@@ -9,69 +9,82 @@
             font-family: Arial, sans-serif;
             text-align: center;
             direction: rtl;
+            margin: 0;
+            padding: 1rem;
+        }
         
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
         }
-        .button-container {
-            display: flex
-;
-    justify-content: center;
-    gap: initial;
-    margin: inherit;
+        
+        audio {
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem 0;
         }
+        
         button {
-            font-size: 1.5rem;
-            width: 20%;
-            height: 100px;
-            margin: 1%;
-            border: none;
-            background-color: #007bff;
+            background: #007bff;
             color: white;
-            border-radius: 10px;
+            border: none;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 0.5rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            min-width: 120px;
         }
+        
         button:hover {
-            background-color: #000000;
+            background: #000;
         }
+        
         .active {
-            background-color: #000000; /* צבע ירוק עבור התחנה הפעילה */
+            background: #000;
         }
+        
         .volume-button {
-            font-size: 2rem;
-            width: 80px;
-            height: 80px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
         }
-        #volume-display {
-            font-size: 1.2rem;
-            margin-top: 20px;
+        
+        @media (max-width: 480px) {
+            button {
+                min-width: 100px;
+                font-size: 0.9rem;
+            }
+            
+            .volume-button {
+                width: 40px;
+                height: 40px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>אפליקציית תחנות רדיו</h1>
-  
-    
-    <audio id="audio-player" controls>
-        <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
-        הדפדפן שלך לא תומך בהשמעת אודיו.
-    </audio>
-    <div>
-        לחץ להאזנה
+    <div class="container">
+        <h1>אפליקציית תחנות רדיו</h1>
+        
+        <audio id="audio-player" controls>
+            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
+            הדפדפן שלך לא תומך בהשמעת אודיו.
+        </audio>
+        
+        <div>לחץ להאזנה</div>
+        
+        <div>
+            <button id="station-kan" onclick="switchStation('http://kanliveicy.media.kan.org.il/kanbet_mp3', 'station-kan')">כאן ב'</button>
+            <button id="station-glz" onclick="switchStation('http://glzwizzlv.bynetcdn.com/glz_mp3', 'station-glz')">גלי צה"ל</button>
         </div>
-    <div class="button-container">
-        <button id="station-kan" onclick="switchStation('http://kanliveicy.media.kan.org.il/kanbet_mp3', 'station-kan')">כאן ב'</button>
-        <button id="station-glz" onclick="switchStation('http://glzwizzlv.bynetcdn.com/glz_mp3', 'station-glz')">גלי צה"ל</button>
-    </div>
 
-    <div class="button-container">
-        <button class="volume-button" onclick="changeVolume(-0.1)">−</button>
-        <button class="volume-button" onclick="changeVolume(0.1)">+</button>
-    </div>
+        <div>
+            <button class="volume-button" onclick="changeVolume(-0.1)">−</button>
+            <button class="volume-button" onclick="changeVolume(0.1)">+</button>
+        </div>
 
-    <div id="volume-display">עוצמה נוכחית: 1</div>
+        <div id="volume-display">עוצמה נוכחית: 1</div>
+    </div>
 
     <script>
         const audioPlayer = document.getElementById('audio-player');
@@ -79,11 +92,9 @@
         let currentStationButton = null;
 
         function switchStation(url, buttonId) {
-            // שינוי תחנת הרדיו
             audioPlayer.src = url;
             audioPlayer.play();
 
-            // עדכון צבע הכפתור של התחנה הפעילה
             if (currentStationButton) {
                 currentStationButton.classList.remove('active');
             }
@@ -98,7 +109,6 @@
             volumeDisplay.textContent = `עוצמה נוכחית: ${newVolume.toFixed(1)}`;
         }
 
-        // תחנת ברירת מחדל פעילה
         switchStation('http://kanliveicy.media.kan.org.il/kanbet_mp3', 'station-kan');
     </script>
 </body>
