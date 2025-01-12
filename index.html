@@ -9,21 +9,20 @@
             font-family: Arial, sans-serif;
             text-align: center;
             direction: rtl;
-            background-color: #f4f4f4;
-            color: #333;
-            padding: 20px;
+        
         }
         .button-container {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin: 20px 0;
+            display: flex
+;
+    justify-content: center;
+    gap: initial;
+    margin: inherit;
         }
         button {
             font-size: 1.5rem;
-            width: 100px;
+            width: 20%;
             height: 100px;
-            margin: 10px;
+            margin: 1%;
             border: none;
             background-color: #007bff;
             color: white;
@@ -34,10 +33,10 @@
             justify-content: center;
         }
         button:hover {
-            background-color: #0056b3;
+            background-color: #000000;
         }
         .active {
-            background-color: #28a745; /* צבע ירוק עבור התחנה הפעילה */
+            background-color: #000000; /* צבע ירוק עבור התחנה הפעילה */
         }
         .volume-button {
             font-size: 2rem;
@@ -53,13 +52,15 @@
 </head>
 <body>
     <h1>אפליקציית תחנות רדיו</h1>
-    <p>בחר תחנה ולחץ על הכפתורים לשינוי עוצמת השמע</p>
+  
     
     <audio id="audio-player" controls>
         <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
         הדפדפן שלך לא תומך בהשמעת אודיו.
     </audio>
-
+    <div>
+        לחץ להאזנה
+        </div>
     <div class="button-container">
         <button id="station-kan" onclick="switchStation('http://kanliveicy.media.kan.org.il/kanbet_mp3', 'station-kan')">כאן ב'</button>
         <button id="station-glz" onclick="switchStation('http://glzwizzlv.bynetcdn.com/glz_mp3', 'station-glz')">גלי צה"ל</button>
