@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J5WT91REYB');
+    </script>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
+    <!-- End Google Tag Manager -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אפליקציית תחנות רדיו</title>
+
+    <!-- Icon for desktop browsers -->
+    <link rel="icon" href="icon.png" type="image/png">
+
+    <!-- Icon for mobile shortcut -->
+    <link rel="apple-touch-icon" href="icon.png">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            direction: rtl;
+            margin: 0;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+        
+        audio {
+            width: 100%;
+            max-width: 400px;
+            margin: 1rem 0;
+        }
+
+        .station-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .station-button {
+            background:   #E91E63;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 120px;
+            height: 120px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        
+        .control-button {
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        
+        .active {
+            background:  #4CAF50;
+        }
+        
+        @media (max-width: 480px) {
+            .station-button {
+                width: 100px;
+                height: 100px;
+                font-size: 1rem;
+            }
+            
+            .control-button {
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <div class="container">
+        <audio id="audio-player">
+            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
+            הדפדפן שלך לא תומך בהשמעת אודיו.
+        </audio>
+        
+        <h4>רדיו נגיש עבור אבא</h4>
+
+        <div>לחץ ובחר תחנה להאזנה</div>
+        
+        <div class="station-buttons">
+            <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">כאן ב'</button>
+            <button class="station-button" id="station-glz" data-url="http://glzwizzlv.bynetcdn.com/glz_mp3">גלי צה"ל</button>
+            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">גלי ישראל</button>
+
+        </div>
+
+        <div>בחר עוצמת שמע</div>
+        <div class="controls">
+            <button class="control-button" onclick="changeVolume(-0.1)">−</button>
+            <button class="control-button" onclick="togglePlay()">⏸</button>
+            <button class="control-button" onclick="changeVolume(0.1)">+</button>
+        </div>
+
+        <div id="volume-display">עוצמה נוכחית: 1</div>
+    </div>
+
+    <script>
+        const audioPlayer = document.getElementById('audio-player');
+        const volumeDisplay = document.getElementById('volume-display');
+        const stationButtons = document.querySelectorAll('.station-button');
+        let currentStationButton = null;
+
+
+        function switchStation(button) {
+             const url = button.getAttribute('data-url');
+
+
+             if(currentStationButton === button){
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                button.classList.remove('active');
+                currentStationButton = null;
+                return;
+            }
+             
+            audioPlayer.src = url;
+            audioPlayer.play();
+
+
+            if (currentStationButton) {
+                currentStationButton.classList.remove('active');
+            }
+          
+            button.classList.add('active');
+            currentStationButton = button;
+        }
+
+
+        stationButtons.forEach(button => {
+            button.addEventListener('click', () => switchStation(button));
+         });
+
+        function changeVolume(amount) {
+            let newVolume = Math.min(Math.max(audioPlayer.volume + amount, 0), 1);
+            audioPlayer.volume = newVolume;
+            volumeDisplay.textContent = `עוצמה נוכחית: ${newVolume.toFixed(1)}`;
+        }
+
+        function togglePlay() {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+                event.target.textContent = '⏸';
+            } else {
+                audioPlayer.pause();
+                event.target.textContent = '▶';
+            }
+        }
+
+        // Initial station setup
+        const initialStation = document.getElementById('station-kan');
+        switchStation(initialStation);
+    </script>
+</body>
+</html>
