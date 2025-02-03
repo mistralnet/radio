@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="he">
 <head>
@@ -99,6 +98,10 @@
             <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
             הדפדפן שלך לא תומך בהשמעת אודיו.
         </audio>
+         <!-- הוספת אודיו שקט -->
+        <audio id="silent-audio" loop>
+           <source src="silent.mp3" type="audio/mpeg">
+        </audio>
         
         <h4>רדיו נגיש עבור אבא</h4>
         <div>לחץ ובחר תחנה להאזנה</div>
@@ -120,17 +123,31 @@
         const audioPlayer = document.getElementById('audio-player');
         const stationButtons = document.querySelectorAll('.station-button');
         let currentStationButton = null;
+         // אודיו שקט
+        const silentAudio = document.getElementById('silent-audio');
 
         // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
         async function requestWakeLock() {
             try {
-                if ('wakeLock' in navigator) {
+                if ('wakeLock' in navigator && !wakeLock) {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    wakeLock.addEventListener('release', () => requestWakeLock());
+                    wakeLock.addEventListener('release', () => {
+                         if (wakeLock) { // הבדיקה של וייק לוק עדיין קיים, ולכן ממשיכים לבקש אותו
+                            requestWakeLock()
+                         }
+                    });
                 }
             } catch (err) {
                 console.log(`${err.name}, ${err.message}`);
             }
+        }
+
+       // פונקציה שמשחררת את ה "Wake Lock" ונותנת למסך לכבות
+        async function releaseWakeLock(){
+             if(wakeLock) {
+                await wakeLock.release()
+                wakeLock = null;
+             }
         }
 
         // פונקציה שמעדכנת את השעה כל שנייה ומציגה אותה על המסך
@@ -206,49 +223,96 @@
         }
 
         // פונקציה שמבצעת את הכרזת השעה באופן אוטומטי כל שעה
-        function scheduleNextAnnouncement() {
+         function scheduleNextAnnouncement() {
             const now = new Date();
             const nextTime = new Date(now);
-            nextTime.setHours(nextTime.getHours() + 1);
-            nextTime.setMinutes(0, 0, 0);
 
-            const nextHour = nextTime.getHours();
+            //חשוב -  להגדיר גם שניות ומלישניות ל 0 כדי לקבל זמן מדוייק ללא חריגה בשניות
+            nextTime.setMinutes(0, 0, 0);
+            nextTime.setMilliseconds(0);
+            nextTime.setHours(nextTime.getHours() + 1);
+
+           const nextHour = nextTime.getHours();
+
             if (nextHour >= 9 && nextHour < 21) {
-                const delay = nextTime.getTime() - now.getTime();
-                setTimeout(() => {
-                    speakTime();
-                    scheduleNextAnnouncement();
-                }, delay);
+                let delay = nextTime.getTime() - now.getTime(); // חישוב ההפרש
+                 if (delay < 0) { // אם החישוב שלילי (קורה במקרים נדירים מאוד) נגדיר ל שעה הבאה
+                    nextTime.setHours(nextTime.getHours() + 1);
+                      delay = nextTime.getTime() - now.getTime();
+                 }
+
+               setTimeout(() => {
+                     speakTime();
+                     scheduleNextAnnouncement();
+                 }, delay);
             } else {
-                const tomorrow = new Date(now);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                tomorrow.setHours(9, 0, 0, 0);
+                 const tomorrow = new Date(now);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    tomorrow.setHours(9, 0, 0, 0);
+                    tomorrow.setMilliseconds(0);
                 const delay = tomorrow.getTime() - now.getTime();
-                setTimeout(scheduleNextAnnouncement, delay);
+                  setTimeout(scheduleNextAnnouncement, delay);
             }
+        }
+
+          // פונקציה שמטפלת בחיבור/ניתוק אוזניות בלוטוס
+          async function handleAudioDevices() {
+            navigator.mediaDevices.enumerateDevices().then(async devices => {
+                let audioOutputConnected = false;
+                devices.forEach(device => {
+                    if (device.kind === 'audiooutput' && device.deviceId !== 'default' && device.deviceId !== 'communications') {
+                        audioOutputConnected = true;
+                    }
+                });
+                if (audioOutputConnected) {
+                     if(!wakeLock) {  //אם אין וייק לוק אז מבקשים
+                        await requestWakeLock();
+                     }
+                    silentAudio.play().then(() => {
+                    silentAudio.volume = 0;
+                     console.log("Bluetooth speaker detected and silence track started.");
+                 }).catch(error => {
+                     console.error("Error playing silent track:", error);
+                 });
+                } else {
+                      if (wakeLock) { //אם היה וייק לוק , אז משחררים
+                            await releaseWakeLock()
+                       }
+                    console.log("No Bluetooth speaker detected.");
+                        silentAudio.pause();
+                    }
+            });
         }
 
         // פעולות עם טעינת הדף
         document.addEventListener('DOMContentLoaded', async () => {
-            await requestWakeLock();
+           //  await requestWakeLock();
             scheduleNextAnnouncement();
             document.getElementById('clock').addEventListener('click', speakTime);
             stationButtons.forEach(button => {
                 button.addEventListener('click', () => switchStation(button));
             });
             switchStation(document.getElementById('station-kan'));
+             handleAudioDevices(); // בדיקה ראשונית
+
+            navigator.mediaDevices.ondevicechange = handleAudioDevices; // eventListener עבור שינוי בהתקני אודיו
+           
+             setInterval(handleAudioDevices, 10 * 60 * 1000); // בדיקה כל 10 דקות
         });
 
-        // התמודדות עם שינוי במצב הראות של הדף
-        document.addEventListener('visibilitychange', async () => {
-            if (document.visibilityState === 'visible') {
-                await requestWakeLock();
-            }
+       // התמודדות עם שינוי במצב הראות של הדף
+         document.addEventListener('visibilitychange', async () => {
+             if (document.visibilityState === 'visible') {
+                 if (wakeLock) { // רק אם יש וייק לוק אז נבקש אותו
+                    await requestWakeLock();
+                 }
+              }
         });
     </script>
     
     <div class="contaibox">
-        גרסה 4.8
+      <!-- הערת קוד פנימית: שינוי גרסה ל-5.2 ב-17/05/2024 - תיקון להקראת השעה המוקדמת, שעת ההכרזה תהיה מדויקת יותר  -->
+        גרסה 5.2
     </div>
 </body>
 </html>
