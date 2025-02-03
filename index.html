@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-J5WT91REYB');
-    </script>
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
-    <!-- End Google Tag Manager -->
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-J5WT91REYB');
+        </script>
+        <!-- Google Tag Manager -->
+        <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+        j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+        'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+        })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
+        <!-- End Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>אפליקציית תחנות רדיו</title>
@@ -80,10 +80,11 @@
     </style>
 </head>
 <body>
+
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+        <!-- End Google Tag Manager (noscript) -->
     <div class="container">
         <audio id="audio-player">
             <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
@@ -105,16 +106,27 @@
     <script>
         let isAnnouncing = false;
         let radioVolume = 1.0;
+        let wakeLock = null;
         const audioPlayer = document.getElementById('audio-player');
         const stationButtons = document.querySelectorAll('.station-button');
         let currentStationButton = null;
 
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLock.addEventListener('release', () => requestWakeLock());
+                }
+            } catch (err) {
+                console.log(`${err.name}, ${err.message}`);
+            }
+        }
+
         function updateClock() {
             const now = new Date();
             let hours = now.getHours();
-            let minutes = now.getMinutes();
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            document.getElementById('clock').textContent = hours + ':' + minutes;
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
         }
         
         setInterval(updateClock, 1000);
@@ -139,19 +151,13 @@
             currentStationButton = button;
         }
 
-        stationButtons.forEach(button => {
-            button.addEventListener('click', () => switchStation(button));
-        });
-
         async function speakTime() {
-            if (isAnnouncing) return; // Prevent multiple announcements
+            if (isAnnouncing) return;
             
             isAnnouncing = true;
             const wasPlaying = !audioPlayer.paused;
-            const currentTime = audioPlayer.currentTime;
             const currentVolume = audioPlayer.volume;
             
-            // Fade out radio
             if (wasPlaying) {
                 await fadeAudio(audioPlayer, currentVolume, 0, 500);
             }
@@ -160,13 +166,11 @@
             const utterance = new SpeechSynthesisUtterance(`השעה היא ${timeString}`);
             utterance.lang = 'he-IL';
             
-            // Wait for announcement to finish
             await new Promise(resolve => {
                 utterance.onend = resolve;
                 window.speechSynthesis.speak(utterance);
             });
 
-            // Restore radio
             if (wasPlaying) {
                 audioPlayer.volume = 0;
                 await fadeAudio(audioPlayer, 0, radioVolume, 500);
@@ -188,15 +192,9 @@
 
         function scheduleNextAnnouncement() {
             const now = new Date();
-            const currentMinutes = now.getMinutes();
             const nextTime = new Date(now);
-
-            if (currentMinutes < 30) {
-                nextTime.setMinutes(30, 0, 0);
-            } else {
-                nextTime.setHours(nextTime.getHours() + 1);
-                nextTime.setMinutes(0, 0, 0);
-            }
+            nextTime.setHours(nextTime.getHours() + 1);
+            nextTime.setMinutes(0, 0, 0);
 
             const nextHour = nextTime.getHours();
             if (nextHour >= 9 && nextHour < 21) {
@@ -214,20 +212,25 @@
             }
         }
 
-        // Start scheduling
-        scheduleNextAnnouncement();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await requestWakeLock();
+            scheduleNextAnnouncement();
+            document.getElementById('clock').addEventListener('click', speakTime);
+            stationButtons.forEach(button => {
+                button.addEventListener('click', () => switchStation(button));
+            });
+            switchStation(document.getElementById('station-kan'));
+        });
 
-        // Listen for clock clicks
-        document.getElementById('clock').addEventListener('click', speakTime);
-
-        // Initialize first station
-        const initialStation = document.getElementById('station-kan');
-        switchStation(initialStation);
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
     </script>
     
     <div class="contaibox">
-        גרסה
-         4.5
+        גרסה 4.7
     </div>
 </body>
 </html>
