@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="he">
 <head>
@@ -99,6 +98,10 @@
             <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
             הדפדפן שלך לא תומך בהשמעת אודיו.
         </audio>
+         <!-- הוספת אודיו שקט -->
+        <audio id="silent-audio" loop>
+           <source src="silent.mp3" type="audio/mpeg">
+        </audio>
         
         <h4>רדיו נגיש עבור אבא</h4>
         <div>לחץ ובחר תחנה להאזנה</div>
@@ -120,6 +123,8 @@
         const audioPlayer = document.getElementById('audio-player');
         const stationButtons = document.querySelectorAll('.station-button');
         let currentStationButton = null;
+         // אודיו שקט
+        const silentAudio = document.getElementById('silent-audio');
 
         // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
         async function requestWakeLock() {
@@ -228,6 +233,31 @@
             }
         }
 
+          // פונקציה שמטפלת בחיבור/ניתוק אוזניות בלוטוס
+        function handleAudioDevices() {
+             navigator.mediaDevices.enumerateDevices().then(devices => {
+                 let audioOutputConnected = false;
+                 devices.forEach(device => {
+                     if (device.kind === 'audiooutput' && device.deviceId !== 'default' && device.deviceId !== 'communications') {
+                         audioOutputConnected = true;
+                     }
+                 });
+                if (audioOutputConnected) {
+                 silentAudio.play().then(() => {
+                    silentAudio.volume = 0; // השתקה של השמע השקט
+                     console.log("Bluetooth speaker detected and silence track started.");
+                 }).catch(error => {
+                     console.error("Error playing silent track:", error);
+                 });
+
+             } else {
+                console.log("No Bluetooth speaker detected.");
+                    silentAudio.pause(); // עצרת את האודיו השקט כשאין רמקול מחובר
+                }
+            });
+        }
+
+
         // פעולות עם טעינת הדף
         document.addEventListener('DOMContentLoaded', async () => {
             await requestWakeLock();
@@ -237,6 +267,8 @@
                 button.addEventListener('click', () => switchStation(button));
             });
             switchStation(document.getElementById('station-kan'));
+            handleAudioDevices()
+            setInterval(handleAudioDevices, 5000);
         });
 
         // התמודדות עם שינוי במצב הראות של הדף
@@ -248,7 +280,7 @@
     </script>
     
     <div class="contaibox">
-        גרסה 4.8
+        גרסה 4.9
     </div>
 </body>
 </html>
