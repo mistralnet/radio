@@ -4,7 +4,6 @@
     <!-- תגית גוגל (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
     <script>
-        // פונקציה זו מקבלת נתונים ומעבירה אותם ל-Google Analytics
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
@@ -23,7 +22,6 @@
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     <style>
-        /* עיצוב לדף כולו */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -32,14 +30,15 @@
             padding: 1rem;
             background-color: #000;
             color: #fff;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
-        /* עיצוב לקונטיינר */
         .container {
             max-width: 600px;
             margin: 0 auto;
             padding-top: 20px;
         }
-        /* עיצוב לשעון */
         .clock {
             font-size: 3rem;
             font-weight: bold;
@@ -51,7 +50,6 @@
             margin-top: 20px;
             cursor: pointer;
         }
-        /* עיצוב לכפתורים של תחנות רדיו */
         .station-buttons {
             display: flex;
             justify-content: center;
@@ -71,7 +69,6 @@
         .active {
             background: #4CAF50;
         }
-        /* עיצוב לעמדת המובייל */
         @media (max-width: 480px) {
             .station-button {
                 width: 100px;
@@ -79,15 +76,30 @@
                 font-size: 1rem;
             }
         }
-        /* עיצוב לנושא של גרסה */
-        .contaibox {   
+        .contaibox {
             padding: 50px;
             color: #989494;
+        }
+        .audio-output-info {
+            font-size: 1rem;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid #fff;
+            border-radius: 5px;
+            display: inline-block;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .audio-output-info:hover {
+            background-color: rgba(255,255,255,0.2);
+        }
+        .footer {
+            margin-top: auto;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-
     <!-- תגית Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -98,10 +110,10 @@
             <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
             הדפדפן שלך לא תומך בהשמעת אודיו.
         </audio>
-        
+
         <h4>רדיו נגיש עבור אבא</h4>
         <div>לחץ ובחר תחנה להאזנה</div>
-        
+
         <div class="station-buttons">
             <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">כאן ב'</button>
             <button class="station-button" id="station-glz" data-url="http://glzwizzlv.bynetcdn.com/glz_mp3">גלי צה"ל</button>
@@ -110,17 +122,22 @@
 
         <div class="clock" id="clock"></div>
     </div>
+    <div class="footer">
+        <div class="audio-output-info" id="audio-output-info">טוען מידע על מכשיר שמע...</div>
+        <div class="contaibox">
+           גרסת אינדקס3
+        </div>
+    </div>
 
     <script>
-        // משתנים גלובליים
         let isAnnouncing = false;
         let radioVolume = 1.0;
         let wakeLock = null;
         const audioPlayer = document.getElementById('audio-player');
         const stationButtons = document.querySelectorAll('.station-button');
         let currentStationButton = null;
+        const audioOutputInfo = document.getElementById('audio-output-info');
 
-        // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator) {
@@ -132,18 +149,16 @@
             }
         }
 
-        // פונקציה שמעדכנת את השעה כל שנייה ומציגה אותה על המסך
         function updateClock() {
             const now = new Date();
             let hours = now.getHours();
             let minutes = now.getMinutes().toString().padStart(2, '0');
             document.getElementById('clock').textContent = `${hours}:${minutes}`;
         }
-        
+
         setInterval(updateClock, 1000);
         updateClock();
 
-        // פונקציה שמבצעת מעבר בין תחנות רדיו
         function switchStation(button) {
             const url = button.getAttribute('data-url');
             if (currentStationButton === button) {
@@ -163,14 +178,13 @@
             currentStationButton = button;
         }
 
-        // פונקציה שמבצעת קריאת השעה בקול
         async function speakTime() {
             if (isAnnouncing) return;
-            
+
             isAnnouncing = true;
             const wasPlaying = !audioPlayer.paused;
             const currentVolume = audioPlayer.volume;
-            
+
             if (wasPlaying) {
                 await fadeAudio(audioPlayer, currentVolume, 0, 500);
             }
@@ -178,7 +192,7 @@
             const timeString = document.getElementById('clock').textContent;
             const utterance = new SpeechSynthesisUtterance(`השעה היא ${timeString}`);
             utterance.lang = 'he-IL';
-            
+
             await new Promise(resolve => {
                 utterance.onend = resolve;
                 window.speechSynthesis.speak(utterance);
@@ -188,11 +202,10 @@
                 audioPlayer.volume = 0;
                 await fadeAudio(audioPlayer, 0, radioVolume, 500);
             }
-            
+
             isAnnouncing = false;
         }
 
-        // פונקציה שמבצעת הדהייה של עוצמת הקול
         async function fadeAudio(audioElement, start, end, duration) {
             const steps = 20;
             const stepDuration = duration / steps;
@@ -204,7 +217,6 @@
             }
         }
 
-        // פונקציה שמבצעת את הכרזת השעה באופן אוטומטי כל שעה
         function scheduleNextAnnouncement() {
             const now = new Date();
             const nextTime = new Date(now);
@@ -227,7 +239,47 @@
             }
         }
 
-        // פעולות עם טעינת הדף
+        async function updateAudioOutputInfo() {
+            try {
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioDevices = devices.filter(device => device.kind === 'audiooutput');
+                
+                if(audioDevices.length === 0) {
+                    audioOutputInfo.textContent = "לא נמצאו התקני שמע";
+                    return;
+                }
+
+                const defaultDevice = audioDevices.find(d => d.deviceId === 'default');
+                const currentDevice = audioDevices.find(d => d.deviceId === audioPlayer.sinkId) || defaultDevice;
+
+                if(currentDevice) {
+                    const deviceTypes = {
+                        'bluetooth': 'בלוטות',
+                        'speaker': 'רמקול פנימי',
+                        'usb': 'התקן USB',
+                        'headphone': 'אוזניות',
+                        'default': 'רמקול'
+                    };
+                    
+                    const type = Object.entries(deviceTypes).find(([key]) => 
+                        currentDevice.label.toLowerCase().includes(key)
+                    )?.[1] || 'רמקול';
+
+                    audioOutputInfo.textContent = `מחובר ל: ${type}`;
+                } else {
+                    audioOutputInfo.textContent = 'רמקול';
+                }
+            } catch (error) {
+                audioOutputInfo.textContent = "נדרשת הרשאה לגשת להתקני שמע";
+                console.error("שגיאת שמע:", error);
+            }
+        }
+
+        async function handleDeviceChange() {
+            await updateAudioOutputInfo();
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             await requestWakeLock();
             scheduleNextAnnouncement();
@@ -235,19 +287,43 @@
             stationButtons.forEach(button => {
                 button.addEventListener('click', () => switchStation(button));
             });
+
+            try {
+                await updateAudioOutputInfo();
+                audioPlayer.addEventListener('sinkchanged', updateAudioOutputInfo);
+                navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange);
+                audioOutputInfo.addEventListener('click', async () => {
+                    try {
+                        if('setSinkId' in audioPlayer) {
+                            const devices = await navigator.mediaDevices.enumerateDevices();
+                            const audioOutputs = devices.filter(d => d.kind === 'audiooutput');
+                            
+                            if(audioOutputs.length > 1) {
+                                const newDevice = prompt(
+                                    `התקני שמע זמינים:\n${audioOutputs.map(d => d.label).join('\n')}\n\nהזן את שם ההתקן הרצוי:`
+                                );
+                                const selected = audioOutputs.find(d => d.label === newDevice);
+                                if(selected) await audioPlayer.setSinkId(selected.deviceId);
+                            }
+                        }
+                        await updateAudioOutputInfo();
+                    } catch (e) {
+                        alert("הדפדפן אינו תומך בשינוי התקני שמע");
+                    }
+                });
+            } catch (e) {
+                console.log("Error getting audio:", e);
+                audioOutputInfo.textContent = "לא ניתן לאתר מכשיר שמע";
+            }
             switchStation(document.getElementById('station-kan'));
         });
 
-        // התמודדות עם שינוי במצב הראות של הדף
         document.addEventListener('visibilitychange', async () => {
             if (document.visibilityState === 'visible') {
                 await requestWakeLock();
+                await updateAudioOutputInfo();
             }
         });
     </script>
-    
-    <div class="contaibox">
-        גרסה 4.8
-    </div>
 </body>
 </html>
