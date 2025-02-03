@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J5WT91REYB');
+    </script>
+    <!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
+    <!-- End Google Tag Manager -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אפליקציית תחנות רדיו</title>
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            direction: rtl;
+            margin: 0;
+            padding: 1rem;
+            background-color: #000;
+            color: #fff;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+        .clock {
+            font-size: 3rem;
+            font-weight: bold;
+            background-color: yellow;
+            color: black;
+            padding: 10px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .station-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .station-button {
+            background: #E91E63;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            width: 120px;
+            height: 120px;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        .active {
+            background: #4CAF50;
+        }
+        @media (max-width: 480px) {
+            .station-button {
+                width: 100px;
+                height: 100px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+      <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <div class="container">
+        <audio id="audio-player">
+            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
+            הדפדפן שלך לא תומך בהשמעת אודיו.
+        </audio>
+        
+        <h4>רדיו נגיש עבור אבא</h4>
+        <div>לחץ ובחר תחנה להאזנה</div>
+        
+        <div class="station-buttons">
+            <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">כאן ב'</button>
+            <button class="station-button" id="station-glz" data-url="http://glzwizzlv.bynetcdn.com/glz_mp3">גלי צה"ל</button>
+            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">גלי ישראל</button>
+        </div>
+
+        <div class="clock" id="clock"></div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes();
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            document.getElementById('clock').textContent = hours + ':' + minutes;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        const audioPlayer = document.getElementById('audio-player');
+        const stationButtons = document.querySelectorAll('.station-button');
+        let currentStationButton = null;
+
+        function switchStation(button) {
+            const url = button.getAttribute('data-url');
+            if (currentStationButton === button) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                button.classList.remove('active');
+                currentStationButton = null;
+                return;
+            }
+            audioPlayer.src = url;
+            audioPlayer.play();
+            if (currentStationButton) {
+                currentStationButton.classList.remove('active');
+            }
+            button.classList.add('active');
+            currentStationButton = button;
+        }
+
+        stationButtons.forEach(button => {
+            button.addEventListener('click', () => switchStation(button));
+        });
+
+        const initialStation = document.getElementById('station-kan');
+        switchStation(initialStation);
+    </script>
+      <div="ve">גרסה 4</div>
+
+</body>
+</html>
