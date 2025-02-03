@@ -183,8 +183,36 @@
         // האזנה ללחיצה על השעון
         document.getElementById('clock').addEventListener('click', speakTime);
     </script>
+    <script>
+
+    function speakTime() {
+        const timeString = document.getElementById('clock').textContent;
+        const utterance = new SpeechSynthesisUtterance(`השעה היא ${timeString}`);
+        utterance.lang = 'he-IL';
+
+        // ביטול הקראה קיימת והשתקת אודיו
+        window.speechSynthesis.cancel();
+        let originalVolume = 1;
+        const isPlaying = !audioPlayer.paused;
+
+        if (isPlaying) {
+            originalVolume = audioPlayer.volume;
+            audioPlayer.volume = 0;
+        }
+
+        utterance.addEventListener('end', () => {
+            if (isPlaying) {
+                audioPlayer.volume = originalVolume;
+            }
+        });
+
+        window.speechSynthesis.speak(utterance);
+    }
+
+</script>
         <div class="contaibox">
-גרסה 4
+גרסה
+           4.1
      </div>
 
 </body>
