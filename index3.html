@@ -1,27 +1,29 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-    <!-- Google tag (gtag.js) -->
+    <!-- תגית גוגל (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
     <script>
+        // פונקציה זו מקבלת נתונים ומעבירה אותם ל-Google Analytics
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
         gtag('config', 'G-J5WT91REYB');
     </script>
-    <!-- Google Tag Manager -->
+    <!-- תגית Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
-    <!-- End Google Tag Manager -->
+    <!-- סוף Google Tag Manager -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>אפליקציית תחנות רדיו</title>
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     <style>
+        /* עיצוב לדף כולו */
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -31,11 +33,13 @@
             background-color: #000;
             color: #fff;
         }
+        /* עיצוב לקונטיינר */
         .container {
             max-width: 600px;
             margin: 0 auto;
             padding-top: 20px;
         }
+        /* עיצוב לשעון */
         .clock {
             font-size: 3rem;
             font-weight: bold;
@@ -47,6 +51,7 @@
             margin-top: 20px;
             cursor: pointer;
         }
+        /* עיצוב לכפתורים של תחנות רדיו */
         .station-buttons {
             display: flex;
             justify-content: center;
@@ -66,6 +71,7 @@
         .active {
             background: #4CAF50;
         }
+        /* עיצוב לעמדת המובייל */
         @media (max-width: 480px) {
             .station-button {
                 width: 100px;
@@ -73,18 +79,20 @@
                 font-size: 1rem;
             }
         }
-.contaibox{   
+        /* עיצוב לנושא של גרסה */
+        .contaibox {   
             padding: 50px;
-    color: #989494;}
+            color: #989494;
+        }
     </style>
-    
-  
 </head>
 <body>
-      <!-- Google Tag Manager (noscript) -->
+
+    <!-- תגית Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- סוף Google Tag Manager (noscript) -->
+
     <div class="container">
         <audio id="audio-player">
             <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
@@ -104,20 +112,38 @@
     </div>
 
     <script>
-        function updateClock() {
-            const now = new Date();
-            let hours = now.getHours();
-            let minutes = now.getMinutes();
-            minutes = minutes < 10 ? '0' + minutes : minutes;
-            document.getElementById('clock').textContent = hours + ':' + minutes;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
+        // משתנים גלובליים
+        let isAnnouncing = false;
+        let radioVolume = 1.0;
+        let wakeLock = null;
         const audioPlayer = document.getElementById('audio-player');
         const stationButtons = document.querySelectorAll('.station-button');
         let currentStationButton = null;
 
+        // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLock.addEventListener('release', () => requestWakeLock());
+                }
+            } catch (err) {
+                console.log(`${err.name}, ${err.message}`);
+            }
+        }
+
+        // פונקציה שמעדכנת את השעה כל שנייה ומציגה אותה על המסך
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+        }
+        
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // פונקציה שמבצעת מעבר בין תחנות רדיו
         function switchStation(button) {
             const url = button.getAttribute('data-url');
             if (currentStationButton === button) {
@@ -128,6 +154,7 @@
                 return;
             }
             audioPlayer.src = url;
+            audioPlayer.volume = radioVolume;
             audioPlayer.play();
             if (currentStationButton) {
                 currentStationButton.classList.remove('active');
@@ -136,32 +163,53 @@
             currentStationButton = button;
         }
 
-        stationButtons.forEach(button => {
-            button.addEventListener('click', () => switchStation(button));
-        });
+        // פונקציה שמבצעת קריאת השעה בקול
+        async function speakTime() {
+            if (isAnnouncing) return;
+            
+            isAnnouncing = true;
+            const wasPlaying = !audioPlayer.paused;
+            const currentVolume = audioPlayer.volume;
+            
+            if (wasPlaying) {
+                await fadeAudio(audioPlayer, currentVolume, 0, 500);
+            }
 
-        const initialStation = document.getElementById('station-kan');
-        switchStation(initialStation);
-
-        // פונקציות חדשות לנגישות
-        function speakTime() {
             const timeString = document.getElementById('clock').textContent;
             const utterance = new SpeechSynthesisUtterance(`השעה היא ${timeString}`);
             utterance.lang = 'he-IL';
-            window.speechSynthesis.speak(utterance);
+            
+            await new Promise(resolve => {
+                utterance.onend = resolve;
+                window.speechSynthesis.speak(utterance);
+            });
+
+            if (wasPlaying) {
+                audioPlayer.volume = 0;
+                await fadeAudio(audioPlayer, 0, radioVolume, 500);
+            }
+            
+            isAnnouncing = false;
         }
 
+        // פונקציה שמבצעת הדהייה של עוצמת הקול
+        async function fadeAudio(audioElement, start, end, duration) {
+            const steps = 20;
+            const stepDuration = duration / steps;
+            const volumeStep = (end - start) / steps;
+
+            for (let i = 0; i <= steps; i++) {
+                audioElement.volume = start + (volumeStep * i);
+                await new Promise(resolve => setTimeout(resolve, stepDuration));
+            }
+        }
+
+        // פונקציה שמבצעת את הכרזת השעה באופן אוטומטי כל שעה
         function scheduleNextAnnouncement() {
             const now = new Date();
-            const currentMinutes = now.getMinutes();
             const nextTime = new Date(now);
-
-            if (currentMinutes < 30) {
-                nextTime.setMinutes(30, 0, 0);
-            } else {
-                nextTime.setHours(nextTime.getHours() + 1);
-                nextTime.setMinutes(0, 0, 0);
-            }
+            nextTime.setHours(nextTime.getHours() + 1);
+            nextTime.setMinutes(0, 0, 0);
 
             const nextHour = nextTime.getHours();
             if (nextHour >= 9 && nextHour < 21) {
@@ -179,16 +227,27 @@
             }
         }
 
-        // התחל תזמון עם טעינת הדף
-        scheduleNextAnnouncement();
+        // פעולות עם טעינת הדף
+        document.addEventListener('DOMContentLoaded', async () => {
+            await requestWakeLock();
+            scheduleNextAnnouncement();
+            document.getElementById('clock').addEventListener('click', speakTime);
+            stationButtons.forEach(button => {
+                button.addEventListener('click', () => switchStation(button));
+            });
+            switchStation(document.getElementById('station-kan'));
+        });
 
-        // האזנה ללחיצה על השעון
-        document.getElementById('clock').addEventListener('click', speakTime);
+        // התמודדות עם שינוי במצב הראות של הדף
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState === 'visible') {
+                await requestWakeLock();
+            }
+        });
     </script>
-        <div class="contaibox">
-גרסה
-           4.3
-     </div>
-
+    
+    <div class="contaibox">
+        גרסה 4.8
+    </div>
 </body>
 </html>
