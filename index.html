@@ -45,6 +45,7 @@
             border-radius: 10px;
             display: inline-block;
             margin-top: 20px;
+            cursor: pointer;
         }
         .station-buttons {
             display: flex;
@@ -72,13 +73,14 @@
                 font-size: 1rem;
             }
         }
-.contaibox{   
+        .contaibox {   
             padding: 50px;
-    color: #989494;}
+            color: #989494;
+        }
     </style>
 </head>
 <body>
-      <!-- Google Tag Manager (noscript) -->
+    <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
@@ -101,6 +103,12 @@
     </div>
 
     <script>
+        let isAnnouncing = false;
+        let radioVolume = 1.0;
+        const audioPlayer = document.getElementById('audio-player');
+        const stationButtons = document.querySelectorAll('.station-button');
+        let currentStationButton = null;
+
         function updateClock() {
             const now = new Date();
             let hours = now.getHours();
@@ -108,12 +116,9 @@
             minutes = minutes < 10 ? '0' + minutes : minutes;
             document.getElementById('clock').textContent = hours + ':' + minutes;
         }
+        
         setInterval(updateClock, 1000);
         updateClock();
-
-        const audioPlayer = document.getElementById('audio-player');
-        const stationButtons = document.querySelectorAll('.station-button');
-        let currentStationButton = null;
 
         function switchStation(button) {
             const url = button.getAttribute('data-url');
@@ -125,6 +130,7 @@
                 return;
             }
             audioPlayer.src = url;
+            audioPlayer.volume = radioVolume;
             audioPlayer.play();
             if (currentStationButton) {
                 currentStationButton.classList.remove('active');
@@ -137,12 +143,91 @@
             button.addEventListener('click', () => switchStation(button));
         });
 
+        async function speakTime() {
+            if (isAnnouncing) return; // Prevent multiple announcements
+            
+            isAnnouncing = true;
+            const wasPlaying = !audioPlayer.paused;
+            const currentTime = audioPlayer.currentTime;
+            const currentVolume = audioPlayer.volume;
+            
+            // Fade out radio
+            if (wasPlaying) {
+                await fadeAudio(audioPlayer, currentVolume, 0, 500);
+            }
+
+            const timeString = document.getElementById('clock').textContent;
+            const utterance = new SpeechSynthesisUtterance(`השעה היא ${timeString}`);
+            utterance.lang = 'he-IL';
+            
+            // Wait for announcement to finish
+            await new Promise(resolve => {
+                utterance.onend = resolve;
+                window.speechSynthesis.speak(utterance);
+            });
+
+            // Restore radio
+            if (wasPlaying) {
+                audioPlayer.volume = 0;
+                await fadeAudio(audioPlayer, 0, radioVolume, 500);
+            }
+            
+            isAnnouncing = false;
+        }
+
+        async function fadeAudio(audioElement, start, end, duration) {
+            const steps = 20;
+            const stepDuration = duration / steps;
+            const volumeStep = (end - start) / steps;
+
+            for (let i = 0; i <= steps; i++) {
+                audioElement.volume = start + (volumeStep * i);
+                await new Promise(resolve => setTimeout(resolve, stepDuration));
+            }
+        }
+
+        function scheduleNextAnnouncement() {
+            const now = new Date();
+            const currentMinutes = now.getMinutes();
+            const nextTime = new Date(now);
+
+            if (currentMinutes < 30) {
+                nextTime.setMinutes(30, 0, 0);
+            } else {
+                nextTime.setHours(nextTime.getHours() + 1);
+                nextTime.setMinutes(0, 0, 0);
+            }
+
+            const nextHour = nextTime.getHours();
+            if (nextHour >= 9 && nextHour < 21) {
+                const delay = nextTime.getTime() - now.getTime();
+                setTimeout(() => {
+                    speakTime();
+                    scheduleNextAnnouncement();
+                }, delay);
+            } else {
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                tomorrow.setHours(9, 0, 0, 0);
+                const delay = tomorrow.getTime() - now.getTime();
+                setTimeout(scheduleNextAnnouncement, delay);
+            }
+        }
+
+        // Start scheduling
+        scheduleNextAnnouncement();
+
+        // Listen for clock clicks
+        document.getElementById('clock').addEventListener('click', speakTime);
+
+        // Initialize first station
         const initialStation = document.getElementById('station-kan');
         switchStation(initialStation);
     </script>
-        <div class="contaibox">
-גרסה 4
-     </div>
-
+    
+    <div class="contaibox">
+        גרסה
+         4.5
+    </div>
 </body>
 </html>
