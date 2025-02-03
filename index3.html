@@ -84,6 +84,22 @@
             padding: 50px;
             color: #989494;
         }
+        /* כפתור שמע קולי*/
+        .voice-button {
+           background: #E91E63;
+           color: white;
+           border: none;
+           border-radius: 8px;
+            width: 80px;
+           height: 80px;
+           cursor: pointer;
+            font-size: 1rem;
+            margin-left: 10px;
+           display: inline-block;
+         }
+         .voice-button.active {
+            background: #4CAF50;
+         }
     </style>
 </head>
 <body>
@@ -105,13 +121,15 @@
         
         <h4>רדיו נגיש עבור אבא</h4>
         <div>לחץ ובחר תחנה להאזנה</div>
-        
+            <div style="display: flex;justify-content: center;align-items: center;margin-bottom:10px">
         <div class="station-buttons">
-            <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">כאן ב'</button>
+           <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">כאן ב'</button>
             <button class="station-button" id="station-glz" data-url="http://glzwizzlv.bynetcdn.com/glz_mp3">גלי צה"ל</button>
-            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">גלי ישראל</button>
-        </div>
+             <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">גלי ישראל</button>
+          </div>
 
+        <button class="voice-button" id="voice-button">🗣️</button>
+     </div>
         <div class="clock" id="clock"></div>
     </div>
 
@@ -120,11 +138,19 @@
         let isAnnouncing = false;
         let radioVolume = 1.0;
         let wakeLock = null;
+         let recognition = null; // משתנה לזיהוי קולי
+        let isListening = false;  //משתנה לבדיקה אם ההקשבה למיקרופון מופעלת
         const audioPlayer = document.getElementById('audio-player');
         const stationButtons = document.querySelectorAll('.station-button');
+         const voiceButton = document.getElementById('voice-button');
         let currentStationButton = null;
          // אודיו שקט
         const silentAudio = document.getElementById('silent-audio');
+        const stations = {
+            'כאן ב\'': 'station-kan',
+            'גלי צה"ל': 'station-glz',
+             'גלי ישראל': 'glyisrael'
+         }
 
         // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
         async function requestWakeLock() {
@@ -284,6 +310,85 @@
             });
         }
 
+          // פונקציה שמפעילה את הזיהוי הקולי
+        function startVoiceRecognition() {
+            // אם הזיהוי כבר פעיל, נבטל אותו
+            if (isListening) {
+                 stopVoiceRecognition();
+                 return;
+            }
+             try{
+              recognition = new webkitSpeechRecognition() || new SpeechRecognition();
+             }
+             catch(e){
+                 console.error('Error: Web Speech API is not supported');
+                 alert("API Web Speech לא נתמך בדפדפן שלך. אנא נסה בדפדפן אחר.");
+                return;
+             }
+
+
+            recognition.lang = 'he-IL';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+
+            recognition.onstart = function() {
+                isListening = true;
+                 voiceButton.classList.add('active');
+                 console.log("Voice recognition started");
+             };
+
+            recognition.onresult = function(event) {
+              const spokenText = event.results[0][0].transcript.trim();
+              console.log("Spoken text:", spokenText);
+              parseVoiceCommand(spokenText);
+              stopVoiceRecognition();
+            };
+
+            recognition.onerror = function(event) {
+             console.error("Error during speech recognition:", event.error);
+              stopVoiceRecognition();
+            };
+
+            recognition.onend = function() {
+               console.log("Voice recognition ended");
+                stopVoiceRecognition();
+            }
+            recognition.start();
+
+        }
+
+        // פונקציה לעצירת הזיהוי הקולי
+        function stopVoiceRecognition() {
+           if (recognition) {
+              recognition.stop();
+             voiceButton.classList.remove('active');
+             isListening = false;
+             recognition = null;
+           }
+
+         }
+
+         // פונקציה לניתוח הפקודה הקולית
+        function parseVoiceCommand(command) {
+            command = command.toLowerCase(); // להפוך ל lower case לחיפוש יותר נוח
+            if (command.startsWith('רדיו ')) {
+             const stationName = command.substring(5).trim();
+             console.log("Station name from command:", stationName);
+                if(stations[stationName]){ // לבדוק אם שם התחנה קיימת
+                      switchStation(document.getElementById(stations[stationName])) // לשלוח את האלמנט של התחנה שצריך להפעיל
+                  }
+                  else {
+                        console.log("Station not found");
+                        alert("תחנה לא נמצאה");
+                   }
+             }else {
+                    console.log("No radio command found");
+                 alert("פקודה לא מזוהה");
+            }
+
+        }
+
         // פעולות עם טעינת הדף
         document.addEventListener('DOMContentLoaded', async () => {
            //  await requestWakeLock();
@@ -294,10 +399,10 @@
             });
             switchStation(document.getElementById('station-kan'));
              handleAudioDevices(); // בדיקה ראשונית
-
+            voiceButton.addEventListener('click', startVoiceRecognition); // event listener  להפעלת הזיהוי הקולי
             navigator.mediaDevices.ondevicechange = handleAudioDevices; // eventListener עבור שינוי בהתקני אודיו
-           
-             setInterval(handleAudioDevices, 10 * 60 * 1000); // בדיקה כל 10 דקות
+
+            setInterval(handleAudioDevices, 10 * 60 * 1000); // בדיקה כל 10 דקות
         });
 
        // התמודדות עם שינוי במצב הראות של הדף
@@ -311,8 +416,8 @@
     </script>
     
     <div class="contaibox">
-      <!-- הערת קוד פנימית: שינוי גרסה ל-5.2 ב-17/05/2024 - תיקון להקראת השעה המוקדמת, שעת ההכרזה תהיה מדויקת יותר  -->
-        גרסה 5.2
+      <!-- הערת קוד פנימית: שינוי גרסה ל-5.3 ב-18/05/2024 - הוספת אפשרות לזיהוי קולי להפעלת תחנות רדיו-->
+        גרסה 5.3
     </div>
 </body>
 </html>
