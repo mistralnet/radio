@@ -244,7 +244,7 @@
                  });
                 if (audioOutputConnected) {
                  silentAudio.play().then(() => {
-                    silentAudio.volume = 0; // השתקה של השמע השקט
+                    silentAudio.volume = 0;
                      console.log("Bluetooth speaker detected and silence track started.");
                  }).catch(error => {
                      console.error("Error playing silent track:", error);
@@ -252,11 +252,10 @@
 
              } else {
                 console.log("No Bluetooth speaker detected.");
-                    silentAudio.pause(); // עצרת את האודיו השקט כשאין רמקול מחובר
+                    silentAudio.pause();
                 }
             });
         }
-
 
         // פעולות עם טעינת הדף
         document.addEventListener('DOMContentLoaded', async () => {
@@ -267,8 +266,11 @@
                 button.addEventListener('click', () => switchStation(button));
             });
             switchStation(document.getElementById('station-kan'));
-            handleAudioDevices()
-            setInterval(handleAudioDevices, 5000);
+            handleAudioDevices(); // בדיקה ראשונית
+           
+            navigator.mediaDevices.ondevicechange = handleAudioDevices; // eventListener עבור שינוי בהתקני אודיו
+           
+            setInterval(handleAudioDevices, 10 * 60 * 1000); // בדיקה כל 10 דקות
         });
 
         // התמודדות עם שינוי במצב הראות של הדף
@@ -280,7 +282,8 @@
     </script>
     
     <div class="contaibox">
-        גרסה 4.9
+      <!-- הערת קוד פנימית: שינוי גרסה ל-5.0 ב-17/05/2024 -  שינוי בדיקה לבלוטוס לכל 10 דקות , ושימוש בeventlistener על שינוי התקנים -->
+        גרסה 5.0
     </div>
 </body>
 </html>
