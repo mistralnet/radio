@@ -36,10 +36,10 @@
             margin: 0 auto;
             padding-top: 20px;
         }
-          .battery-info {
-             font-size: 1rem;
-              margin-bottom: 10px;
-             color: #989494;
+        .battery-info {
+            font-size: 1rem;
+            margin-top: 10px; /* הוספנו מרווח עליון בין השעון למידע הסוללה */
+            color: #989494;
         }
         .clock {
             font-size: 3rem;
@@ -78,7 +78,7 @@
                 font-size: 1rem;
             }
         }
-        .contaibox {   
+        .contaibox {
             padding: 50px;
             color: #989494;
         }
@@ -88,7 +88,6 @@
     <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
 
     <div class="container">
         <audio id="audio-player">
@@ -100,7 +99,6 @@
             <source src="silent.mp3" type="audio/mpeg">
         </audio>
         
-        <div id="battery-info" class="battery-info"></div>
         <h4>רדיו נגיש עבור אבא</h4>
         <div>לחץ ובחר תחנה להאזנה</div>
         
@@ -110,6 +108,7 @@
             <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">גלי ישראל</button>
         </div>
         <div class="clock" id="clock"></div>
+        <div id="battery-info" class="battery-info"></div> <!-- מיקום חדש למידע הסוללה -->
     </div>
 
     <script>
@@ -124,42 +123,77 @@
         let currentStationButton = null;
         const silentAudio = document.getElementById('silent-audio');
         const batteryInfo = document.getElementById('battery-info');
+        let lastBatteryLevel = 100;
 
 
         // פונקציה שמקבלת מידע על סוללה
         async function updateBatteryStatus() {
-             try {
+            try {
                 if ('getBattery' in navigator) {
-                     const battery = await navigator.getBattery();
+                    const battery = await navigator.getBattery();
                     const level = Math.round(battery.level * 100);
                     const charging = battery.charging ? 'בטעינה' : 'לא בטעינה';
-                    const chargingTime = battery.chargingTime === Infinity ? 'לא זמין' : formatTime(battery.chargingTime);
-                     const dischargingTime = battery.dischargingTime === Infinity ? 'לא זמין' : formatTime(battery.dischargingTime);
-                     batteryInfo.textContent = `סוללה: ${level}% , מצב: ${charging}, זמן טעינה: ${chargingTime}, זמן פריקה: ${dischargingTime}`;
+                    batteryInfo.textContent = `סוללה: ${level}%, מצב: ${charging}`;
                     
-                     battery.addEventListener('chargingchange', () => {
+                    if (level <= 40 && lastBatteryLevel > 40) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    } else if (level <= 30 && lastBatteryLevel > 30) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    }  else if (level <= 20 && lastBatteryLevel > 20) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    } else if (level <= 10 && lastBatteryLevel > 10) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    } else if (level <= 5 && lastBatteryLevel > 5) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    } else if (level > 40 ) {
+                        lastBatteryLevel = level;
+                    }
+                    
+                    battery.addEventListener('chargingchange', () => {
                         updateBatteryStatus()
                     });
-                     battery.addEventListener('levelchange', () => {
+                    battery.addEventListener('levelchange', () => {
                         updateBatteryStatus()
                     });
                 } else {
                     batteryInfo.textContent = 'מצב סוללה לא נתמך.';
-                 }
-              } catch (error) {
-                 batteryInfo.textContent = 'שגיאה בקבלת מידע על סוללה.';
+                }
+            } catch (error) {
+                batteryInfo.textContent = 'שגיאה בקבלת מידע על סוללה.';
             }
         }
 
-        // פונקציה שממירה זמן בשניות לפורמט "שעות:דקות:שניות"
-       function formatTime(seconds) {
-              const hours = Math.floor(seconds / 3600);
-                const minutes = Math.floor((seconds % 3600) / 60);
-                const sec = Math.floor(seconds % 60);
-                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-          }
+        // פונקציה שמבצעת קריאת התראה קולית של הסוללה ומבקשת הטענה
+         async function speakBatteryAlert(level) {
+            if (isAnnouncing) return;
+            isAnnouncing = true;
+            const wasPlaying = !audioPlayer.paused;
+            const currentVolume = audioPlayer.volume;
 
-          // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
+             if (wasPlaying) {
+                 await fadeAudio(audioPlayer, currentVolume, 0, 500);
+             }
+
+            const utterance = new SpeechSynthesisUtterance(`שים לב, מצב הסוללה ${level} אחוז, יש להטעין את המכשיר`);
+            utterance.lang = 'he-IL';
+
+            await new Promise(resolve => {
+                 utterance.onend = resolve;
+                window.speechSynthesis.speak(utterance);
+            });
+             if (wasPlaying) {
+                 await fadeAudio(audioPlayer, 0, radioVolume, 500);
+             }
+
+             isAnnouncing = false;
+        }
+
+         // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator && !wakeLock) {
@@ -174,7 +208,7 @@
                 console.log(`${err.name}, ${err.message}`);
             }
         }
-    
+
          // פונקציה שמשחררת את ה "Wake Lock" ונותנת למסך לכבות
         async function releaseWakeLock(){
              if(wakeLock) {
@@ -195,7 +229,7 @@
 
         // פונקציה שמבצעת מעבר בין תחנות רדיו
         function switchStation(button) {
-              const url = button.getAttribute('data-url');
+            const url = button.getAttribute('data-url');
             if (currentStationButton === button) {
                 audioPlayer.pause();
                 audioPlayer.currentTime = 0;
@@ -204,7 +238,7 @@
                 return;
             }
             audioPlayer.src = url;
-             audioPlayer.volume = radioVolume;
+            audioPlayer.volume = radioVolume;
             audioPlayer.play();
             if (currentStationButton) {
                 currentStationButton.classList.remove('active');
@@ -255,7 +289,7 @@
         }
 
        // פונקציה שמבצעת את הכרזת השעה באופן אוטומטי כל שעה
-        function scheduleNextAnnouncement() {
+       function scheduleNextAnnouncement() {
             const now = new Date();
            const nextTime = new Date(now);
 
@@ -303,15 +337,14 @@
                 wakeLockInterval = null;
             }
          }
-         
-        // פונקציה לאתחול מחדש
+        
+         // פונקציה לאתחול מחדש
         function restartApp() {
              window.location.reload(true);
         }
-
         // פעולות עם טעינת הדף
         document.addEventListener('DOMContentLoaded', async () => {
-            updateBatteryStatus(); // לקריאה ראשונית של מצב הסוללה
+             updateBatteryStatus(); // לקריאה ראשונית של מצב הסוללה
             await requestWakeLock();
             startKeepAwake();
              if (!silentAudioStarted) {
@@ -325,23 +358,23 @@
             }
              scheduleNextAnnouncement();
             document.getElementById('clock').addEventListener('click', speakTime);
-             stationButtons.forEach(button => {
+            stationButtons.forEach(button => {
                 button.addEventListener('click', () => switchStation(button));
             });
             switchStation(document.getElementById('station-kan'));
             // אם האפליקציה נכנסה למצב שינה, נאתחל אותה מחדש.
-             document.addEventListener('visibilitychange', () => {
+            document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible' ) {
                      if (!wakeLock) {
-                        restartApp();
+                         restartApp();
                     }
                 }
-           });
+            });
         });
     </script>
      <div class="contaibox">
        <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
-        גרסה 5.6
+        גרסה 5.7
     </div>
 </body>
 </html>
