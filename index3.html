@@ -1,66 +1,98 @@
 <!DOCTYPE html>
-<html lang="he">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>שעון וכפתורי רדיו</title>
-    <style>
-        body {
-            text-align: center;
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        .radio-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        .clock-button {
-            font-size: 24px;
-            padding: 10px 20px;
-            margin-top: 20px;
-            cursor: pointer;
-            border: none;
-            background-color: #007BFF;
-            color: white;
-            border-radius: 5px;
-        }
-        .clock-button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+<title>שעון דיגיטלי מדבר</title>
+<style>
+  #clock {
+    font-size: 4em;
+    text-align: center;
+    cursor: pointer;
+    padding: 20px;
+    border: 1px solid #ccc;
+    width: 200px;
+    margin: 50px auto;
+  }
+</style>
 </head>
 <body>
-    <div class="container">
-        <button id="clock" class="clock-button">⏰ לחץ לשעה</button>
-        <div class="radio-group">
-            <label><input type="radio" name="option" value="1"> אפשרות 1</label>
-            <label><input type="radio" name="option" value="2"> אפשרות 2</label>
-            <label><input type="radio" name="option" value="3"> אפשרות 3</label>
-        </div>
-    </div>
 
-    <script>
-        document.getElementById("clock").addEventListener("click", function() {
-            const now = new Date();
-            const hours = now.getHours();
-            const minutes = now.getMinutes();
-            const timeString = `השעה היא ${hours} ו-${minutes} דקות`;
-            
-            if ('speechSynthesis' in window) {
-                const utterance = new SpeechSynthesisUtterance(timeString);
-                utterance.lang = 'he-IL';
-                speechSynthesis.speak(utterance);
-            } else {
-                alert(timeString);
-            }
-        });
-    </script>
+<div id="clock"></div>
+
+<script>
+  function updateClock() {
+    const now = new Date();
+    let hours = now.getHours();
+    const minutes = now.getMinutes();
+    const seconds = now.getSeconds();
+
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+
+    const timeString = hours.toString().padStart(2, '0') + ':' +
+                       minutes.toString().padStart(2, '0') + ':' +
+                       seconds.toString().padStart(2, '0') + ' ' + ampm;
+
+    document.getElementById('clock').textContent = timeString;
+
+    // Hourly chime
+    if (minutes === 0 && seconds === 0) {
+      speakTime();
+    }
+  }
+
+  function speakTime() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+
+    let hourText = "";
+
+    switch (hours) {
+        case 0: hourText = "שתים עשרה"; break;
+        case 1: hourText = "אחת"; break;
+        case 2: hourText = "שתיים"; break;
+        case 3: hourText = "שלוש"; break;
+        case 4: hourText = "ארבע"; break;
+        case 5: hourText = "חמש"; break;
+        case 6: hourText = "שש"; break;
+        case 7: hourText = "שבע"; break;
+        case 8: hourText = "שמונה"; break;
+        case 9: hourText = "תשע"; break;
+        case 10: hourText = "עשר"; break;
+        case 11: hourText = "אחת עשרה"; break;
+        case 12: hourText = "שתים עשרה"; break;
+        case 13: hourText = "אחת"; break;
+        case 14: hourText = "שתיים"; break;
+        case 15: hourText = "שלוש"; break;
+        case 16: hourText = "ארבע"; break;
+        case 17: hourText = "חמש"; break;
+        case 18: hourText = "שש"; break;
+        case 19: hourText = "שבע"; break;
+        case 20: hourText = "שמונה"; break;
+        case 21: hourText = "תשע"; break;
+        case 22: hourText = "עשר"; break;
+        case 23: hourText = "אחת עשרה"; break;
+    }
+
+    let minuteText = "";
+    if (minutes > 0) {
+      minuteText = " ו" + minutes + " דקות"; // Corrected to include "דקות"
+    }
+
+    const textToSpeak = "השעה " + hourText + minuteText;
+
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = 'he-IL';
+    speechSynthesis.speak(utterance);
+  }
+
+  document.getElementById('clock').addEventListener('click', speakTime);
+
+  updateClock(); // Initial call
+  setInterval(updateClock, 1000); // Update every second
+</script>
+
 </body>
 </html>
