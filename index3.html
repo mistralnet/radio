@@ -3,211 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>אפליקציית תחנות רדיו</title>
-    <link rel="icon" href="icon.png" type="image/png">
-    <link rel="apple-touch-icon" href="icon.png">
+    <title>שעון וכפתורי רדיו</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
             text-align: center;
-            direction: rtl;
-            margin: 0;
-            padding: 1rem;
-            background-color: #000;
-            color: #fff;
+            font-family: Arial, sans-serif;
         }
-
         .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding-top: 20px;
-        }
-
-        .battery-info {
-            font-size: 1rem;
-            margin-top: 10px;
-            color: #989494;
-        }
-
-        .clock {
-            font-size: 3rem;
-            font-weight: bold;
-            background-color: #FFD700;
-            color: black;
-            padding: 10px;
-            border-radius: 10px;
-            display: inline-block;
-            margin-top: 20px;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s ease;
-        }
-
-        .clock:hover {
-            transform: scale(1.05);
-            background-color: #FFC107;
-        }
-
-        .clock:active {
-            transform: scale(0.95);
-        }
-
-        .station-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            justify-content: center;
-            margin: 20px 0;
-        }
-
-        .station-button {
-            background: #E91E63;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            aspect-ratio: 1/1;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.3s ease;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            text-align: center;
-            padding: 10px;
+            height: 100vh;
         }
-
-        .station-button:hover {
-            background-color: #D81B60;
-            transform: scale(1.05);
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
         }
-
-        .station-button.active {
-            background: #4CAF50;
+        .clock-button {
+            font-size: 24px;
+            padding: 10px 20px;
+            margin-top: 20px;
+            cursor: pointer;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            border-radius: 5px;
         }
-
-        @media (max-width: 480px) {
-            .station-button {
-                font-size: 1rem;
-            }
-        }
-
-        .contaibox {
-            padding: 50px;
-            color: #989494;
+        .clock-button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <audio id="audio-player">
-            <source src="" type="audio/mpeg">
-            הדפדפן שלך לא תומך בהשמעת אודיו.
-        </audio>
-
-        <audio id="silent-audio" loop>
-            <source src="silent.mp3" type="audio/mpeg">
-        </audio>
-        
-        <h4>רדיו נגיש עבור אבא</h4>
-        <div>לחץ ובחר תחנה להאזנה</div>
-
-        <div class="station-buttons">
-            <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">כאן ב'</button>
-            <button class="station-button" id="station-glz" data-url="http://glzwizzlv.bynetcdn.com/glz_mp3">גלי צה"ל</button>
-            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">גלי ישראל</button>
+        <button id="clock" class="clock-button">⏰ לחץ לשעה</button>
+        <div class="radio-group">
+            <label><input type="radio" name="option" value="1"> אפשרות 1</label>
+            <label><input type="radio" name="option" value="2"> אפשרות 2</label>
+            <label><input type="radio" name="option" value="3"> אפשרות 3</label>
         </div>
-
-        <div id="clock" class="clock">00:00</div>
-        <div id="battery-info" class="battery-info"></div>
     </div>
 
     <script>
-        // Global variables
-        let isAnnouncing = false;
-        let radioVolume = 1.0;
-        const audioPlayer = document.getElementById('audio-player');
-        const stationButtons = document.querySelectorAll('.station-button');
-        let currentStationButton = null;
-
-        // Speak time with Hebrew words
-        function speakHebrew(timeString) {
-            // Convert hour to Hebrew words
-            const hourToHebrew = {
-                '00': 'חצות', '01': 'אחת', '02': 'שתיים', '03': 'שלוש', 
-                '04': 'ארבע', '05': 'חמש', '06': 'שש', '07': 'שבע', 
-                '08': 'שמונה', '09': 'תשע', '10': 'עשר', '11': 'אחת עשרה', 
-                '12': 'שתיים עשרה', '13': 'אחת עשרה', '14': 'שתיים עשרה', 
-                '15': 'שלוש עשרה', '16': 'ארבע עשרה', '17': 'חמש עשרה', 
-                '18': 'שש עשרה', '19': 'שבע עשרה', '20': 'שמונה עשרה', 
-                '21': 'תשע עשרה', '22': 'עשרים', '23': 'אחת עשרה'
-            };
-
-            const minutesToHebrew = {
-                '00': 'בדיוק', 
-                '15': 'ורבע', 
-                '30': 'וחצי', 
-                '45': 'פחות רבע'
-            };
-
-            const [hours, minutes] = timeString.split(':');
-            const hebrewHour = hourToHebrew[hours] || hours;
-            const hebrewMinute = minutesToHebrew[minutes] || '';
-
-            const fullTimePhrase = `השעה היא ${hebrewHour} ${hebrewMinute}`;
-
-            const utterance = new SpeechSynthesisUtterance(fullTimePhrase);
-            utterance.lang = 'he-IL';
-            window.speechSynthesis.speak(utterance);
-        }
-
-        // Update clock
-        function updateClock() {
+        document.getElementById("clock").addEventListener("click", function() {
             const now = new Date();
-            let hours = now.getHours().toString().padStart(2, '0');
-            let minutes = now.getMinutes().toString().padStart(2, '0');
-            document.getElementById('clock').textContent = `${hours}:${minutes}`;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        // Clock click handler
-        document.getElementById('clock').addEventListener('click', function() {
-            const timeString = this.textContent;
-            speakHebrew(timeString);
-        });
-
-        // Station switching logic
-        function switchStation(button) {
-            const url = button.getAttribute('data-url');
-            if (currentStationButton === button) {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
-                button.classList.remove('active');
-                currentStationButton = null;
-                return;
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            const timeString = `השעה היא ${hours} ו-${minutes} דקות`;
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(timeString);
+                utterance.lang = 'he-IL';
+                speechSynthesis.speak(utterance);
+            } else {
+                alert(timeString);
             }
-            audioPlayer.src = url;
-            audioPlayer.volume = radioVolume;
-            audioPlayer.play();
-            if (currentStationButton) {
-                currentStationButton.classList.remove('active');
-            }
-            button.classList.add('active');
-            currentStationButton = button;
-        }
-
-        // Initialize first station
-        document.addEventListener('DOMContentLoaded', () => {
-            stationButtons.forEach(button => {
-                button.addEventListener('click', () => switchStation(button));
-            });
-            switchStation(document.getElementById('station-kan'));
         });
     </script>
-    
-    <div class="contaibox">
-        גרסה
-       6.1
-    </div>
 </body>
 </html>
