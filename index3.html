@@ -45,7 +45,7 @@
         .clock {
             font-size: 3rem;
             font-weight: bold;
-            background-color: yellow;
+        
             color: black;
             padding: 10px;
             border-radius: 10px;
@@ -54,6 +54,7 @@
             cursor: pointer; /* סמן עכבר של כפתור */
             user-select: none; /* מונע סימון טקסט */
         }
+
         .station-buttons {
             display: flex;
             justify-content: center;
@@ -76,10 +77,11 @@
             object-fit: cover; /* מבטיח שהתמונה תכסה את כל הכפתור */
             display: block; /* מונע מרווחים לא רצויים מתחת לתמונה */
         }
-        .station-button.active {
-  border-color: #ffff00;
-    background: #ffff00;
+        .station-button.active, .clock  {
+  border-color: red;
+    background:red;
         }
+ 
         @media (max-width: 480px) {
             .station-button {
                 width: 100px;
