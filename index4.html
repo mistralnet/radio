@@ -1,7 +1,3 @@
-אני רוצה שהקוד הבא יעבוד גם בטלפון נייד במצב מאוזן ומאונך שיהיה סימטרי ונוח לשימוש על ידי המשתמש.
-
-
-
 <!DOCTYPE html>
 <html lang="he">
 <head>
@@ -21,77 +17,115 @@
     })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
     <!-- סוף Google Tag Manager -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>אפליקציית תחנות רדיו</title>
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     <style>
+        /* משתנים CSS לשימוש חוזר ונוחות שינוי */
+        :root {
+            --main-font: Arial, sans-serif;
+            --main-bg-color: #000;
+            --main-text-color: #fff;
+            --secondary-text-color: #989494;
+            --highlight-color: #ffff00;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: var(--main-font);
             text-align: center;
             direction: rtl;
             margin: 0;
-            padding: 1rem;
-            background-color: #000;
-            color: #fff;
+            padding: 0; /* הסרנו את ה padding כאן */
+            background-color: var(--main-bg-color);
+            color: var(--main-text-color);
+            display: flex;  /*Flexbox כדי למרכז תוכן אנכית*/
+            flex-direction: column;
+            min-height: 100vh; /*גובה מינימלי של המסך*/
         }
+
         .container {
             max-width: 600px;
-            margin: 0 auto;
-            padding-top: 20px;
+            margin: auto; /*מרכוז אוטומטי אופקית ואנכית */
+            padding: 20px; /*הוספנו padding פנימי*/
+            flex: 1; /*תופס את כל המקום הפנוי בגובה*/
+            display: flex;
+            flex-direction: column;
+            align-items: center; /*מרכוז אופקי של פריטים בתוך הקונטיינר*/
         }
+
         .battery-info {
             font-size: 1rem;
-            margin-top: 10px; /* הוספנו מרווח עליון בין השעון למידע הסוללה */
-            color: #989494;
+            margin-top: 10px;
+            color: var(--secondary-text-color);
         }
+
         .clock {
             font-size: 3rem;
             font-weight: bold;
-            background-color: yellow;
+            background-color: var(--highlight-color);
             color: black;
             padding: 10px;
             border-radius: 10px;
             display: inline-block;
             margin-top: 20px;
-            cursor: pointer; /* סמן עכבר של כפתור */
-            user-select: none; /* מונע סימון טקסט */
+            cursor: pointer;
+            user-select: none;
         }
+
         .station-buttons {
             display: flex;
             justify-content: center;
             gap: 10px;
             margin: 20px 0;
+            flex-wrap: wrap; /*מאפשר לכפתורים לעבור לשורה חדשה אם אין מקום*/
         }
+
         .station-button {
             width: 120px;
             height: 120px;
             cursor: pointer;
             border-radius: 8px;
-            overflow: hidden; /* כדי שהתמונה לא תצא מגבולות הכפתור */
-            border: 4px solid  ;
-            box-sizing: border-box; /* כולל את הגבול בתוך הגודל של הכפתור */
-            padding: 0; /* הסרת ריפוד כדי שהתמונה תמלא את הכפתור */
+            overflow: hidden;
+            border: 4px solid transparent; /*הגדרת שקוף כברירת מחדל*/
+            box-sizing: border-box;
+            padding: 0;
+            transition: border-color 0.3s ease; /*מעבר חלק של שינוי צבע הגבול*/
         }
+
         .station-button img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* מבטיח שהתמונה תכסה את כל הכפתור */
-            display: block; /* מונע מרווחים לא רצויים מתחת לתמונה */
+            object-fit: cover;
+            display: block;
         }
+
         .station-button.active {
-  border-color: #ffff00;
-    background: #ffff00;
+            border-color: var(--highlight-color);
+            /*  background: var(--highlight-color); כבר לא נדרש כי יש גבול צבע */
         }
+
         @media (max-width: 480px) {
             .station-button {
-                width: 100px;
-                height: 100px;
+                width: 90px; /*הקטנה קלה של הכפתורים במסכים קטנים*/
+                height: 90px;
+            }
+
+            .clock {
+                font-size: 2rem; /*הקטנת השעון במסכים קטנים*/
             }
         }
+
         .contaibox {
-            padding: 50px;
-            color: #989494;
+            padding: 20px;
+            color: var(--secondary-text-color);
+            text-align: center; /*מרכוז הטקסט*/
+            margin-top: auto; /*דחיפה לתחתית*/
+        }
+
+        .contailink {
+            text-align: center;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -126,6 +160,14 @@
         </div>
         <div class="clock" id="clock"></div>
         <div id="battery-info" class="battery-info"></div> <!-- מיקום חדש למידע הסוללה -->
+    </div>
+
+     <div class="contaibox">
+       <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
+        גרסה 6
+    </div>
+     <div class="contailink">
+<p><a href="https://mistralnet.github.io/radio/index3.html">V-test</a></p>
     </div>
 
     <script>
@@ -389,14 +431,7 @@
             });
         });
     </script>
-     <div class="contaibox">
-       <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
-      גרסה
-         6.1
-    </div>
-     <div class="contailink">
-<p><a href="https://mistralnet.github.io/radio/index3.html">V-test</a></p>
-    </div>
+   
     
 </body>
 </html>
