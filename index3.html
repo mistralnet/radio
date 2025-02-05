@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="he">
 <head>
@@ -60,23 +61,29 @@
             margin: 20px 0;
         }
         .station-button {
-            background: #E91E63;
-            color: white;
-            border: none;
-            border-radius: 8px;
             width: 120px;
             height: 120px;
             cursor: pointer;
-            font-size: 1.2rem;
+            border-radius: 8px;
+            overflow: hidden; /* כדי שהתמונה לא תצא מגבולות הכפתור */
+            border: 4px solid  ;
+            box-sizing: border-box; /* כולל את הגבול בתוך הגודל של הכפתור */
+            padding: 0; /* הסרת ריפוד כדי שהתמונה תמלא את הכפתור */
         }
-        .active {
-            background: #4CAF50;
+        .station-button img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* מבטיח שהתמונה תכסה את כל הכפתור */
+            display: block; /* מונע מרווחים לא רצויים מתחת לתמונה */
+        }
+        .station-button.active {
+  border-color: #ffff00;
+    background: #ffff00;
         }
         @media (max-width: 480px) {
             .station-button {
                 width: 100px;
                 height: 100px;
-                font-size: 1rem;
             }
         }
         .contaibox {
@@ -104,9 +111,15 @@
         <div>לחץ ובחר תחנה להאזנה</div>
         
         <div class="station-buttons">
-            <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">כאן ב'</button>
-            <button class="station-button" id="station-glz" data-url="http://glzwizzlv.bynetcdn.com/glz_mp3">גלי צה"ל</button>
-            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">גלי ישראל</button>
+            <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">
+                <img src="kan_logo.png" alt="כאן ב'">
+            </button>
+            <button class="station-button" id="station-glz" data-url="http://glzwizzlv.bynetcdn.com/glz_mp3">
+                <img src="glz_logo.png" alt="גלי צהל">
+            </button>
+            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
+                <img src="glyisrael_logo.png" alt="גלי ישראל">
+            </button>
         </div>
         <div class="clock" id="clock"></div>
         <div id="battery-info" class="battery-info"></div> <!-- מיקום חדש למידע הסוללה -->
@@ -375,7 +388,7 @@
     </script>
      <div class="contaibox">
        <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
-        גרסה 5.9
+        גרסה 6
     </div>
      <div class="contailink">
 <p><a href="https://mistralnet.github.io/radio/index3.html">V-test</a></p>
