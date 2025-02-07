@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="he">
 <head>
@@ -18,41 +17,60 @@
     })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
     <!-- סוף Google Tag Manager -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>אפליקציית תחנות רדיו</title>
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     <style>
+        /* משתנים CSS לשימוש חוזר ונוחות שינוי */
+        :root {
+            --main-font: Arial, sans-serif;
+            --main-bg-color: #000;
+            --main-text-color: #fff;
+            --secondary-text-color: #989494;
+            --highlight-color: #ffff00;
+        }
+
         body {
-            font-family: Arial, sans-serif;
+            font-family: var(--main-font);
             text-align: center;
             direction: rtl;
             margin: 0;
-            padding: 1rem;
-            background-color: #000;
-            color: #fff;
+            padding: 0;
+            background-color: var(--main-bg-color);
+            color: var(--main-text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
+
         .container {
             max-width: 600px;
-            margin: 0 auto;
-            padding-top: 20px;
+            margin: auto;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
+
         .battery-info {
             font-size: 1rem;
-            margin-top: 10px; /* הוספנו מרווח עליון בין השעון למידע הסוללה */
-            color: #989494;
+            margin-top: 10px;
+            color: var(--secondary-text-color);
         }
+
         .clock {
             font-size: 3rem;
             font-weight: bold;
-        
+            background-color: var(--highlight-color);
             color: black;
             padding: 10px;
             border-radius: 10px;
             display: inline-block;
             margin-top: 20px;
-            cursor: pointer; /* סמן עכבר של כפתור */
-            user-select: none; /* מונע סימון טקסט */
+            cursor: pointer;
+            user-select: none;
         }
 
         .station-buttons {
@@ -60,37 +78,59 @@
             justify-content: center;
             gap: 10px;
             margin: 20px 0;
+            flex-wrap: wrap;
         }
+
         .station-button {
             width: 120px;
             height: 120px;
             cursor: pointer;
             border-radius: 8px;
-            overflow: hidden; /* כדי שהתמונה לא תצא מגבולות הכפתור */
-            border: 4px solid  ;
-            box-sizing: border-box; /* כולל את הגבול בתוך הגודל של הכפתור */
-            padding: 0; /* הסרת ריפוד כדי שהתמונה תמלא את הכפתור */
+            overflow: hidden;
+            border: 4px solid transparent;
+            box-sizing: border-box;
+            padding: 0;
+            transition: border-color 0.3s ease;
         }
+
         .station-button img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* מבטיח שהתמונה תכסה את כל הכפתור */
-            display: block; /* מונע מרווחים לא רצויים מתחת לתמונה */
+            object-fit: cover;
+            display: block;
         }
-        .station-button.active, .clock  {
-  border-color: red;
-    background:red;
+
+        .station-button.active {
+            border-color: var(--highlight-color);
+           background: var(--highlight-color);  
         }
- 
+
         @media (max-width: 480px) {
             .station-button {
-                width: 100px;
-                height: 100px;
+                width: 90px;
+                height: 90px;
+            }
+
+            .clock {
+                font-size: 2rem;
             }
         }
+
         .contaibox {
-            padding: 50px;
-            color: #989494;
+            padding: 20px;
+            color: var(--secondary-text-color);
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .contailink {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .container h4 {        
+            padding: 0;
+            margin: 0;
         }
     </style>
 </head>
@@ -124,11 +164,21 @@
             </button>
         </div>
         <div class="clock" id="clock"></div>
-        <div id="battery-info" class="battery-info"></div> <!-- מיקום חדש למידע הסוללה -->
+        <div id="battery-info" class="battery-info"></div>
+    </div>
+
+     <div class="contaibox">
+       <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
+        גרסה
+         6.2
+    </div>
+     <div class="contailink">
+        <p><a href="https://mistralnet.github.io/radio/">Home</a>
+        <a href="https://mistralnet.github.io/radio/index4.html">4-test</a></p>
     </div>
 
     <script>
-       // משתנים גלובליים
+        // משתנים גלובליים
         let isAnnouncing = false;
         let radioVolume = 1.0;
         let wakeLock = null;
@@ -140,7 +190,6 @@
         const silentAudio = document.getElementById('silent-audio');
         const batteryInfo = document.getElementById('battery-info');
         let lastBatteryLevel = 100;
-
 
         // פונקציה שמקבלת מידע על סוללה
         async function updateBatteryStatus() {
@@ -215,7 +264,7 @@
                 if ('wakeLock' in navigator && !wakeLock) {
                     wakeLock = await navigator.wakeLock.request('screen');
                     wakeLock.addEventListener('release', () => {
-                         if (wakeLock) { // הבדיקה של וייק לוק עדיין קיים, ולכן ממשיכים לבקש אותו
+                         if (wakeLock) {
                             requestWakeLock()
                          }
                     });
@@ -261,6 +310,11 @@
             }
             button.classList.add('active');
             currentStationButton = button;
+
+            // הוספת רטט בלחיצה על כפתור במכשיר נייד
+            if ('vibrate' in navigator && /Mobi/.test(navigator.userAgent)) {
+                navigator.vibrate(50); // רטט קל של 50 מילישניות
+            }
         }
         
          // פונקציה שמבצעת קריאת השעה בקול
@@ -309,7 +363,6 @@
             const now = new Date();
            const nextTime = new Date(now);
 
-             //חשוב -  להגדיר גם שניות ומלישניות ל 0 כדי לקבל זמן מדוייק ללא חריגה בשניות
             nextTime.setMinutes(0, 0, 0);
            nextTime.setMilliseconds(0);
              nextTime.setHours(nextTime.getHours() + 1);
@@ -317,8 +370,8 @@
              const nextHour = nextTime.getHours();
              
              if (nextHour >= 9 && nextHour < 21) {
-                let delay = nextTime.getTime() - now.getTime(); // חישוב ההפרש
-                 if (delay < 0) { // אם החישוב שלילי (קורה במקרים נדירים מאוד) נגדיר ל שעה הבאה
+                let delay = nextTime.getTime() - now.getTime();
+                 if (delay < 0) {
                     nextTime.setHours(nextTime.getHours() + 1);
                       delay = nextTime.getTime() - now.getTime();
                  }
@@ -340,10 +393,10 @@
         function startKeepAwake() {
             if (!wakeLockInterval) {
                 wakeLockInterval = setInterval(async () => {
-                     if (wakeLock) { // אם יש וייק לוק, ממשיכים לנסות לבקש אותו
+                     if (wakeLock) {
                          await requestWakeLock()
                     }
-                }, 15 * 1000); // בקשה כל 15 שניות
+                }, 15 * 1000);
              }
         }
 
@@ -358,9 +411,10 @@
         function restartApp() {
              window.location.reload(true);
         }
+
         // פעולות עם טעינת הדף
         document.addEventListener('DOMContentLoaded', async () => {
-             updateBatteryStatus(); // לקריאה ראשונית של מצב הסוללה
+             updateBatteryStatus();
             await requestWakeLock();
             startKeepAwake();
              if (!silentAudioStarted) {
@@ -378,7 +432,6 @@
                 button.addEventListener('click', () => switchStation(button));
             });
             switchStation(document.getElementById('station-kan'));
-            // אם האפליקציה נכנסה למצב שינה, נאתחל אותה מחדש.
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible' ) {
                      if (!wakeLock) {
@@ -388,13 +441,8 @@
             });
         });
     </script>
-     <div class="contaibox">
-       <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
-        גרסה 6
-    </div>
-     <div class="contailink">
-<p><a href="https://mistralnet.github.io/radio/index3.html">V-test</a></p>
-    </div>
-    
+   
+    <!-- קובץ ה-Widget -->
+    <script src="widget.js"></script>
 </body>
 </html>
