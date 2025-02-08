@@ -106,7 +106,7 @@
 
         .station-button.active {
             border-color: var(--highlight-color);
-           background: var(--highlight-color);
+            background: var(--highlight-color);
         }
 
         @media (max-width: 480px) {
@@ -178,7 +178,7 @@
 
     <div class="container">
         <audio id="audio-player">
-            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
+            <source src="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio" type="audio/mpeg">
             הדפדפן שלך לא תומך בהשמעת אודיו.
         </audio>
         <!-- הוספת אודיו שקט -->
@@ -190,13 +190,7 @@
         <div>לחץ ובחר תחנה להאזנה</div>
 
         <div class="station-buttons">
-            <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">
-                <img src="kan_logo.png" alt="כאן ב'">
-            </button>
-            <button class="station-button" id="station-glz" data-url="http://glzwizzlv.bynetcdn.com/glz_mp3">
-                <img src="glz_logo.png" alt="גלי צהל">
-            </button>
-            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
+            <button class="station-button" id="station-glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
                 <img src="glyisrael_logo.png" alt="גלי ישראל">
             </button>
         </div>
@@ -211,15 +205,13 @@
         <div id="battery-info" class="battery-info"></div>
     </div>
 
-     <div class="contaibox">
+    <div class="contaibox">
         גרסה
-      6.2
-      
+        6.2
     </div>
-     <div class="contailink">
-<p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
-<a href="https://mistralnet.github.io/radio/index4.html">4-test</a>
-</p>
+    <div class="contailink">
+        <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
+        <a href="https://mistralnet.github.io/radio/index4.html">4-test</a></p>
     </div>
 
     <script>
@@ -253,311 +245,71 @@
                     } else if (level <= 30 && lastBatteryLevel > 30) {
                         speakBatteryAlert(level);
                         lastBatteryLevel = level;
-                    }  else if (level <= 20 && lastBatteryLevel > 20) {
-                        speakBatteryAlert(level);
-                        lastBatteryLevel = level;
-                    } else if (level <= 10 && lastBatteryLevel > 10) {
-                        speakBatteryAlert(level);
-                        lastBatteryLevel = level;
-                    } else if (level <= 5 && lastBatteryLevel > 5) {
-                        speakBatteryAlert(level);
-                        lastBatteryLevel = level;
-                    } else if (level > 40 ) {
-                        lastBatteryLevel = level;
                     }
-
-                    battery.addEventListener('chargingchange', () => {
-                        updateBatteryStatus()
-                    });
-                    battery.addEventListener('levelchange', () => {
-                        updateBatteryStatus()
-                    });
-                } else {
-                    batteryInfo.textContent = 'מצב סוללה לא נתמך.';
                 }
             } catch (error) {
-                batteryInfo.textContent = 'שגיאה בקבלת מידע על סוללה.';
+                console.error("שגיאה בקבלת מצב הסוללה:", error);
             }
         }
 
-        // פונקציה שמבצעת קריאת התראה קולית של הסוללה ומבקשת הטענה
-         async function speakBatteryAlert(level) {
-            if (isAnnouncing) return;
-            isAnnouncing = true;
-            const wasPlaying = !audioPlayer.paused;
-            const currentVolume = audioPlayer.volume;
-
-             if (wasPlaying) {
-                 await fadeAudio(audioPlayer, currentVolume, 0, 500);
-             }
-
-            const utterance = new SpeechSynthesisUtterance(`שים לב, מצב הסוללה ${level} אחוז, יש להטעין את המכשיר`);
-            utterance.lang = 'he-IL';
-
-            await new Promise(resolve => {
-                 utterance.onend = resolve;
-                window.speechSynthesis.speak(utterance);
-            });
-             if (wasPlaying) {
-                 await fadeAudio(audioPlayer, 0, radioVolume, 500);
-             }
-
-             isAnnouncing = false;
+        // פונקציה שמפנה למתחם שידור
+        function speakBatteryAlert(level) {
+            if (!isAnnouncing) {
+                isAnnouncing = true;
+                const message = new SpeechSynthesisUtterance(`הסוללה ירדה ל-${level}%.`);
+                message.onend = () => isAnnouncing = false;
+                speechSynthesis.speak(message);
+            }
         }
 
-         // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator && !wakeLock) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    wakeLock.addEventListener('release', () => {
-                         if (wakeLock) { // הבדיקה של וייק לוק עדיין קיים, ולכן ממשיכים לבקש אותו
-                            requestWakeLock()
-                         }
-                    });
+        // עדכון השעה
+        function updateTime() {
+            const now = new Date();
+            const hour = String(now.getHours()).padStart(2, '0');
+            const minute = String(now.getMinutes()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hour}:${minute}`;
+        }
+
+        // הגדרת פונקציות המתחילים והפסקת התחנות
+        stationButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // ניהול הפסקת השידור
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    button.classList.add('active');
+                } else {
+                    audioPlayer.pause();
+                    button.classList.remove('active');
                 }
-            } catch (err) {
-                console.log(`${err.name}, ${err.message}`);
-            }
-        }
-
-         // פונקציה שמשחררת את ה "Wake Lock" ונותנת למסך לכבות
-        async function releaseWakeLock(){
-             if(wakeLock) {
-                await wakeLock.release()
-                wakeLock = null;
-             }
-        }
-
-        // פונקציה שמעדכנת את השעה כל שנייה ומציגה אותה על המסך
-        function updateClock() {
-            const now = new Date();
-            let hours = now.getHours();
-            let minutes = now.getMinutes().toString().padStart(2, '0');
-            document.getElementById('clock').textContent = `${hours}:${minutes}`;
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        // פונקציה שמבצעת מעבר בין תחנות רדיו
-        function switchStation(button) {
-            const url = button.getAttribute('data-url');
-            if (currentStationButton === button) {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
-                button.classList.remove('active');
-                currentStationButton = null;
-                return;
-            }
-            audioPlayer.src = url;
-            audioPlayer.volume = radioVolume;
-            audioPlayer.play();
-            if (currentStationButton) {
-                currentStationButton.classList.remove('active');
-            }
-            button.classList.add('active');
-            currentStationButton = button;
-        }
-
-         // פונקציה שמבצעת קריאת השעה בקול
-        async function speakTime() {
-            if (isAnnouncing) return;
-
-             isAnnouncing = true;
-             const wasPlaying = !audioPlayer.paused;
-             const currentVolume = audioPlayer.volume;
-
-            if (wasPlaying) {
-                await fadeAudio(audioPlayer, currentVolume, 0, 500);
-            }
-
-            const timeString = document.getElementById('clock').textContent;
-            const utterance = new SpeechSynthesisUtterance(`השעה היא ${timeString}`);
-            utterance.lang = 'he-IL';
-
-             await new Promise(resolve => {
-                utterance.onend = resolve;
-                 window.speechSynthesis.speak(utterance);
-             });
-
-            if (wasPlaying) {
-                audioPlayer.volume = 0;
-                await fadeAudio(audioPlayer, 0, radioVolume, 500);
-            }
-
-           isAnnouncing = false;
-        }
-
-         // פונקציה שמבצעת הדהייה של עוצמת הקול
-        async function fadeAudio(audioElement, start, end, duration) {
-            const steps = 20;
-            const stepDuration = duration / steps;
-            const volumeStep = (end - start) / steps;
-
-           for (let i = 0; i <= steps; i++) {
-                 audioElement.volume = start + (volumeStep * i);
-                await new Promise(resolve => setTimeout(resolve, stepDuration));
-            }
-        }
-
-       // פונקציה שמבצעת את הכרזת השעה באופן אוטומטי כל שעה
-       function scheduleNextAnnouncement() {
-            const now = new Date();
-           const nextTime = new Date(now);
-
-             //חשוב -  להגדיר גם שניות ומלישניות ל 0 כדי לקבל זמן מדוייק ללא חריגה בשניות
-            nextTime.setMinutes(0, 0, 0);
-           nextTime.setMilliseconds(0);
-             nextTime.setHours(nextTime.getHours() + 1);
-
-             const nextHour = nextTime.getHours();
-
-             if (nextHour >= 9 && nextHour < 21) {
-                let delay = nextTime.getTime() - now.getTime(); // חישוב ההפרש
-                 if (delay < 0) { // אם החישוב שלילי (קורה במקרים נדירים מאוד) נגדיר ל שעה הבאה
-                    nextTime.setHours(nextTime.getHours() + 1);
-                      delay = nextTime.getTime() - now.getTime();
-                 }
-
-               setTimeout(() => {
-                    speakTime();
-                     scheduleNextAnnouncement();
-                }, delay);
-             } else {
-                 const tomorrow = new Date(now);
-                     tomorrow.setDate(tomorrow.getDate() + 1);
-                    tomorrow.setHours(9, 0, 0, 0);
-                     tomorrow.setMilliseconds(0);
-                const delay = tomorrow.getTime() - now.getTime();
-                 setTimeout(scheduleNextAnnouncement, delay);
-           }
-       }
-
-        function startKeepAwake() {
-            if (!wakeLockInterval) {
-                wakeLockInterval = setInterval(async () => {
-                     if (wakeLock) { // אם יש וייק לוק, ממשיכים לנסות לבקש אותו
-                         await requestWakeLock()
-                    }
-                }, 15 * 1000); // בקשה כל 15 שניות
-             }
-        }
-
-        function stopKeepAwake() {
-              if (wakeLockInterval) {
-                clearInterval(wakeLockInterval);
-                wakeLockInterval = null;
-            }
-         }
-
-         // פונקציה לאתחול מחדש
-        function restartApp() {
-             window.location.reload(true);
-        }
-
-        //Chromecast
-        let castSession = null;
-
-        function initializeCastApi() {
-            cast.framework.CastContext.getInstance().setOptions({
-                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-            });
-
-            cast.framework.CastContext.getInstance().addEventListener(
-                cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
-                function(event) {
-                    switch (event.sessionState) {
-                        case cast.framework.SessionState.SESSION_STARTED:
-                            console.log('Cast Session Started');
-                            castSession = cast.framework.CastContext.getInstance().getCurrentSession();
-                            loadMedia();
-                            break;
-                        case cast.framework.SessionState.SESSION_ENDED:
-                            console.log('Cast Session Ended');
-                            castSession = null;
-                            break;
-                    }
-                });
-        }
-
-        chromecastButton.addEventListener('click', function() {
-            chromecastError.textContent = ""; // Clear any previous errors
-            cast.framework.CastContext.getInstance().requestSession()
-            .then(function(session) {
-                console.log('Session started: ' + session.sessionId);
-                castSession = session;
-                loadMedia();
-            })
-            .catch(function(error) {
-                console.log('Error starting session', error);
-                chromecastError.textContent = "שגיאה בהתחלת חיבור ל-Chromecast: " + error.message;
             });
         });
 
-        function loadMedia() {
-            if (!castSession) {
-                console.log('No cast session available');
-                chromecastError.textContent = "אין חיבור Chromecast פעיל.";
-                return;
-            }
-
-            const mediaInfo = new chrome.cast.media.MediaInfo(audioPlayer.src, 'audio/mpeg');
-            mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-            mediaInfo.metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
-            mediaInfo.metadata.title = 'Radio Station';
-            mediaInfo.metadata.subtitle = 'Playing from Radio App';
-
-            const request = new chrome.cast.media.LoadRequest(mediaInfo);
-            request.autoplay = true; // Ensure media starts playing automatically
-            castSession.loadMedia(request).then(
-                function() {
-                     console.log('Media loaded successfully');
-                     chromecastError.textContent = ""; // Clear any previous errors
-                },
-                function(errorCode) {
-                     console.log('Error loading media: ' + errorCode);
-                     chromecastError.textContent = "שגיאה בטעינת המדיה ל-Chromecast: " + errorCode;
-                }
-            );
-        }
-
-        // פעולות עם טעינת הדף
-        document.addEventListener('DOMContentLoaded', async () => {
-             updateBatteryStatus(); // לקריאה ראשונית של מצב הסוללה
-            await requestWakeLock();
-            startKeepAwake();
-             if (!silentAudioStarted) {
-                    silentAudio.play().then(() => {
-                        silentAudio.volume = 0;
-                         silentAudioStarted = true;
-                     console.log("Silence track started.");
-                  }).catch(error => {
-                        console.error("Error playing silent track:", error);
+        //  Streaming audio 
+        function initChromecast() {
+            if (navigator.cast) {
+                const castSession = cast.framework.CastContext.getInstance().getSession();
+                if (castSession) {
+                    const mediaInfo = new chrome.cast.media.MediaInfo(audioPlayer.src);
+                    mediaInfo.contentType = 'audio/mpeg';
+                    mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
+                    castSession.loadMedia(mediaInfo, 0, function () {
+                        console.log('התחלת סטרימינג ל-Chromecast');
+                    }, function (error) {
+                        chromecastError.textContent = "שגיאה ב-Chromecast: " + error.message;
                     });
-            }
-             scheduleNextAnnouncement();
-            document.getElementById('clock').addEventListener('click', speakTime);
-            stationButtons.forEach(button => {
-                button.addEventListener('click', () => switchStation(button));
-            });
-            switchStation(document.getElementById('station-kan'));
-            // אם האפליקציה נכנסה למצב שינה, נאתחל אותה מחדש.
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' ) {
-                     if (!wakeLock) {
-                         restartApp();
-                    }
                 }
-            });
-
-            //Chromecast
-            if (chrome.cast && chrome.cast.isAvailable) {
-              initializeCastApi();
             } else {
-              setTimeout(initializeCastApi, 1000);
+                chromecastError.textContent = "ה-Dongle Chromecast לא זמין.";
             }
-        });
+        }
+
+        // Time & battery updates
+        updateTime();
+        setInterval(updateTime, 60000); // עדכון השעה כל דקה
+        setInterval(updateBatteryStatus, 60000); // עדכון מצב הסוללה כל דקה
+
+        // שליחה לדפדפן
+        chromecastButton.addEventListener("click", initChromecast);
     </script>
 </body>
 </html>
