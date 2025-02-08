@@ -1,168 +1,449 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="he">
 <head>
+    <!-- תגית גוגל (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J5WT91REYB');
+    </script>
+    <!-- תגית Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
+    <!-- סוף Google Tag Manager -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>נגן רדיו גל״צ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>אפליקציית תחנות רדיו</title>
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon.png">
     <style>
+        /* משתנים CSS לשימוש חוזר ונוחות שינוי */
+        :root {
+            --main-font: Arial, sans-serif;
+            --main-bg-color: #000;
+            --main-text-color: #fff;
+            --secondary-text-color: #989494;
+            --highlight-color: #ffff00;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: var(--main-font);
+            text-align: center;
+            direction: rtl;
+            margin: 0;
+            padding: 0; /* הסרנו את ה padding כאן */
+            background-color: var(--main-bg-color);
+            color: var(--main-text-color);
+            display: flex;  /*Flexbox כדי למרכז תוכן אנכית*/
+            flex-direction: column;
+            min-height: 100vh; /*גובה מינימלי של המסך*/
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto; /*מרכוז אוטומטי אופקית ואנכית */
+            padding: 20px; /*הוספנו padding פנימי*/
+            flex: 1; /*תופס את כל המקום הפנוי בגובה*/
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: center; /*מרכוז אופקי של פריטים בתוך הקונטיינר*/
+        }
+
+        .battery-info {
+            font-size: 1rem;
+            margin-top: 10px;
+            color: var(--secondary-text-color);
+        }
+
+        .clock {
+            font-size: 3rem;
+            font-weight: bold;
+            background-color: var(--highlight-color);
+            color: black;
+            padding: 10px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 20px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .station-buttons {
+            display: flex;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f0f2f5;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap; /*מאפשר לכפתורים לעבור לשורה חדשה אם אין מקום*/
         }
 
-        .player-container {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            max-width: 90%;
-            width: 400px;
-        }
-
-        .logo {
+        .station-button {
             width: 120px;
             height: 120px;
-            border-radius: 60px;
-            margin-bottom: 1rem;
-            background-color: #e0e0e0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-        }
-
-        .button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 0.8rem 1.5rem;
-            border-radius: 8px;
             cursor: pointer;
-            font-size: 1rem;
-            margin: 0.5rem;
-            min-width: 120px;
-            transition: background-color 0.2s;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 4px solid transparent; /*הגדרת שקוף כברירת מחדל*/
+            box-sizing: border-box;
+            padding: 0;
+            transition: border-color 0.3s ease; /*מעבר חלק של שינוי צבע הגבול*/
         }
 
-        .button:hover {
-            background-color: #0056b3;
+        .station-button img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
         }
 
-        .button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
+        .station-button.active {
+            border-color: var(--highlight-color);
+           background: var(--highlight-color);  
         }
 
-        .status {
-            margin-top: 1rem;
-            color: #666;
+        @media (max-width: 480px) {
+            .station-button {
+                width: 90px; /*הקטנה קלה של הכפתורים במסכים קטנים*/
+                height: 90px;
+            }
+
+            .clock {
+                font-size: 2rem; /*הקטנת השעון במסכים קטנים*/
+            }
         }
 
-        .volume-control {
-            width: 80%;
-            margin: 1rem auto;
+        .contaibox {
+            padding: 20px;
+            color: var(--secondary-text-color);
+            text-align: center; /*מרכוז הטקסט*/
+            margin-top: auto; /*דחיפה לתחתית*/
         }
+
+        .contailink {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+.container h4 {        
+    padding: 0;
+    margin: 0;
+
+}
+
+ 
     </style>
 </head>
 <body>
-    <div class="player-container">
-        <div class="logo">
-            גל״צ
-        </div>
-        <h1>נגן רדיו גל״צ</h1>
-        
-        <audio id="radioPlayer">
-            <source src="http://glzwizzlv.bynetcdn.com/glz_mp3" type="audio/mpeg">
-            הדפדפן שלך לא תומך בנגינת אודיו
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+    <div class="container">
+        <audio id="audio-player">
+            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
+            הדפדפן שלך לא תומך בהשמעת אודיו.
         </audio>
-
-        <div>
-            <button id="playButton" class="button">נגן</button>
-            <button id="bluetoothButton" class="button">בחר התקן בלוטוס</button>
+        <!-- הוספת אודיו שקט -->
+        <audio id="silent-audio" loop>
+            <source src="silent.mp3" type="audio/mpeg">
+        </audio>
+        
+        <h4>רדיו נגיש עבור אבא</h4>
+        <div>לחץ ובחר תחנה להאזנה</div>
+        
+        <div class="station-buttons">
+      
+                      <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
+                <img src="kan_logo.png" alt="כאן ב'">
+            </button>
+            <button class="station-button" id="station-glz" data-url="https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz">
+                <img src="glz_logo.png" alt="גלי צהל">
+            </button>
+            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
+                <img src="glyisrael_logo.png" alt="גלי ישראל">
+            </button>
         </div>
+        <div class="clock" id="clock"></div>
+        <div id="battery-info" class="battery-info"></div> <!-- מיקום חדש למידע הסוללה -->
+    </div>
 
-        <div class="volume-control">
-            <input type="range" id="volumeSlider" min="0" max="100" value="100">
-        </div>
-
-        <div id="status" class="status"></div>
+     <div class="contaibox">
+       <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
+        גרסה
+     7
+    </div>
+     <div class="contailink">
+<p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
+<a href="https://mistralnet.github.io/radio/index4.html">4-test</a>
+</p>
     </div>
 
     <script>
-        const radioPlayer = document.getElementById('radioPlayer');
-        const playButton = document.getElementById('playButton');
-        const bluetoothButton = document.getElementById('bluetoothButton');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const statusElement = document.getElementById('status');
-        
-        let isPlaying = false;
+       // משתנים גלובליים
+        let isAnnouncing = false;
+        let radioVolume = 1.0;
+        let wakeLock = null;
+        let wakeLockInterval = null;
+        let silentAudioStarted = false;
+        const audioPlayer = document.getElementById('audio-player');
+        const stationButtons = document.querySelectorAll('.station-button');
+        let currentStationButton = null;
+        const silentAudio = document.getElementById('silent-audio');
+        const batteryInfo = document.getElementById('battery-info');
+        let lastBatteryLevel = 100;
 
-        // Define Bluetooth UUIDs
-        const A2DP_SINK_UUID = '0000110b-0000-1000-8000-00805f9b34fb';
-        const AVRCP_TARGET_UUID = '0000110c-0000-1000-8000-00805f9b34fb';
 
-        // בקרת ניגון
-        playButton.addEventListener('click', () => {
-            if (!isPlaying) {
-                radioPlayer.play()
-                    .then(() => {
-                        playButton.textContent = 'עצור';
-                        isPlaying = true;
-                    })
-                    .catch(error => {
-                        statusElement.textContent = 'שגיאה בהפעלת הרדיו: ' + error.message;
-                    });
-            } else {
-                radioPlayer.pause();
-                playButton.textContent = 'נגן';
-                isPlaying = false;
-            }
-        });
-
-        // בקרת ווליום
-        volumeSlider.addEventListener('input', (e) => {
-            radioPlayer.volume = e.target.value / 100;
-        });
-
-        // בקרת בלוטוס
-        bluetoothButton.addEventListener('click', async () => {
+        // פונקציה שמקבלת מידע על סוללה
+        async function updateBatteryStatus() {
             try {
-                const device = await navigator.bluetooth.requestDevice({
-                    filters: [
-                        {
-                            services: [A2DP_SINK_UUID]
-                        }
-                    ],
-                    optionalServices: [AVRCP_TARGET_UUID]
-                });
-                
-                statusElement.textContent = `מחובר להתקן: ${device.name}`;
-                
-                const server = await device.gatt.connect();
-                statusElement.textContent = `מחובר להתקן: ${device.name} (GATT מחובר)`;
-                
-            } catch (error) {
-                if (error.name === 'NotFoundError') {
-                    statusElement.textContent = 'לא נמצאו התקני בלוטוס זמינים';
-                } else if (error.name === 'SecurityError') {
-                    statusElement.textContent = 'אין הרשאה לגשת להתקני בלוטוס';
+                if ('getBattery' in navigator) {
+                    const battery = await navigator.getBattery();
+                    const level = Math.round(battery.level * 100);
+                    const charging = battery.charging ? 'בטעינה' : 'לא בטעינה';
+                    batteryInfo.textContent = `סוללה: ${level}%, מצב: ${charging}`;
+                    
+                    if (level <= 40 && lastBatteryLevel > 40) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    } else if (level <= 30 && lastBatteryLevel > 30) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    }  else if (level <= 20 && lastBatteryLevel > 20) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    } else if (level <= 10 && lastBatteryLevel > 10) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    } else if (level <= 5 && lastBatteryLevel > 5) {
+                        speakBatteryAlert(level);
+                        lastBatteryLevel = level;
+                    } else if (level > 40 ) {
+                        lastBatteryLevel = level;
+                    }
+                    
+                    battery.addEventListener('chargingchange', () => {
+                        updateBatteryStatus()
+                    });
+                    battery.addEventListener('levelchange', () => {
+                        updateBatteryStatus()
+                    });
                 } else {
-                    statusElement.textContent = 'שגיאה בחיבור לבלוטוס: ' + error.message;
+                    batteryInfo.textContent = 'מצב סוללה לא נתמך.';
                 }
+            } catch (error) {
+                batteryInfo.textContent = 'שגיאה בקבלת מידע על סוללה.';
             }
-        });
+        }
 
-        // טיפול בשגיאות נגן
-        radioPlayer.addEventListener('error', (e) => {
-            statusElement.textContent = 'שגיאה בטעינת השידור';
+        // פונקציה שמבצעת קריאת התראה קולית של הסוללה ומבקשת הטענה
+         async function speakBatteryAlert(level) {
+            if (isAnnouncing) return;
+            isAnnouncing = true;
+            const wasPlaying = !audioPlayer.paused;
+            const currentVolume = audioPlayer.volume;
+
+             if (wasPlaying) {
+                 await fadeAudio(audioPlayer, currentVolume, 0, 500);
+             }
+
+            const utterance = new SpeechSynthesisUtterance(`שים לב, מצב הסוללה ${level} אחוז, יש להטעין את המכשיר`);
+            utterance.lang = 'he-IL';
+
+            await new Promise(resolve => {
+                 utterance.onend = resolve;
+                window.speechSynthesis.speak(utterance);
+            });
+             if (wasPlaying) {
+                 await fadeAudio(audioPlayer, 0, radioVolume, 500);
+             }
+
+             isAnnouncing = false;
+        }
+
+         // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator && !wakeLock) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    wakeLock.addEventListener('release', () => {
+                         if (wakeLock) { // הבדיקה של וייק לוק עדיין קיים, ולכן ממשיכים לבקש אותו
+                            requestWakeLock()
+                         }
+                    });
+                }
+            } catch (err) {
+                console.log(`${err.name}, ${err.message}`);
+            }
+        }
+
+         // פונקציה שמשחררת את ה "Wake Lock" ונותנת למסך לכבות
+        async function releaseWakeLock(){
+             if(wakeLock) {
+                await wakeLock.release()
+                wakeLock = null;
+             }
+        }
+
+        // פונקציה שמעדכנת את השעה כל שנייה ומציגה אותה על המסך
+        function updateClock() {
+            const now = new Date();
+            let hours = now.getHours();
+            let minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // פונקציה שמבצעת מעבר בין תחנות רדיו
+        function switchStation(button) {
+            const url = button.getAttribute('data-url');
+            if (currentStationButton === button) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                button.classList.remove('active');
+                currentStationButton = null;
+                return;
+            }
+            audioPlayer.src = url;
+            audioPlayer.volume = radioVolume;
+            audioPlayer.play();
+            if (currentStationButton) {
+                currentStationButton.classList.remove('active');
+            }
+            button.classList.add('active');
+            currentStationButton = button;
+        }
+        
+         // פונקציה שמבצעת קריאת השעה בקול
+        async function speakTime() {
+            if (isAnnouncing) return;
+            
+             isAnnouncing = true;
+             const wasPlaying = !audioPlayer.paused;
+             const currentVolume = audioPlayer.volume;
+             
+            if (wasPlaying) {
+                await fadeAudio(audioPlayer, currentVolume, 0, 500);
+            }
+
+            const timeString = document.getElementById('clock').textContent;
+            const utterance = new SpeechSynthesisUtterance(`השעה היא ${timeString}`);
+            utterance.lang = 'he-IL';
+            
+             await new Promise(resolve => {
+                utterance.onend = resolve;
+                 window.speechSynthesis.speak(utterance);
+             });
+
+            if (wasPlaying) {
+                audioPlayer.volume = 0;
+                await fadeAudio(audioPlayer, 0, radioVolume, 500);
+            }
+            
+           isAnnouncing = false;
+        }
+
+         // פונקציה שמבצעת הדהייה של עוצמת הקול
+        async function fadeAudio(audioElement, start, end, duration) {
+            const steps = 20;
+            const stepDuration = duration / steps;
+            const volumeStep = (end - start) / steps;
+
+           for (let i = 0; i <= steps; i++) {
+                 audioElement.volume = start + (volumeStep * i);
+                await new Promise(resolve => setTimeout(resolve, stepDuration));
+            }
+        }
+
+       // פונקציה שמבצעת את הכרזת השעה באופן אוטומטי כל שעה
+       function scheduleNextAnnouncement() {
+            const now = new Date();
+           const nextTime = new Date(now);
+
+             //חשוב -  להגדיר גם שניות ומלישניות ל 0 כדי לקבל זמן מדוייק ללא חריגה בשניות
+            nextTime.setMinutes(0, 0, 0);
+           nextTime.setMilliseconds(0);
+             nextTime.setHours(nextTime.getHours() + 1);
+
+             const nextHour = nextTime.getHours();
+             
+             if (nextHour >= 9 && nextHour < 21) {
+                let delay = nextTime.getTime() - now.getTime(); // חישוב ההפרש
+                 if (delay < 0) { // אם החישוב שלילי (קורה במקרים נדירים מאוד) נגדיר ל שעה הבאה
+                    nextTime.setHours(nextTime.getHours() + 1);
+                      delay = nextTime.getTime() - now.getTime();
+                 }
+
+               setTimeout(() => {
+                    speakTime();
+                     scheduleNextAnnouncement();
+                }, delay);
+             } else {
+                 const tomorrow = new Date(now);
+                     tomorrow.setDate(tomorrow.getDate() + 1);
+                    tomorrow.setHours(9, 0, 0, 0);
+                     tomorrow.setMilliseconds(0);
+                const delay = tomorrow.getTime() - now.getTime();
+                 setTimeout(scheduleNextAnnouncement, delay);
+           }
+       }
+
+        function startKeepAwake() {
+            if (!wakeLockInterval) {
+                wakeLockInterval = setInterval(async () => {
+                     if (wakeLock) { // אם יש וייק לוק, ממשיכים לנסות לבקש אותו
+                         await requestWakeLock()
+                    }
+                }, 15 * 1000); // בקשה כל 15 שניות
+             }
+        }
+
+        function stopKeepAwake() {
+              if (wakeLockInterval) {
+                clearInterval(wakeLockInterval);
+                wakeLockInterval = null;
+            }
+         }
+        
+         // פונקציה לאתחול מחדש
+        function restartApp() {
+             window.location.reload(true);
+        }
+        // פעולות עם טעינת הדף
+        document.addEventListener('DOMContentLoaded', async () => {
+             updateBatteryStatus(); // לקריאה ראשונית של מצב הסוללה
+            await requestWakeLock();
+            startKeepAwake();
+             if (!silentAudioStarted) {
+                    silentAudio.play().then(() => {
+                        silentAudio.volume = 0;
+                         silentAudioStarted = true;
+                     console.log("Silence track started.");
+                  }).catch(error => {
+                        console.error("Error playing silent track:", error);
+                    });
+            }
+             scheduleNextAnnouncement();
+            document.getElementById('clock').addEventListener('click', speakTime);
+            stationButtons.forEach(button => {
+                button.addEventListener('click', () => switchStation(button));
+            });
+            switchStation(document.getElementById('station-kan'));
+            // אם האפליקציה נכנסה למצב שינה, נאתחל אותה מחדש.
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' ) {
+                     if (!wakeLock) {
+                         restartApp();
+                    }
+                }
+            });
         });
     </script>
+   
+    
 </body>
 </html>
