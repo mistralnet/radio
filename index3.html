@@ -1,103 +1,54 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>נגן רדיו בלוטוס</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        select {
-            padding: 5px;
-            font-size: 16px;
-        }
-    </style>
+    <title>אפליקציית רדיו</title>
 </head>
 <body>
-    <h1>נגן רדיו בלוטוס</h1>
+    <h1>אפליקציית רדיו</h1>
 
-    <audio id="radioPlayer" controls autoplay>
-        <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
-        דפדפן זה אינו תומך בנגן אודיו.
+    <audio id="radioPlayer" controls>
+        <source src="http://glz.icast.co.il/Content/live.mp3" type="audio/mpeg">
+        דפדפן זה אינו תומך בהשמעת אודיו.
     </audio>
 
     <div>
-        <label for="stationSelect">בחר תחנת רדיו:</label>
-        <select id="stationSelect">
-            <option value="http://kanliveicy.media.kan.org.il/kanbet_mp3" selected>כאן ב'</option>
-            <option value="http://icecast.vrt.be/stubru.mp3">Studio Brussel</option>
-            <option value="http://stream.radiosai.org:8000/SaiGlobalHarmony">Radio Sai Global Harmony</option>
-            <!-- הוסף תחנות נוספות כאן -->
+        <label for="audioOutput">בחר פלט שמע:</label>
+        <select id="audioOutput">
+            <option value="default">ברירת מחדל (מכשיר)</option>
+            <option value="bluetooth">Bluetooth (אם מחובר)</option>
         </select>
-    </div>
-
-    <div>
-        <button id="playButton">הפעל</button>
-        <button id="pauseButton">השהה</button>
-    </div>
-
-    <div>
-        <label for="bluetoothDevices">בחר התקן בלוטוס:</label>
-        <select id="bluetoothDevices">
-            <!-- התקני בלוטוס יופיעו כאן -->
-        </select>
-        <button id="connectBluetooth">חפש התקני בלוטוס</button>
     </div>
 
     <script>
         const radioPlayer = document.getElementById('radioPlayer');
-        const stationSelect = document.getElementById('stationSelect');
-        const playButton = document.getElementById('playButton');
-        const pauseButton = document.getElementById('pauseButton');
-        const bluetoothDevicesSelect = document.getElementById('bluetoothDevices');
-        const connectBluetoothButton = document.getElementById('connectBluetooth');
+        const audioOutputSelect = document.getElementById('audioOutput');
 
-        // פונקציה להפעלת תחנת רדיו נבחרת
-        function playSelectedStation() {
-            const selectedStation = stationSelect.value;
-            radioPlayer.src = selectedStation;
-            radioPlayer.play();
-        }
+        audioOutputSelect.addEventListener('change', () => {
+            const selectedOutput = audioOutputSelect.value;
 
-        // טיפול באירועי לחיצה על כפתורי הפעלה והשהיה
-        playButton.addEventListener('click', playSelectedStation);
-        pauseButton.addEventListener('click', () => radioPlayer.pause());
-
-        // פונקציה לבקשת גישה לבלוטוס (ייתכן שלא יעבוד בכל הדפדפנים)
-        async function connectBluetoothDevice() {
-            try {
-                const device = await navigator.bluetooth.requestDevice({
+            if (selectedOutput === 'bluetooth') {
+                // בקשה למשתמש לבחור התקן בלוטות'
+                navigator.bluetooth.requestDevice({
                     acceptAllDevices: true,
-                    // filters: [{services: ['audio']}] // אפשרות לסנן התקנים תומכי אודיו
+                    optionalServices: ['audio_sink']
+                })
+                .then(device => {
+                    console.log('התקן בלוטות' נבחר: ' + device.name);
+                    // כאן יש להוסיף לוגיקה לניתוב האודיו להתקן הבלוטות'
+                    // (זה דורש API ספציפי להתקן בלוטות' ויכול להיות מורכב)
+                    alert('שימו לב: ניתוב אודיו לבלוטות\' דורש API ספציפי ואינו מיושם בדוגמה זו.');
+                })
+                .catch(error => {
+                    console.error('שגיאה בבחירת התקן בלוטות\':', error);
+                    alert('אירעה שגיאה בבחירת התקן בלוטות\'.');
                 });
-
-                // כאן אפשר לבצע פעולות נוספות עם ההתקן שנבחר
-                console.log('התקן בלוטוס נבחר:', device.name);
-
-                // הוספת ההתקן לרשימת הבחירה
-                const option = document.createElement('option');
-                option.value = device.id;
-                option.textContent = device.name;
-                bluetoothDevicesSelect.appendChild(option);
-
-            } catch (error) {
-                console.error('שגיאה בחיבור בלוטוס:', error);
-                alert('שגיאה בחיבור בלוטוס: ' + error.message);
+            } else {
+                // חזרה לפלט ברירת מחדל
+                console.log('חזרה לפלט ברירת מחדל.');
+                // כאן יש להוסיף לוגיקה להחזרת האודיו לפלט ברירת מחדל
+                // (ברוב המקרים זה קורה אוטומטית)
             }
-        }
-
-        // טיפול באירוע לחיצה על כפתור חיבור בלוטוס
-        connectBluetoothButton.addEventListener('click', connectBluetoothDevice);
-
-        // הפעלת תחנת "כאן ב'" אוטומטית עם טעינת הדף
-        radioPlayer.play();
+        });
     </script>
 </body>
 </html>
