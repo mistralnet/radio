@@ -1,57 +1,89 @@
 <!DOCTYPE html>
-<html>
+<html lang="he">
 <head>
-    <title>אפליקציית רדיו</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שידור רדיו</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #player {
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+        }
+    </style>
 </head>
 <body>
-    <h1>אפליקציית רדיו</h1>
+    <h1>האזנה לרדיו</h1>
+    <p>בחר מאיפה להאזין:</p>
+    <button id="deviceBtn">האזן דרך המכשיר</button>
+    <button id="bluetoothBtn">האזן דרך Bluetooth</button>
 
-    <audio id="radioPlayer" controls>
-        <source id="audioSource" src="https://www.computerhope.com/jargon/m/example.mp3" type="audio/mpeg">
-        דפדפן זה אינו תומך בהשמעת אודיו.
-    </audio>
-
-    <div>
-        <label for="audioOutput">בחר פלט שמע:</label>
-        <select id="audioOutput">
-            <option value="default">ברירת מחדל (מכשיר)</option>
-            <option value="bluetooth">Bluetooth (אם מחובר)</option>
-        </select>
+    <div id="player" style="display: none;">
+        <audio id="radioAudio" controls>
+            <source src="" type="audio/mpeg">
+            הדפדפן שלך אינו תומך בנגן אודיו.
+        </audio>
+        <br>
+        <button id="stopBtn">עצור</button>
     </div>
 
     <script>
-        const radioPlayer = document.getElementById('radioPlayer');
-        const audioSource = document.getElementById('audioSource');
-        const audioOutputSelect = document.getElementById('audioOutput');
+        // קישור לשידור רדיו (לדוגמה: תחנת רדיו ישראלית)
+        const radioStreamUrl = 'https://eco.onestreaming.com/proxy/glz/stream';
 
-        // טעינת הנתונים של נגן האודיו
-        radioPlayer.load();
+        // אלמנט האודיו
+        const audioElement = document.getElementById('radioAudio');
 
-        audioOutputSelect.addEventListener('change', () => {
-            const selectedOutput = audioOutputSelect.value;
+        // הצגת הנגן והפעלת השידור
+        function showPlayerAndPlay() {
+            document.getElementById('player').style.display = 'block';
+            audioElement.src = radioStreamUrl;
+            audioElement.play();
+        }
 
-            if (selectedOutput === 'bluetooth') {
-                // בקשה למשתמש לבחור התקן בלוטות'
-                navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ['audio_sink']
-                })
-                .then(device => {
-                    console.log('התקן בלוטות' נבחר: ' + device.name);
-                    // כאן יש להוסיף לוגיקה לניתוב האודיו להתקן הבלוטות'
-                    // (זה דורש API ספציפי להתקן בלוטות' ויכול להיות מורכב)
-                    alert('שימו לב: ניתוב אודיו לבלוטות\' דורש API ספציפי ואינו מיושם בדוגמה זו.');
-                })
-                .catch(error => {
-                    console.error('שגיאה בבחירת התקן בלוטות\':', error);
-                    alert('אירעה שגיאה בבחירת התקן בלוטות\'.');
-                });
+        // כפתור להאזנה דרך המכשיר
+        document.getElementById('deviceBtn').addEventListener('click', () => {
+            showPlayerAndPlay();
+            console.log('האודיו מושמע דרך המכשיר');
+        });
+
+        // כפתור להאזנה דרך Bluetooth
+        document.getElementById('bluetoothBtn').addEventListener('click', async () => {
+            // קבלת רשימת התקני השמע הזמינים
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+
+            // מציאת התקן Bluetooth (אם קיים)
+            const bluetoothDevice = audioOutputs.find(device => device.label.toLowerCase().includes('bluetooth'));
+
+            if (bluetoothDevice) {
+                // הפניית האודיו להתקן Bluetooth
+                audioElement.setSinkId(bluetoothDevice.deviceId)
+                    .then(() => {
+                        console.log('האודיו מושמע דרך Bluetooth');
+                        showPlayerAndPlay();
+                    })
+                    .catch(err => {
+                        console.error('שגיאה בחיבור ל-Bluetooth:', err);
+                    });
             } else {
-                // חזרה לפלט ברירת מחדל
-                console.log('חזרה לפלט ברירת מחדל.');
-                // כאן יש להוסיף לוגיקה להחזרת האודיו לפלט ברירת מחדל
-                // (ברוב המקרים זה קורה אוטומטית)
+                alert('לא נמצא התקן Bluetooth מחובר.');
             }
+        });
+
+        // כפתור לעצירת השידור
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            audioElement.pause();
+            audioElement.currentTime = 0;
+            console.log('השידור נעצר');
         });
     </script>
 </body>
