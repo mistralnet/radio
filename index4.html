@@ -1,86 +1,54 @@
 <!DOCTYPE html>
-<html dir="rtl" lang="he">
+<html lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>נגן רדיו עם בחירת התקן</title>
+    <title>האזנה לרדיו</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
             text-align: center;
+            padding: 50px;
         }
-        select, button {
-            margin: 10px;
-            padding: 8px;
+        button {
+            padding: 10px 20px;
             font-size: 16px;
-        }
-        #status {
-            margin-top: 20px;
-            color: #666;
+            margin: 10px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-    <h1>נגן רדיו עם בחירת התקן שמע</h1>
-    
-    <div>
-        <button onclick="getDevices()" id="deviceButton">בחר התקן שמע</button>
-        <select id="audioOutput" style="display: none;">
-            <option value="">טוען התקנים...</option>
-        </select>
-    </div>
-
-    <div>
-        <audio id="player" controls>
-            <source src="https://live.radio.co/example" type="audio/mpeg">
-            הדפדפן שלך לא תומך בנגן השמע.
-        </audio>
-    </div>
-
-    <div id="status"></div>
+    <h1>האזנה לרדיו</h1>
+    <audio id="radio" controls>
+        <source src="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <br>
+    <button onclick="playOnThisDevice()">האזן במכשיר זה</button>
+    <button onclick="playOnBluetooth()">האזן בהתקן בלוטוס</button>
 
     <script>
-        const player = document.getElementById('player');
-        const audioOutput = document.getElementById('audioOutput');
-        const status = document.getElementById('status');
-        const deviceButton = document.getElementById('deviceButton');
+        const audioElement = document.getElementById('radio');
 
-        async function getDevices() {
-            try {
-                // בקשת הרשאה לגישה להתקני מדיה
-                await navigator.mediaDevices.getUserMedia({ audio: true });
-                
-                // קבלת רשימת התקני השמע
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const outputDevices = devices.filter(device => device.kind === 'audiooutput');
+        function playOnThisDevice() {
+            audioElement.play();
+            alert('מאזינים במכשיר זה');
+        }
 
-                if (outputDevices.length > 0) {
-                    audioOutput.innerHTML = outputDevices.map(device =>
-                        `<option value="${device.deviceId}">${device.label || 'התקן ' + device.deviceId}</option>`
-                    ).join('');
-                    
-                    audioOutput.style.display = 'inline-block';
-                    deviceButton.style.display = 'none';
-                    
-                    // הוספת מאזין לשינוי בחירת ההתקן
-                    audioOutput.addEventListener('change', async () => {
-                        try {
-                            if (player.setSinkId) {
-                                await player.setSinkId(audioOutput.value);
-                                status.textContent = 'התקן השמע הוחלף בהצלחה';
-                            }
-                        } catch (err) {
-                            status.textContent = 'שגיאה בהחלפת התקן השמע: ' + err.message;
-                        }
+        function playOnBluetooth() {
+            if (navigator.mediaDevices && navigator.mediaDevices.selectAudioOutput) {
+                navigator.mediaDevices.selectAudioOutput()
+                    .then(() => {
+                        audioElement.play();
+                        alert('מאזינים בהתקן בלוטוס');
+                    })
+                    .catch((error) => {
+                        console.error('Error selecting audio output:', error);
+                        alert('שגיאה בבחירת התקן שמע');
                     });
-                } else {
-                    status.textContent = 'לא נמצאו התקני שמע זמינים';
-                }
-            } catch (err) {
-                status.textContent = 'שגיאה בקבלת גישה להתקני שמע: ' + err.message;
+            } else {
+                alert('הדפדפן שלך אינו תומך בבחירת התקן שמע');
             }
         }
     </script>
