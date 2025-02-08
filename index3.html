@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="he">
 <head>
     <!-- תגית גוגל (gtag.js) -->
@@ -17,11 +17,11 @@
     })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
     <!-- סוף Google Tag Manager -->
     <meta charset="UTF-8">
- <script src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>אפליקציית תחנות רדיו</title>
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
+    <script src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
     <style>
         /* משתנים CSS לשימוש חוזר ונוחות שינוי */
         :root {
@@ -163,6 +163,12 @@
         .chromecast-button:active {
             background-color: #2A56C6; /*גוון כחול כהה יותר בלחיצה*/
         }
+
+        /* הודעות שגיאה */
+        .error-message {
+            color: red;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -199,13 +205,16 @@
         <button class="chromecast-button" id="chromecast-button">
             העברה ל-Chromecast
         </button>
+        <div id="chromecast-error" class="error-message"></div>
 
         <div class="clock" id="clock"></div>
         <div id="battery-info" class="battery-info"></div>
     </div>
 
      <div class="contaibox">
-        גרסה 6.1
+        גרסה
+      6.2
+      
     </div>
      <div class="contailink">
 <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
@@ -227,6 +236,7 @@
         const batteryInfo = document.getElementById('battery-info');
         let lastBatteryLevel = 100;
         const chromecastButton = document.getElementById('chromecast-button'); // הוספנו
+        const chromecastError = document.getElementById('chromecast-error');
 
         // פונקציה שמקבלת מידע על סוללה
         async function updateBatteryStatus() {
@@ -446,41 +456,69 @@
         }
 
         //Chromecast
+        let castSession = null;
+
         function initializeCastApi() {
             cast.framework.CastContext.getInstance().setOptions({
                 receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
                 autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
             });
+
+            cast.framework.CastContext.getInstance().addEventListener(
+                cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+                function(event) {
+                    switch (event.sessionState) {
+                        case cast.framework.SessionState.SESSION_STARTED:
+                            console.log('Cast Session Started');
+                            castSession = cast.framework.CastContext.getInstance().getCurrentSession();
+                            loadMedia();
+                            break;
+                        case cast.framework.SessionState.SESSION_ENDED:
+                            console.log('Cast Session Ended');
+                            castSession = null;
+                            break;
+                    }
+                });
         }
 
         chromecastButton.addEventListener('click', function() {
+            chromecastError.textContent = ""; // Clear any previous errors
             cast.framework.CastContext.getInstance().requestSession()
             .then(function(session) {
                 console.log('Session started: ' + session.sessionId);
+                castSession = session;
                 loadMedia();
             })
             .catch(function(error) {
                 console.log('Error starting session', error);
+                chromecastError.textContent = "שגיאה בהתחלת חיבור ל-Chromecast: " + error.message;
             });
         });
 
         function loadMedia() {
-            var castSession = cast.framework.CastContext.getInstance().getCurrentSession();
             if (!castSession) {
                 console.log('No cast session available');
+                chromecastError.textContent = "אין חיבור Chromecast פעיל.";
                 return;
             }
 
-            var mediaInfo = new chrome.cast.media.MediaInfo(audioPlayer.src, 'audio/mpeg');
+            const mediaInfo = new chrome.cast.media.MediaInfo(audioPlayer.src, 'audio/mpeg');
             mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
             mediaInfo.metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
             mediaInfo.metadata.title = 'Radio Station';
             mediaInfo.metadata.subtitle = 'Playing from Radio App';
 
-            var request = new chrome.cast.media.LoadRequest(mediaInfo);
+            const request = new chrome.cast.media.LoadRequest(mediaInfo);
+            request.autoplay = true; // Ensure media starts playing automatically
             castSession.loadMedia(request).then(
-                function() { console.log('Media loaded successfully'); },
-                function(errorCode) { console.log('Error loading media: ' + errorCode); }
+                function() {
+                     console.log('Media loaded successfully');
+                     chromecastError.textContent = ""; // Clear any previous errors
+                },
+                function(errorCode) {
+                     console.log('Error loading media: ' + errorCode);
+                     chromecastError.textContent = "שגיאה בטעינת המדיה ל-Chromecast: " + errorCode;
+                }
             );
         }
 
