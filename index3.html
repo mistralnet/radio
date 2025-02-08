@@ -7,7 +7,7 @@
     <h1>אפליקציית רדיו</h1>
 
     <audio id="radioPlayer" controls>
-        <source src="http://glz.icast.co.il/Content/live.mp3" type="audio/mpeg">
+        <source id="audioSource" src="https://www.computerhope.com/jargon/m/example.mp3" type="audio/mpeg">
         דפדפן זה אינו תומך בהשמעת אודיו.
     </audio>
 
@@ -21,7 +21,11 @@
 
     <script>
         const radioPlayer = document.getElementById('radioPlayer');
+        const audioSource = document.getElementById('audioSource');
         const audioOutputSelect = document.getElementById('audioOutput');
+
+        // טעינת הנתונים של נגן האודיו
+        radioPlayer.load();
 
         audioOutputSelect.addEventListener('change', () => {
             const selectedOutput = audioOutputSelect.value;
