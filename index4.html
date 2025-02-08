@@ -1,56 +1,156 @@
 <!DOCTYPE html>
-<html lang="he">
+<html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>האזנה לרדיו</title>
+    <title>נגן רדיו גל״צ</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 50px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            margin: 10px;
+
+        .player-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+            margin-bottom: 1rem;
+            background-color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
             cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+            min-width: 120px;
+            transition: background-color 0.2s;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .status {
+            margin-top: 1rem;
+            color: #666;
+        }
+
+        .volume-control {
+            width: 80%;
+            margin: 1rem auto;
         }
     </style>
 </head>
 <body>
-    <h1>האזנה לרדיו</h1>
-    <audio id="radio" controls>
-        <source src="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-    <br>
-    <button onclick="playOnThisDevice()">האזן במכשיר זה</button>
-    <button onclick="playOnBluetooth()">האזן בהתקן בלוטוס</button>
+    <div class="player-container">
+        <div class="logo">
+            גל״צ
+        </div>
+        <h1>נגן רדיו גל״צ</h1>
+        
+        <audio id="radioPlayer">
+            <source src="http://glzwizzlv.bynetcdn.com/glz_mp3" type="audio/mpeg">
+            הדפדפן שלך לא תומך בנגינת אודיו
+        </audio>
+
+        <div>
+            <button id="playButton" class="button">נגן</button>
+            <button id="bluetoothButton" class="button">בחר התקן בלוטוס</button>
+        </div>
+
+        <div class="volume-control">
+            <input type="range" id="volumeSlider" min="0" max="100" value="100">
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
 
     <script>
-        const audioElement = document.getElementById('radio');
+        const radioPlayer = document.getElementById('radioPlayer');
+        const playButton = document.getElementById('playButton');
+        const bluetoothButton = document.getElementById('bluetoothButton');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const statusElement = document.getElementById('status');
+        
+        let isPlaying = false;
 
-        function playOnThisDevice() {
-            audioElement.play();
-            alert('מאזינים במכשיר זה');
-        }
-
-        function playOnBluetooth() {
-            if (navigator.mediaDevices && navigator.mediaDevices.selectAudioOutput) {
-                navigator.mediaDevices.selectAudioOutput()
+        // בקרת ניגון
+        playButton.addEventListener('click', () => {
+            if (!isPlaying) {
+                radioPlayer.play()
                     .then(() => {
-                        audioElement.play();
-                        alert('מאזינים בהתקן בלוטוס');
+                        playButton.textContent = 'עצור';
+                        isPlaying = true;
                     })
-                    .catch((error) => {
-                        console.error('Error selecting audio output:', error);
-                        alert('שגיאה בבחירת התקן שמע');
+                    .catch(error => {
+                        statusElement.textContent = 'שגיאה בהפעלת הרדיו: ' + error.message;
                     });
             } else {
-                alert('הדפדפן שלך אינו תומך בבחירת התקן שמע');
+                radioPlayer.pause();
+                playButton.textContent = 'נגן';
+                isPlaying = false;
             }
-        }
+        });
+
+        // בקרת ווליום
+        volumeSlider.addEventListener('input', (e) => {
+            radioPlayer.volume = e.target.value / 100;
+        });
+
+        // בקרת בלוטוס
+        bluetoothButton.addEventListener('click', async () => {
+            try {
+                const device = await navigator.bluetooth.requestDevice({
+                    acceptAllDevices: true,
+                    optionalServices: ['audio_output']
+                });
+                
+                statusElement.textContent = `מחובר להתקן: ${device.name}`;
+            } catch (error) {
+                if (error.name === 'NotFoundError') {
+                    statusElement.textContent = 'לא נמצאו התקני בלוטוס זמינים';
+                } else if (error.name === 'SecurityError') {
+                    statusElement.textContent = 'אין הרשאה לגשת להתקני בלוטוס';
+                } else {
+                    statusElement.textContent = 'שגיאה בחיבור לבלוטוס: ' + error.message;
+                }
+            }
+        });
+
+        // טיפול בשגיאות נגן
+        radioPlayer.addEventListener('error', (e) => {
+            statusElement.textContent = 'שגיאה בטעינת השידור';
+        });
     </script>
 </body>
 </html>
