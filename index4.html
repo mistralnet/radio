@@ -1,52 +1,86 @@
 <!DOCTYPE html>
-<html lang="he">
+<html dir="rtl" lang="he">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>נגן רדיו</title>
+    <title>נגן רדיו עם בחירת התקן</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        select, button {
+            margin: 10px;
+            padding: 8px;
+            font-size: 16px;
+        }
+        #status {
+            margin-top: 20px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
-    <h2>נגן רדיו</h2>
-    <audio id="radio" controls>
-        <source src="https://stream.live.vc.bbcmedia.co.uk/bbc_world_service" type="audio/mpeg">
-        הדפדפן שלך אינו תומך באודיו.
-    </audio>
-    <br>
-    <button onclick="getAudioDevices()">בחר התקן שמע</button>
-    <select id="audioDevices" onchange="changeAudioOutput()"></select>
+    <h1>נגן רדיו עם בחירת התקן שמע</h1>
+    
+    <div>
+        <button onclick="getDevices()" id="deviceButton">בחר התקן שמע</button>
+        <select id="audioOutput" style="display: none;">
+            <option value="">טוען התקנים...</option>
+        </select>
+    </div>
+
+    <div>
+        <audio id="player" controls>
+            <source src="https://live.radio.co/example" type="audio/mpeg">
+            הדפדפן שלך לא תומך בנגן השמע.
+        </audio>
+    </div>
+
+    <div id="status"></div>
 
     <script>
-        async function getAudioDevices() {
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
-                const select = document.getElementById('audioDevices');
-                select.innerHTML = '';
-                if (audioOutputs.length === 0) {
-                    alert('לא נמצאו התקני שמע זמינים.');
-                    return;
-                }
-                audioOutputs.forEach(device => {
-                    const option = document.createElement('option');
-                    option.value = device.deviceId;
-                    option.textContent = device.label || `התקן ${select.length + 1}`;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('שגיאה בקבלת התקני שמע:', error);
-                alert('לא ניתן לגשת לרשימת התקני שמע. ודא שהדפדפן מאפשר זאת.');
-            }
-        }
+        const player = document.getElementById('player');
+        const audioOutput = document.getElementById('audioOutput');
+        const status = document.getElementById('status');
+        const deviceButton = document.getElementById('deviceButton');
 
-        function changeAudioOutput() {
-            const audio = document.getElementById('radio');
-            const selectedDevice = document.getElementById('audioDevices').value;
-            if (audio.setSinkId) {
-                audio.setSinkId(selectedDevice)
-                    .then(() => console.log('התקן שמע שונה בהצלחה'))
-                    .catch(error => console.error('שגיאה בשינוי התקן שמע:', error));
-            } else {
-                alert('הדפדפן שלך אינו תומך בבחירת התקני שמע.');
+        async function getDevices() {
+            try {
+                // בקשת הרשאה לגישה להתקני מדיה
+                await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                // קבלת רשימת התקני השמע
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const outputDevices = devices.filter(device => device.kind === 'audiooutput');
+
+                if (outputDevices.length > 0) {
+                    audioOutput.innerHTML = outputDevices.map(device =>
+                        `<option value="${device.deviceId}">${device.label || 'התקן ' + device.deviceId}</option>`
+                    ).join('');
+                    
+                    audioOutput.style.display = 'inline-block';
+                    deviceButton.style.display = 'none';
+                    
+                    // הוספת מאזין לשינוי בחירת ההתקן
+                    audioOutput.addEventListener('change', async () => {
+                        try {
+                            if (player.setSinkId) {
+                                await player.setSinkId(audioOutput.value);
+                                status.textContent = 'התקן השמע הוחלף בהצלחה';
+                            }
+                        } catch (err) {
+                            status.textContent = 'שגיאה בהחלפת התקן השמע: ' + err.message;
+                        }
+                    });
+                } else {
+                    status.textContent = 'לא נמצאו התקני שמע זמינים';
+                }
+            } catch (err) {
+                status.textContent = 'שגיאה בקבלת גישה להתקני שמע: ' + err.message;
             }
         }
     </script>
