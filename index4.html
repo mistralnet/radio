@@ -104,6 +104,10 @@
         
         let isPlaying = false;
 
+        // Define Bluetooth UUIDs
+        const A2DP_SINK_UUID = '0000110b-0000-1000-8000-00805f9b34fb';
+        const AVRCP_TARGET_UUID = '0000110c-0000-1000-8000-00805f9b34fb';
+
         // בקרת ניגון
         playButton.addEventListener('click', () => {
             if (!isPlaying) {
@@ -131,11 +135,19 @@
         bluetoothButton.addEventListener('click', async () => {
             try {
                 const device = await navigator.bluetooth.requestDevice({
-                    acceptAllDevices: true,
-                    optionalServices: ['audio_output']
+                    filters: [
+                        {
+                            services: [A2DP_SINK_UUID]
+                        }
+                    ],
+                    optionalServices: [AVRCP_TARGET_UUID]
                 });
                 
                 statusElement.textContent = `מחובר להתקן: ${device.name}`;
+                
+                const server = await device.gatt.connect();
+                statusElement.textContent = `מחובר להתקן: ${device.name} (GATT מחובר)`;
+                
             } catch (error) {
                 if (error.name === 'NotFoundError') {
                     statusElement.textContent = 'לא נמצאו התקני בלוטוס זמינים';
