@@ -1,81 +1,51 @@
 <!DOCTYPE html>
-<html lang="he">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>רדיו עם תמיכה בכרומקאסט</title>
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-    <script>
-        let session = null;
-        let currentAudio = new Audio();
-        let isCasting = false;
-
-        function checkCastAvailability() {
-            if (!window.cast || !window.chrome || !chrome.cast) {
-                console.error("Chromecast API not available yet.");
-                setTimeout(checkCastAvailability, 1000);
-                return;
-            }
-            initializeCastApi();
+    <title>רדיו מקוון - Chromecast (ללא API ישיר)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
         }
 
-        function initializeCastApi() {
-            cast.framework.CastContext.getInstance().setOptions({
-                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-            });
+        .station-button {
+            margin: 10px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #f0f0f0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-radius: 5px;
         }
 
-        function playLocally(url) {
-            if (currentAudio.src !== url) {
-                currentAudio.src = url;
-            }
-            currentAudio.play();
+        .station-button img {
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
         }
 
-        function stopLocalPlayback() {
-            currentAudio.pause();
-            currentAudio.src = "";
+        #cast-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-top: 20px;
         }
 
-        function launchCast(url) {
-            const context = cast.framework.CastContext.getInstance();
-            context.requestSession().then(session => {
-                const mediaInfo = new chrome.cast.media.MediaInfo(url, 'audio/mp3');
-                mediaInfo.contentType = 'audio/mp3';
-                const request = new chrome.cast.media.LoadRequest(mediaInfo);
-                session.loadMedia(request).catch(error => console.error("Error loading media: ", error));
-                isCasting = true;
-            }).catch(error => console.error("Failed to start session: ", error));
+        #player {
+            margin-top: 20px;
         }
-
-        function togglePlayback(url) {
-            if (isCasting) {
-                stopLocalPlayback();
-                launchCast(url);
-            } else {
-                playLocally(url);
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", () => {
-            checkCastAvailability();
-            document.querySelectorAll(".station-button").forEach(button => {
-                button.addEventListener("click", () => {
-                    const url = button.getAttribute("data-url");
-                    togglePlayback(url);
-                });
-            });
-
-            document.getElementById("toggle-cast").addEventListener("click", () => {
-                isCasting = !isCasting;
-                alert(isCasting ? "מעבר לשידור בכרומקאסט" : "מעבר לשידור מקומי");
-            });
-        });
-    </script>
+    </style>
 </head>
 <body>
-    <button id="toggle-cast">החלף בין כרומקאסט לשידור מקומי</button>
+    <h1>רדיו מקוון</h1>
+
     <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
         <img src="kan_logo.png" alt="כאן ב'">
     </button>
@@ -85,5 +55,32 @@
     <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
         <img src="glyisrael_logo.png" alt="גלי ישראל">
     </button>
+
+    <button id="cast-button">שלח לכרוםקאסט</button>
+
+    <audio id="player" controls autoplay></audio>
+
+    <script>
+        const castButton = document.getElementById('cast-button');
+        const player = document.getElementById('player');
+
+        document.querySelectorAll('.station-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const streamURL = this.dataset.url;
+                player.src = streamURL;
+                player.play();
+            });
+        });
+
+        castButton.addEventListener('click', function() {
+            // פעולה פשוטה: פתיחת ה-URL של הסטרימינג בחלון חדש
+            // הכרוםקאסט יזהה את זה אם הוא מוגדר לזהות מדיה
+            if (player.src) {
+                window.open(player.src, '_blank');
+            } else {
+                alert('אנא בחר תחנה קודם.');
+            }
+        });
+    </script>
 </body>
 </html>
