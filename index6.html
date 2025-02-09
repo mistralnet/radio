@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <!-- תגית גוגל (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J5WT91REYB');
+    </script>
+    <!-- תגית Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
+    <!-- סוף Google Tag Manager -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>אפליקציית תחנות רדיו</title>
+    <link rel="icon" href="icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="icon.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
+        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+    <div class="container">
+        <audio id="audio-player">
+            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
+            הדפדפן שלך לא תומך בהשמעת אודיו.
+        </audio>
+        <!-- הוספת אודיו שקט -->
+        <audio id="silent-audio" loop>
+            <source src="silent.mp3" type="audio/mpeg">
+        </audio>
+        
+        <h4>רדיו נגיש עבור אבא</h4>
+        <div>לחץ ובחר תחנה להאזנה</div>
+        
+        <div class="station-buttons">
+      
+                      <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
+                <img src="kan_logo.png" alt="כאן ב'">
+            </button>
+            <button class="station-button" id="station-glz" data-url="https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz">
+                <img src="glz_logo.png" alt="גלי צהל">
+            </button>
+            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
+                <img src="glyisrael_logo.png" alt="גלי ישראל">
+            </button>
+        </div>
+        <div class="clock" id="clock"></div>
+        <div id="battery-info" class="battery-info"></div> <!-- מיקום חדש למידע הסוללה -->
+    </div>
+
+     <div class="contaibox">
+       <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
+        גרסה
+    9
+    </div>
+     <div class="contailink">
+<p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
+<a href="https://mistralnet.github.io/radio/index4.html">4-test</a>
+</p>
+    </div>
+    <script src="script.js"></script>
+   
+    
+</body>
+</html>
