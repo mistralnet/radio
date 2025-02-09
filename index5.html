@@ -17,79 +17,11 @@
     })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
     <!-- סוף Google Tag Manager -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>אפליקציית תחנות רדיו</title>
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            direction: rtl;
-            margin: 0;
-            padding: 1rem;
-            background-color: #000;
-            color: #fff;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding-top: 20px;
-        }
-        .battery-info {
-            font-size: 1rem;
-            margin-top: 10px; /* הוספנו מרווח עליון בין השעון למידע הסוללה */
-            color: #989494;
-        }
-        .clock {
-            font-size: 3rem;
-            font-weight: bold;
-            background-color: yellow;
-            color: black;
-            padding: 10px;
-            border-radius: 10px;
-            display: inline-block;
-            margin-top: 20px;
-            cursor: pointer; /* סמן עכבר של כפתור */
-            user-select: none; /* מונע סימון טקסט */
-        }
-        .station-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-        }
-        .station-button {
-            width: 120px;
-            height: 120px;
-            cursor: pointer;
-            border-radius: 8px;
-            overflow: hidden; /* כדי שהתמונה לא תצא מגבולות הכפתור */
-            border: 4px solid  ;
-            box-sizing: border-box; /* כולל את הגבול בתוך הגודל של הכפתור */
-            padding: 0; /* הסרת ריפוד כדי שהתמונה תמלא את הכפתור */
-        }
-        .station-button img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover; /* מבטיח שהתמונה תכסה את כל הכפתור */
-            display: block; /* מונע מרווחים לא רצויים מתחת לתמונה */
-        }
-        .station-button.active {
-  border-color: #ffff00;
-    background: #ffff00;
-        }
-        @media (max-width: 480px) {
-            .station-button {
-                width: 100px;
-                height: 100px;
-            }
-        }
-        .contaibox {
-            padding: 50px;
-            color: #989494;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Google Tag Manager (noscript) -->
@@ -110,10 +42,11 @@
         <div>לחץ ובחר תחנה להאזנה</div>
         
         <div class="station-buttons">
-            <button class="station-button" id="station-kan" data-url="http://kanliveicy.media.kan.org.il/kanbet_mp3">
+      
+                      <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
                 <img src="kan_logo.png" alt="כאן ב'">
             </button>
-            <button class="station-button" id="station-glz" data-url="http://glzwizzlv.bynetcdn.com/glz_mp3">
+            <button class="station-button" id="station-glz" data-url="https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz">
                 <img src="glz_logo.png" alt="גלי צהל">
             </button>
             <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
@@ -122,6 +55,17 @@
         </div>
         <div class="clock" id="clock"></div>
         <div id="battery-info" class="battery-info"></div> <!-- מיקום חדש למידע הסוללה -->
+    </div>
+
+     <div class="contaibox">
+       <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
+        גרסה
+    8
+    </div>
+     <div class="contailink">
+<p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
+<a href="https://mistralnet.github.io/radio/index4.html">4-test</a>
+</p>
     </div>
 
     <script>
@@ -385,13 +329,7 @@
             });
         });
     </script>
-     <div class="contaibox">
-       <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
-        גרסה 6
-    </div>
-     <div class="contailink">
-<p><a href="https://mistralnet.github.io/radio/index3.html">V-test</a></p>
-    </div>
+   
     
 </body>
 </html>
