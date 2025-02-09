@@ -99,7 +99,7 @@
     <h1>רדיו נגיש</h1>
 
     <div class="station-container">
-        <h2>כאן ב'</h2>
+        <h2>כאן בקק'</h2>
         <button class="station-button" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net" onclick="playStation(this)">הפעל כאן ב'</button>
     </div>
 
@@ -124,6 +124,7 @@
         let castButton = document.getElementById('cast-button');
         let statusDiv = document.getElementById('status');
         let castSession = null;
+        let isCasting = false; // מציין אם השידור כרגע בכרוםקאסט
 
         // Initialize Chromecast SDK
         window['__onGCastApiAvailable'] = function(isAvailable) {
@@ -156,6 +157,17 @@
         function sessionListener(session) {
             console.log('New session ID: ' + session.sessionId);
             castSession = session;
+
+            // הוספת מאזין לניתוק מהכרוםקאסט
+            castSession.addUpdateListener(sessionUpdateListener);
+        }
+
+        function sessionUpdateListener(isAlive) {
+            if (!isAlive) {
+                castSession = null;
+                isCasting = false;
+                statusDiv.innerText = "Chromecast מנותק.";
+            }
         }
 
         function receiverListener(availability) {
@@ -169,9 +181,16 @@
 
         function playStation(button) {
             currentStationURL = button.dataset.url;
-            audioPlayer.src = currentStationURL;
-            audioPlayer.play();
-            statusDiv.innerText = "מנגן: " + button.innerText.replace('הפעל ', '');
+
+            if (isCasting && castSession) {
+                // אם כבר משדרים לכרוםקאסט, נטען את התחנה החדשה
+                loadMedia(currentStationURL);
+            } else {
+                // אחרת, ננגן במכשיר המקומי
+                audioPlayer.src = currentStationURL;
+                audioPlayer.play();
+                statusDiv.innerText = "מנגן: " + button.innerText.replace('הפעל ', '');
+            }
         }
 
         function castMedia() {
@@ -209,6 +228,8 @@
             castSession.loadMedia(request,
                 function() {
                     statusDiv.innerText = "השידור הועבר לכרוםקאסט.";
+                    isCasting = true; // מציינים שאנחנו משדרים לכרוםקאסט
+                    audioPlayer.pause(); // עוצרים את הנגן המקומי
                 },
                 function(errorCode) {
                     statusDiv.innerText = "שגיאה בהעברת השידור לכרוםקאסט: " + errorCode;
