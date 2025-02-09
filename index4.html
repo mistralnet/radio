@@ -183,7 +183,7 @@
      <div class="contaibox">
        <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
         גרסה
-    6.3
+    6.44
     </div>
      <div class="contailink">
 <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
@@ -213,6 +213,7 @@
         let isCasting = false;
         const castButton = document.getElementById('cast-button');
         let currentStationName = null;
+        let isStationActive = false;
 
         // Initialize Chromecast SDK
         window.onload = function() {
@@ -265,6 +266,7 @@
               castSession = null;
                 isCasting = false;
                  updateButtonState();
+                  resetCurrentStation();
             }
           };
 
@@ -308,7 +310,7 @@
               console.log('App stopped successfully');
                isCasting = false;
                  updateButtonState();
-                 //resetCurrentStation();
+                resetCurrentStation();
             }
 
             function onStopAppError(err) {
@@ -345,9 +347,19 @@
             function updateButtonState() {
                 if (isCasting) {
                   castButton.src = 'cast_connected.png';
-                  audioPlayer.pause();
+                    audioPlayer.pause(); // Stop local playback when casting
+                     isStationActive = !audioPlayer.paused
                 } else {
                     castButton.src = 'cast_icon.png';
+                }
+            }
+
+            function resetCurrentStation() {
+                currentStationURL = null;
+                currentStationName = null;
+                if (currentStationButton) {
+                    currentStationButton.classList.remove('active');
+                    currentStationButton = null;
                 }
             }
 
@@ -470,9 +482,9 @@
                     audioPlayer.pause();
                     audioPlayer.currentTime = 0;
                 }
-
                 button.classList.remove('active');
                 currentStationButton = null;
+                isStationActive = false;
                 return;
             }
 
@@ -487,6 +499,7 @@
 
             currentStationURL = url;
             currentStationName = stationName;
+           isStationActive = true;
 
             if (isCasting) {
                 // אם משדרים ל-Chromecast, העבר את הניגון לשם
@@ -616,7 +629,13 @@
             stationButtons.forEach(button => {
                 button.addEventListener('click', () => switchStation(button));
             });
+
+            // Initialize with the default station (Kan)
+            currentStationURL = document.getElementById('station-kan').getAttribute('data-url');
+            currentStationName = document.getElementById('station-kan').querySelector('img').alt;
+
             switchStation(document.getElementById('station-kan'));
+
             // אם האפליקציה נכנסה למצב שינה, נאתחל אותה מחדש.
             document.addEventListener('visibilitychange', () => {
                 if (document.visibilityState === 'visible' ) {
