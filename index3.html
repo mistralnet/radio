@@ -5,27 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>רדיו באינטרנט עם Chromecast</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
         .station-button {
             margin: 10px;
-            padding: 10px;
+            padding: 10px 20px;
             font-size: 16px;
             cursor: pointer;
+            border: none;
+            background-color: #f0f0f0;
+            border-radius: 5px;
         }
-        #cast-button {
+
+        .station-button img {
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        #cast-container {
             position: fixed;
             top: 10px;
             right: 10px;
-            width: 40px;
-            height: 40px;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 50%;
-            cursor: pointer;
         }
+
         #mode-toggle {
-            position: fixed;
-            top: 60px;
-            right: 10px;
+            margin-top: 20px;
             padding: 10px;
             background-color: #fff;
             border: 1px solid #ccc;
@@ -33,117 +45,110 @@
             cursor: pointer;
         }
     </style>
+    <!-- הוספת stylesheet של Chromecast -->
+    <link rel="stylesheet" href="https://www.gstatic.com/cast/sdk/libs/remoteplayer/1.0.0/css/remote_player.css">
 </head>
 <body>
-    <div id="cast-button"></div>
-    <div id="mode-toggle" onclick="toggleMode()">האזן בדפדפן</div>
+    <h1>רדיו מקוון</h1>
+
+    <div id="cast-container">
+        <!-- כאן יוצג כפתור ה-Cast -->
+        <google-cast-launcher></google-cast-launcher>
+    </div>
 
     <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
-        <img src="kan_logo.png" alt="כאן ב'">
+        <img src="kan_logo.png" alt="כאן ב'"> כאן ב'
     </button>
     <button class="station-button" id="station-glz" data-url="https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz">
-        <img src="glz_logo.png" alt="גלי צהל">
+        <img src="glz_logo.png" alt="גלי צהל"> גלי צה"ל
     </button>
     <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
-        <img src="glyisrael_logo.png" alt="גלי ישראל">
+        <img src="glyisrael_logo.png" alt="גלי ישראל"> גלי ישראל
     </button>
 
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
-    <script>
-        let currentStationUrl = '';
-        let currentAudio = null;
-        let castContext = null;
-        let isCasting = false;
+    <button id="mode-toggle" onclick="toggleMode()">האזן בדפדפן</button>
 
-        // Initialize Cast SDK
-        function initializeCastApi() {
+    <audio id="audioPlayer" controls autoplay></audio>
+
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    <script src="https://www.gstatic.com/cast/sdk/libs/remoteplayer/1.0.0/remote_player.js"></script>
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        let currentStationUrl = '';
+        let isCasting = false;
+        let castSession = null;
+
+        // Initialize Cast API
+        window.onload = function() {
             cast.framework.CastContext.getInstance().setOptions({
-                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID, // או ה-App ID שלך
                 autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
             });
-            castContext = cast.framework.CastContext.getInstance();
+
+            cast.framework.CastContext.getInstance().addEventListener(
+                cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+                function(event) {
+                    switch (event.sessionState) {
+                        case cast.framework.SessionState.SESSION_STARTED:
+                            console.log('Cast Session Started');
+                            castSession = cast.framework.CastContext.getInstance().getCurrentSession();
+                            isCasting = true;
+                            break;
+                        case cast.framework.SessionState.SESSION_ENDED:
+                            console.log('Cast Session Ended');
+                            isCasting = false;
+                            castSession = null;
+                            // עצור את הניגון המקומי אם הכרוםקאסט התנתק
+                            audioPlayer.pause();
+                            break;
+                    }
+                });
+        };
+
+        // Function to play station
+        function playStation(stationUrl) {
+            currentStationUrl = stationUrl;
+            if (isCasting && castSession) {
+                // השמעה דרך Chromecast
+                const mediaInfo = new chrome.cast.media.MediaInfo(stationUrl, 'audio/mp3');
+                mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
+                mediaInfo.metadata.title = 'רדיו מקוון';
+
+                const request = new chrome.cast.media.LoadRequest(mediaInfo);
+                castSession.loadMedia(request).then(
+                    () => console.log('התחנה משודרת בהצלחה לכרוםקאסט'),
+                    (error) => console.error('שגיאה בשידור לכרוםקאסט', error)
+                );
+                audioPlayer.pause(); // עצור השמעה מקומית אם יש
+            } else {
+                // השמעה מקומית בדפדפן
+                audioPlayer.src = stationUrl;
+                audioPlayer.play();
+            }
         }
 
-        // Function to stop current playback
-        function stopPlayback() {
-            if (currentAudio) {
-                currentAudio.pause();
-                currentAudio = null;
-            }
-            if (isCasting) {
-                const castSession = castContext.getCurrentSession();
-                if (castSession) {
-                    castSession.endSession(true);
-                }
-                isCasting = false;
-            }
-        }
-
-        // Function to cast the current station
-        function castStation() {
-            if (!currentStationUrl) {
-                alert('בחר תחנה תחילה');
-                return;
-            }
-
-            const castSession = castContext.getCurrentSession();
-            if (!castSession) {
-                alert('לא נמצא מכשיר Chromecast');
-                return;
-            }
-
-            const mediaInfo = new chrome.cast.media.MediaInfo(currentStationUrl, 'audio/mp3');
-            const request = new chrome.cast.media.LoadRequest(mediaInfo);
-            castSession.loadMedia(request).then(
-                () => {
-                    console.log('שידור החל בהצלחה');
-                    isCasting = true;
-                },
-                (error) => console.error('שגיאה בהפעלת השידור:', error)
-            );
-        }
-
-        // Function to play locally
-        function playLocally() {
-            if (!currentStationUrl) {
-                alert('בחר תחנה תחילה');
-                return;
-            }
-            stopPlayback();
-            currentAudio = new Audio(currentStationUrl);
-            currentAudio.play();
-        }
-
-        // Toggle between local and Chromecast mode
+        // Function to toggle between local and Chromecast mode
         function toggleMode() {
             const modeToggle = document.getElementById('mode-toggle');
             if (modeToggle.textContent === 'האזן בדפדפן') {
                 modeToggle.textContent = 'שדר ל-Chromecast';
-                stopPlayback();
+                // עצור השמעה מקומית ועבור למצב Chromecast
+                audioPlayer.pause();
             } else {
                 modeToggle.textContent = 'האזן בדפדפן';
-                stopPlayback();
+                // עצור השמעה ב-Chromecast וחזור למצב מקומי
+                if (castSession) {
+                    castSession.endSession(true); // סיים את הסשן
+                }
             }
         }
 
         // Add event listeners to station buttons
         document.querySelectorAll('.station-button').forEach(button => {
-            button.addEventListener('click', () => {
-                currentStationUrl = button.getAttribute('data-url');
-                const modeToggle = document.getElementById('mode-toggle');
-                if (modeToggle.textContent === 'האזן בדפדפן') {
-                    playLocally();
-                } else {
-                    castStation();
-                }
+            button.addEventListener('click', function() {
+                playStation(this.dataset.url);
             });
         });
-
-        // Add event listener to cast button
-        document.getElementById('cast-button').addEventListener('click', castStation);
-
-        // Initialize Cast API when the script loads
-        window.onload = initializeCastApi;
     </script>
 </body>
 </html>
