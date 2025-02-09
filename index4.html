@@ -180,7 +180,7 @@
     </div>
 
     <div class="contaibox">
-        גרסה 6.8
+        גרסה 6.9
     </div>
     <div class="contailink">
         <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
@@ -460,7 +460,7 @@
             const stepDuration = duration / steps;
             const volumeStep = (end - start) / steps;
 
-           for (let i = 0; i <= steps; i++) {
+           for (let i = 0; <= steps; i++) {
                  audioElement.volume = start + (volumeStep * i);
                 await new Promise(resolve => setTimeout(resolve, stepDuration));
             }
@@ -544,6 +544,7 @@
                             }, error => {
                                 console.error("Failed to stop other media", error);
                                 speakCastError();
+                                console.log("Error details:", error); // הדפסת פרטים נוספים על השגיאה
                             });
                         } else {
                             loadMedia(currentStationURL); // אם אין מדיה, מטעינים את שלנו
@@ -551,11 +552,13 @@
                     }, error => {
                         console.error("Failed to get media session", error);
                         speakCastError();
+                        console.log("Error details:", error); // הדפסת פרטים נוספים על השגיאה
                     });
                 },
                 function(err) {
                     console.error('Error launching session: ' + err);
                     speakCastError();
+                    console.log("Error details:", err); // הדפסת פרטים נוספים על השגיאה
                 }
             );
         }
@@ -578,32 +581,34 @@
                     function(err) {
                         console.error('Error launching session: ' + err);
                         speakCastError();
+                        console.log("Error details:", err); // הדפסת פרטים נוספים על השגיאה
                     }
                 );
             }
         }
 
         function loadMedia(mediaURL) {
-            let mediaInfo = new chrome.cast.media.MediaInfo(mediaURL, 'audio/mp3');
-            mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-            mediaInfo.metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
-            mediaInfo.metadata.title = 'רדיו נגיש';
+             let mediaInfo = new chrome.cast.media.MediaInfo(mediaURL, 'audio/mp3');
+             mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+             mediaInfo.metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
+             mediaInfo.metadata.title = 'רדיו נגיש';
 
-            let request = new chrome.cast.media.LoadRequest(mediaInfo);
-            request.autoplay = true;
+             let request = new chrome.cast.media.LoadRequest(mediaInfo);
+             request.autoplay = true;
 
             castSession.loadMedia(request,
-                function() {
-                    console.log('Media loaded');
-                    isCasting = true;
+                 function() {
+                     console.log('Media loaded');
+                     isCasting = true;
                     audioPlayer.pause();
-                },
-                function(errorCode) {
-                    console.error('Error launching media: ' + errorCode);
-                    speakCastError();
-                }
-            );
-        }
+                 },
+                 function(errorCode) {
+                     console.error('Error launching media: ' + errorCode);
+                     speakCastError();
+                     console.log("Error details:", errorCode); // הדפסת פרטים נוספים על השגיאה
+                 }
+             );
+         }
 
         function stopCast() {
             castSession.stop(
@@ -617,6 +622,7 @@
                 function(errorCode) {
                     console.error('Error stopping cast: ' + errorCode);
                     speakCastError();
+                    console.log("Error details:", errorCode); // הדפסת פרטים נוספים על השגיאה
                 }
             );
         }
