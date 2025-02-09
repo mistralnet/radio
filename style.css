@@ -1,0 +1,111 @@
+/* משתנים CSS לשימוש חוזר ונוחות שינוי */
+:root {
+    --main-font: Arial, sans-serif;
+    --main-bg-color: #000;
+    --main-text-color: #fff;
+    --secondary-text-color: #989494;
+    --highlight-color: #ffff00;
+}
+
+body {
+    font-family: var(--main-font);
+    text-align: center;
+    direction: rtl;
+    margin: 0;
+    padding: 0; /* הסרנו את ה padding כאן */
+    background-color: var(--main-bg-color);
+    color: var(--main-text-color);
+    display: flex;  /*Flexbox כדי למרכז תוכן אנכית*/
+    flex-direction: column;
+    min-height: 100vh; /*גובה מינימלי של המסך*/
+}
+
+.container {
+    max-width: 600px;
+    margin: auto; /*מרכוז אוטומטי אופקית ואנכית */
+    padding: 20px; /*הוספנו padding פנימי*/
+    flex: 1; /*תופס את כל המקום הפנוי בגובה*/
+    display: flex;
+    flex-direction: column;
+    align-items: center; /*מרכוז אופקי של פריטים בתוך הקונטיינר*/
+}
+
+.battery-info {
+    font-size: 1rem;
+    margin-top: 10px;
+    color: var(--secondary-text-color);
+}
+
+.clock {
+    font-size: 3rem;
+    font-weight: bold;
+    background-color: var(--highlight-color);
+    color: black;
+    padding: 10px;
+    border-radius: 10px;
+    display: inline-block;
+    margin-top: 20px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.station-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+    flex-wrap: wrap; /*מאפשר לכפתורים לעבור לשורה חדשה אם אין מקום*/
+}
+
+.station-button {
+    width: 120px;
+    height: 120px;
+    cursor: pointer;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 4px solid transparent; /*הגדרת שקוף כברירת מחדל*/
+    box-sizing: border-box;
+    padding: 0;
+    transition: border-color 0.3s ease; /*מעבר חלק של שינוי צבע הגבול*/
+}
+
+.station-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.station-button.active {
+    border-color: var(--highlight-color);
+   background: var(--highlight-color);  
+}
+
+@media (max-width: 480px) {
+    .station-button {
+        width: 90px; /*הקטנה קלה של הכפתורים במסכים קטנים*/
+        height: 90px;
+    }
+
+    .clock {
+        font-size: 2rem; /*הקטנת השעון במסכים קטנים*/
+    }
+}
+
+.contaibox {
+    padding: 20px;
+    color: var(--secondary-text-color);
+    text-align: center; /*מרכוז הטקסט*/
+    margin-top: auto; /*דחיפה לתחתית*/
+}
+
+.contailink {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.container h4 {        
+    padding: 0;
+    margin: 0;
+
+}
