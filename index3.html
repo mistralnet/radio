@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="he">
 <head>
@@ -134,14 +135,7 @@
 
 }
 
-    #cast-button {
-      margin-top: 20px;
-      padding: 10px;
-      background-color: #fff;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-      cursor: pointer;
-    }
+ 
     </style>
 </head>
 <body>
@@ -150,18 +144,21 @@
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div class="container">
- 
+        <audio id="audio-player">
+            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
+            הדפדפן שלך לא תומך בהשמעת אודיו.
+        </audio>
         <!-- הוספת אודיו שקט -->
         <audio id="silent-audio" loop>
             <source src="silent.mp3" type="audio/mpeg">
         </audio>
-
+        
         <h4>רדיו נגיש עבור אבא</h4>
         <div>לחץ ובחר תחנה להאזנה</div>
-
+        
         <div class="station-buttons">
-
-            <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
+      
+                      <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
                 <img src="kan_logo.png" alt="כאן ב'">
             </button>
             <button class="station-button" id="station-glz" data-url="https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz">
@@ -173,15 +170,12 @@
         </div>
         <div class="clock" id="clock"></div>
         <div id="battery-info" class="battery-info"></div> <!-- מיקום חדש למידע הסוללה -->
-
-    <button id="cast-button">שדר ל-Chromecast</button>
-
     </div>
 
-    <div class="contaibox">
+     <div class="contaibox">
        <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
         גרסה
-     7
+    6.3
     </div>
      <div class="contailink">
 <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
@@ -202,7 +196,6 @@
         const silentAudio = document.getElementById('silent-audio');
         const batteryInfo = document.getElementById('battery-info');
         let lastBatteryLevel = 100;
-        let isCasting = false; // מציין אם מושמע כרגע בכרוםקאסט
 
 
         // פונקציה שמקבלת מידע על סוללה
@@ -213,7 +206,7 @@
                     const level = Math.round(battery.level * 100);
                     const charging = battery.charging ? 'בטעינה' : 'לא בטעינה';
                     batteryInfo.textContent = `סוללה: ${level}%, מצב: ${charging}`;
-
+                    
                     if (level <= 40 && lastBatteryLevel > 40) {
                         speakBatteryAlert(level);
                         lastBatteryLevel = level;
@@ -232,7 +225,7 @@
                     } else if (level > 40 ) {
                         lastBatteryLevel = level;
                     }
-
+                    
                     battery.addEventListener('chargingchange', () => {
                         updateBatteryStatus()
                     });
@@ -324,29 +317,24 @@
             }
             button.classList.add('active');
             currentStationButton = button;
-
-            // עצור שידור Chromecast אם הוא פועל
-            if (isCasting) {
-                stopCasting();
-            }
         }
-
+        
          // פונקציה שמבצעת קריאת השעה בקול
         async function speakTime() {
             if (isAnnouncing) return;
-
+            
              isAnnouncing = true;
              const wasPlaying = !audioPlayer.paused;
              const currentVolume = audioPlayer.volume;
-
+             
             if (wasPlaying) {
                 await fadeAudio(audioPlayer, currentVolume, 0, 500);
-             }
+            }
 
             const timeString = document.getElementById('clock').textContent;
             const utterance = new SpeechSynthesisUtterance(`השעה היא ${timeString}`);
             utterance.lang = 'he-IL';
-
+            
              await new Promise(resolve => {
                 utterance.onend = resolve;
                  window.speechSynthesis.speak(utterance);
@@ -356,7 +344,7 @@
                 audioPlayer.volume = 0;
                 await fadeAudio(audioPlayer, 0, radioVolume, 500);
             }
-
+            
            isAnnouncing = false;
         }
 
@@ -383,7 +371,7 @@
              nextTime.setHours(nextTime.getHours() + 1);
 
              const nextHour = nextTime.getHours();
-
+             
              if (nextHour >= 9 && nextHour < 21) {
                 let delay = nextTime.getTime() - now.getTime(); // חישוב ההפרש
                  if (delay < 0) { // אם החישוב שלילי (קורה במקרים נדירים מאוד) נגדיר ל שעה הבאה
@@ -421,35 +409,11 @@
                 wakeLockInterval = null;
             }
          }
-
+        
          // פונקציה לאתחול מחדש
         function restartApp() {
              window.location.reload(true);
         }
-
-        // פונקציית שידור לכרוםקאסט פשוטה
-        function castToChromecast() {
-            if (currentStationButton) {
-                const streamURL = currentStationButton.getAttribute('data-url');
-                if (streamURL) {
-                    // פתיחת ה-URL בחלון חדש
-                    window.open(streamURL, '_blank');
-                    isCasting = true;
-                } else {
-                    alert('בחר תחנה קודם.');
-                }
-            } else {
-                alert('בחר תחנה קודם.');
-            }
-        }
-
-        // פונקציה לעצור את השידור
-        function stopCasting() {
-            // סגירת החלון שנפתח
-            window.close();
-            isCasting = false;
-        }
-
         // פעולות עם טעינת הדף
         document.addEventListener('DOMContentLoaded', async () => {
              updateBatteryStatus(); // לקריאה ראשונית של מצב הסוללה
@@ -478,12 +442,9 @@
                     }
                 }
             });
-
-            // הוספת event listener לכפתור השידור
-            document.getElementById('cast-button').addEventListener('click', castToChromecast);
         });
     </script>
-
-
+   
+    
 </body>
 </html>
