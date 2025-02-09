@@ -52,6 +52,10 @@
             background-color: #0056b3;
         }
 
+        .station-button.active {
+            background-color: #28a745; /* צבע ירוק לתחנה פעילה */
+        }
+
         audio {
             width: 100%;
             margin-top: 10px;
@@ -100,7 +104,7 @@
     </style>
 </head>
 <body>
-    <h1>רדיו נגגגגיש</h1>
+    <h1>רדיו נגיש</h1>
 
     <div class="station-container">
         <h2>כאן ב'</h2>
@@ -129,7 +133,7 @@
         let statusDiv = document.getElementById('status');
         let castSession = null;
         let isCasting = false;
-        let currentStationButton = null; // כפתור התחנה הנוכחית
+        let currentStationButton = null;
 
         // Initialize Chromecast SDK
         window['__onGCastApiAvailable'] = function(isAvailable) {
@@ -172,6 +176,7 @@
                 isCasting = false;
                 castButton.classList.remove('on');
                 statusDiv.innerText = "Chromecast מנותק.";
+                resetStationButtons();
             }
         }
 
@@ -188,15 +193,19 @@
             let newStationURL = button.dataset.url;
 
             // אם לוחצים על אותה תחנה שמשודרת, עוצרים את השידור
-            if (currentStationURL === newStationURL && (audioPlayer.src || isCasting)) {
+            if (currentStationURL === newStationURL) {
                 stopPlaying();
                 return;
             }
 
             currentStationURL = newStationURL;
 
-            // שמירת הכפתור של התחנה הנוכחית
+            // הסרת סימון מהכפתור הקודם
+            resetStationButtons();
+
+            // שמירת הכפתור של התחנה הנוכחית וסימון שלו
             currentStationButton = button;
+            currentStationButton.classList.add('active');
 
             if (isCasting && castSession) {
                 loadMedia(currentStationURL);
@@ -266,10 +275,10 @@
                 function() {
                     console.log('Session stopped');
                     isCasting = false;
-                    castButton.classList.add('on'); // משנה צבע
+                    castButton.classList.add('on');
                     statusDiv.innerText = "השידור חזר למכשיר.";
-                    audioPlayer.play(); // מפעיל את הנגן המקומי
-                    audioPlayer.src = currentStationURL; // מוודא שהנגן המקומי מנגן את התחנה הנכונה
+                    audioPlayer.play();
+                    audioPlayer.src = currentStationURL;
                 },
                 function(errorCode) {
                     statusDiv.innerText = "שגיאה בעצירת השידור בכרוםקאסט: " + errorCode;
@@ -280,13 +289,28 @@
 
         function stopPlaying() {
             if (isCasting && castSession) {
-                stopCast(); // אם משדרים לכרוםקאסט, נעצור אותו
+                // אם משדרים לכרוםקאסט, פשוט עוצרים את הסשן
+                castSession.stop(null, function(errorCode) {
+                    if (errorCode) {
+                        console.error('Error stopping cast session: ' + errorCode);
+                    }
+                });
+                isCasting = false;
+                castButton.classList.add('on');
+                statusDiv.innerText = "השידור הופסק.";
+
             } else {
-                audioPlayer.pause(); // עוצרים את הנגן המקומי
-                audioPlayer.src = ''; // מנקים את מקור השמע
-                currentStationURL = null; // מנקים את כתובת התחנה הנוכחית
+                audioPlayer.pause();
+                audioPlayer.src = '';
                 statusDiv.innerText = "השידור הופסק.";
             }
+            currentStationURL = null;
+            resetStationButtons();
+        }
+
+        function resetStationButtons() {
+            let buttons = document.querySelectorAll('.station-button');
+            buttons.forEach(button => button.classList.remove('active'));
         }
     </script>
     <script src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
