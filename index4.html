@@ -180,7 +180,7 @@
     </div>
 
     <div class="contaibox">
-        גרסה 6.6
+        גרסה 6.7
     </div>
     <div class="contailink">
         <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
@@ -528,27 +528,29 @@
                 return;
             }
 
-            // בדיקה אם כבר מתנגן משהו בכרוםקאסט ממקור אחר
-            if (castSession) {
-                castSession.getMediaSession(media => {
-                    if (media) {
-                        speakChromecastOccupied(); // הודעה שהכרוםקאסט תפוס
-                    } else {
-                        // אם אין מדיה שמתנגנת, ממשיכים כרגיל
-                        if (isCasting) {
-                            stopCast();
+            // קודם כל, מבקשים סשן לכרוםקאסט
+            chrome.cast.requestSession(
+                function(session) {
+                    console.log('Session acquired: ' + session.sessionId);
+                    castSession = session;
+
+                    // לאחר שהסשן נוצר, בודקים אם כבר מתנגן משהו
+                    castSession.getMediaSession(media => {
+                        if (media) {
+                            speakChromecastOccupied(); // הודעה שהכרוםקאסט תפוס
                         } else {
-                            castMedia(currentStationURL);
+                            loadMedia(currentStationURL); // אם אין מדיה, מטעינים את שלנו
                         }
-                    }
-                }, error => {
-                    console.error("Failed to get media session", error);
+                    }, error => {
+                        console.error("Failed to get media session", error);
+                        speakCastError();
+                    });
+                },
+                function(err) {
+                    console.error('Error launching session: ' + err);
                     speakCastError();
-                });
-            } else {
-                // אם אין סשן, מנסים ליצור אחד
-                castMedia(currentStationURL);
-            }
+                }
+            );
         }
 
         function castMedia(mediaURL) {
