@@ -180,7 +180,7 @@
     </div>
 
     <div class="contaibox">
-        גרסה 6.7
+        גרסה 6.8
     </div>
     <div class="contailink">
         <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
@@ -537,7 +537,14 @@
                     // לאחר שהסשן נוצר, בודקים אם כבר מתנגן משהו
                     castSession.getMediaSession(media => {
                         if (media) {
-                            speakChromecastOccupied(); // הודעה שהכרוםקאסט תפוס
+                            // אם יש מדיה, עוצרים אותה ואז מתחילים את שלנו
+                            media.stop(null, () => {
+                                console.log('Other media stopped, loading ours');
+                                loadMedia(currentStationURL); // טוענים את המדיה שלנו לאחר העצירה
+                            }, error => {
+                                console.error("Failed to stop other media", error);
+                                speakCastError();
+                            });
                         } else {
                             loadMedia(currentStationURL); // אם אין מדיה, מטעינים את שלנו
                         }
@@ -619,19 +626,6 @@
              if (isAnnouncing) return;
              isAnnouncing = true;
             const utterance = new SpeechSynthesisUtterance("שגיאה בהפעלת Chromecast");
-            utterance.lang = 'he-IL';
-             await new Promise(resolve => {
-                 utterance.onend = resolve;
-                 window.speechSynthesis.speak(utterance);
-             });
-             isAnnouncing = false;
-        }
-
-        // פונקציה שמבצעת הקראה של הודעה שהכרוםקאסט תפוס
-        async function speakChromecastOccupied() {
-             if (isAnnouncing) return;
-             isAnnouncing = true;
-            const utterance = new SpeechSynthesisUtterance("הכרוםקאסט תפוס כרגע");
             utterance.lang = 'he-IL';
              await new Promise(resolve => {
                  utterance.onend = resolve;
