@@ -180,9 +180,7 @@
     </div>
 
     <div class="contaibox">
-        גרסה
-        6.5
-        
+        גרסה 6.6
     </div>
     <div class="contailink">
         <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
@@ -530,9 +528,25 @@
                 return;
             }
 
-            if (isCasting) {
-                stopCast();
+            // בדיקה אם כבר מתנגן משהו בכרוםקאסט ממקור אחר
+            if (castSession) {
+                castSession.getMediaSession(media => {
+                    if (media) {
+                        speakChromecastOccupied(); // הודעה שהכרוםקאסט תפוס
+                    } else {
+                        // אם אין מדיה שמתנגנת, ממשיכים כרגיל
+                        if (isCasting) {
+                            stopCast();
+                        } else {
+                            castMedia(currentStationURL);
+                        }
+                    }
+                }, error => {
+                    console.error("Failed to get media session", error);
+                    speakCastError();
+                });
             } else {
+                // אם אין סשן, מנסים ליצור אחד
                 castMedia(currentStationURL);
             }
         }
@@ -603,6 +617,19 @@
              if (isAnnouncing) return;
              isAnnouncing = true;
             const utterance = new SpeechSynthesisUtterance("שגיאה בהפעלת Chromecast");
+            utterance.lang = 'he-IL';
+             await new Promise(resolve => {
+                 utterance.onend = resolve;
+                 window.speechSynthesis.speak(utterance);
+             });
+             isAnnouncing = false;
+        }
+
+        // פונקציה שמבצעת הקראה של הודעה שהכרוםקאסט תפוס
+        async function speakChromecastOccupied() {
+             if (isAnnouncing) return;
+             isAnnouncing = true;
+            const utterance = new SpeechSynthesisUtterance("הכרוםקאסט תפוס כרגע");
             utterance.lang = 'he-IL';
              await new Promise(resolve => {
                  utterance.onend = resolve;
