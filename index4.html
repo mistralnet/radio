@@ -188,7 +188,7 @@
         </p>
     </div>
 
-    <script src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    <script src="https://www.gstatic.com/cast/sdk/libs/caf/v3/cast_framework.js"></script>
 
     <script>
         // משתנים גלובליים
@@ -208,52 +208,11 @@
         let isCasting = false; // מציין אם השידור כרגע בכרוםקאסט
 
         // אתחול Chromecast
-        window['__onGCastApiAvailable'] = function(isAvailable) {
-            if (isAvailable) {
-                initializeCastApi();
-            } else {
-                console.log("Chromecast לא זמין.");
-            }
-        };
-
         function initializeCastApi() {
-            let applicationID = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
-            let sessionRequest = new chrome.cast.SessionRequest(applicationID);
-            let apiConfig = new chrome.cast.ApiConfig(sessionRequest,
-                sessionListener,
-                receiverListener);
-
-            chrome.cast.initialize(apiConfig, onInitSuccess, onError);
-        }
-
-        function onInitSuccess() {
-            console.log('Chromecast API initialized');
-        }
-
-        function onError(message) {
-            console.error('Chromecast initialization error: ' + message);
-        }
-
-        function sessionListener(session) {
-            console.log('New session ID: ' + session.sessionId);
-            castSession = session;
-            castSession.addUpdateListener(sessionUpdateListener); // האזנה לניתוקים
-        }
-
-        function sessionUpdateListener(isAlive) {
-            if (!isAlive) {
-                castSession = null;
-                isCasting = false;
-                console.log('Chromecast session ended');
-            }
-        }
-
-        function receiverListener(availability) {
-            if (availability === chrome.cast.ReceiverAvailability.AVAILABLE) {
-                console.log('Chromecast receiver available');
-            } else {
-                console.log('Chromecast receiver unavailable');
-            }
+            cast.framework.CastContext.getInstance().setOptions({
+                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+            });
         }
 
         // פונקציה שמקבלת מידע על סוללה
@@ -391,7 +350,7 @@
             button.classList.add('active');
             currentStationButton = button;
 
-            if (isCasting && castSession) {
+            if (isCasting) {
                 castMedia(url); // העברה לכרוםקאסט
             } else {
                 audioPlayer.src = url;
@@ -528,39 +487,16 @@
                 return;
             }
 
-            // קודם כל, מבקשים סשן לכרוםקאסט
-            chrome.cast.requestSession(
-                function(session) {
-                    console.log('Session acquired: ' + session.sessionId);
+            const castContext = cast.framework.CastContext.getInstance();
+            castContext.requestSession()
+                .then(session => {
                     castSession = session;
-
-                    // לאחר שהסשן נוצר, בודקים אם כבר מתנגן משהו
-                    castSession.getMediaSession(media => {
-                        if (media) {
-                            // אם יש מדיה, עוצרים אותה ואז מתחילים את שלנו
-                            media.stop(null, () => {
-                                console.log('Other media stopped, loading ours');
-                                loadMedia(currentStationURL); // טוענים את המדיה שלנו לאחר העצירה
-                            }, error => {
-                                console.error("Failed to stop other media", error);
-                                speakCastError();
-                                console.log("Error details:", error); // הדפסת פרטים נוספים על השגיאה
-                            });
-                        } else {
-                            loadMedia(currentStationURL); // אם אין מדיה, מטעינים את שלנו
-                        }
-                    }, error => {
-                        console.error("Failed to get media session", error);
-                        speakCastError();
-                        console.log("Error details:", error); // הדפסת פרטים נוספים על השגיאה
-                    });
-                },
-                function(err) {
-                    console.error('Error launching session: ' + err);
+                    castMedia(currentStationURL);
+                })
+                .catch(error => {
+                    console.error('Error launching session: ' + error);
                     speakCastError();
-                    console.log("Error details:", err); // הדפסת פרטים נוספים על השגיאה
-                }
-            );
+                });
         }
 
         function castMedia(mediaURL) {
@@ -569,62 +505,39 @@
                 return;
             }
 
-            if (castSession) {
-                loadMedia(mediaURL);
-            } else {
-                chrome.cast.requestSession(
-                    function(session) {
-                        console.log('Session acquired: ' + session.sessionId);
-                        castSession = session;
-                        loadMedia(mediaURL);
-                    },
-                    function(err) {
-                        console.error('Error launching session: ' + err);
-                        speakCastError();
-                        console.log("Error details:", err); // הדפסת פרטים נוספים על השגיאה
-                    }
-                );
-            }
+            const mediaInfo = new chrome.cast.media.MediaInfo(mediaURL, 'audio/mp3');
+            mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+            mediaInfo.metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
+            mediaInfo.metadata.title = 'רדיו נגיש';
+
+            const request = new chrome.cast.media.LoadRequest(mediaInfo);
+            request.autoplay = true;
+
+            castSession.loadMedia(request)
+                .then(() => {
+                    console.log('Media loaded');
+                    isCasting = true;
+                    audioPlayer.pause();
+                })
+                .catch(error => {
+                    console.error('Error launching media: ' + error);
+                    speakCastError();
+                });
         }
 
-        function loadMedia(mediaURL) {
-             let mediaInfo = new chrome.cast.media.MediaInfo(mediaURL, 'audio/mp3');
-             mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
-             mediaInfo.metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
-             mediaInfo.metadata.title = 'רדיו נגיש';
-
-             let request = new chrome.cast.media.LoadRequest(mediaInfo);
-             request.autoplay = true;
-
-            castSession.loadMedia(request,
-                 function() {
-                     console.log('Media loaded');
-                     isCasting = true;
-                    audioPlayer.pause();
-                 },
-                 function(errorCode) {
-                     console.error('Error launching media: ' + errorCode);
-                     speakCastError();
-                     console.log("Error details:", errorCode); // הדפסת פרטים נוספים על השגיאה
-                 }
-             );
-         }
-
         function stopCast() {
-            castSession.stop(
-                function() {
+            castSession.getSessionObj().stop()
+                .then(() => {
                     console.log('Session stopped');
                     isCasting = false;
-                     if (currentStationButton) {
-                         audioPlayer.play();
-                     }
-                },
-                function(errorCode) {
-                    console.error('Error stopping cast: ' + errorCode);
+                    if (currentStationButton) {
+                        audioPlayer.play();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error stopping cast: ' + error);
                     speakCastError();
-                    console.log("Error details:", errorCode); // הדפסת פרטים נוספים על השגיאה
-                }
-            );
+                });
         }
 
         // פונקציה שמבצעת הקראה של שגיאה בכרוםקאסט
@@ -670,6 +583,7 @@
                     }
                 }
             });
+             initializeCastApi();
         });
     </script>
 </body>
