@@ -64,6 +64,7 @@
         let inactivityTimer = null;
         const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 דקות
         let isCasting = false; // מציין אם משדרים לכרומקאסט
+        let isPlaying = false; // מציין אם תחנה מתנגנת (מקומי או בכרומקאסט)
 
         const audioPlayer = document.getElementById('audio-player');
         const stationsDiv = document.getElementById('stations');
@@ -86,9 +87,10 @@
         });
 
         // פונקציה להפעלת תחנה
-        function playStation(station) {
+       function playStation(station) {
             if (currentStation === station) {
-                stopCast(); // עצירת שידור בכרומקאסט אם התחנה כבר מתנגנת
+                // אם לוחצים על אותה תחנה שוב, עצור את השידור
+                stopStation();
                 return;
             }
 
@@ -100,16 +102,30 @@
             // הפעלת התחנה החדשה
             if (!isCasting) {
                 startLocalPlayback(station);
+                isPlaying = true;
+                updateButtonStatus(station.id, 'מנגן במכשיר');
             } else {
                 castMedia(station.url);
+                isPlaying = true;
+                updateButtonStatus(station.id, 'מנגן בכרומקאסט');
             }
-
-            // עדכון סטטוס כפתורים
-            updateButtonStatus(station.id, isCasting ? 'מנגן בכרומקאסט' : 'מנגן במכשיר');
 
             // איפוס טיימר חוסר פעילות
             resetInactivityTimer();
+        }
 
+        // פונקציה לעצירת התחנה (מקומי או כרומקאסט)
+        function stopStation() {
+            stopLocalPlayback();
+            if (isCasting) {
+                // אם משדרים לכרומקאסט, השאר את החיבור פעיל
+                // רק עצור את הניגון
+                if (castPlayer && castPlayer.isMediaLoaded) {
+                      castPlayer.load(new chrome.cast.media.LoadRequest(castPlayer.mediaInfo));
+                }
+            }
+            isPlaying = false;
+            updateButtonStatus(currentStation.id, 'מופסק');
         }
 
         // פונקציה לעצירת ניגון מקומי
@@ -167,8 +183,13 @@
                       castPlayer = null;
                       castRemotePlayerController = null;
                       isCasting = false;
-                      updateButtonStatus(currentStation.id, 'מנגן במכשיר');
-                      startLocalPlayback(currentStation); // המשך ניגון מקומי
+                      if (isPlaying){
+                        updateButtonStatus(currentStation.id, 'מנגן במכשיר');
+                        startLocalPlayback(currentStation); // המשך ניגון מקומי
+                      } else {
+                        updateButtonStatus(currentStation.id, 'מופסק');
+                      }
+
                       break;
                   }
                 });
@@ -180,7 +201,6 @@
               .then(function(session) {
                 castSession = session;
                 console.log('Connected to Chromecast');
-                //castMedia(currentStation.url); //העברה ל session start
                 isCasting = true;
 
               })
@@ -221,7 +241,8 @@
                         console.log('Session ended');
                         updateButtonStatus(currentStation.id, 'מופסק');
                         isCasting = false;
-                        startLocalPlayback(currentStation); // חזרה לניגון מקומי
+                        isPlaying = false;
+                        //startLocalPlayback(currentStation); // חזרה לניגון מקומי
                     })
                     .catch(function(error) {
                         console.error('Error ending session', error);
@@ -242,6 +263,7 @@
                 castSession.endSession(true);
                 castSession = null;
                 isCasting = false;
+                isPlaying = false;
                 statusDiv.textContent = 'הכרומקאסט התנתק עקב חוסר פעילות';
             }
         }
@@ -261,5 +283,7 @@
 
     </script>
     <script src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+
+    4444
 </body>
 </html>
