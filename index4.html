@@ -86,7 +86,6 @@
             stationsDiv.appendChild(button);
         });
 
-        // פונקציה להפעלת תחנה
        function playStation(station) {
             if (currentStation === station) {
                 // אם לוחצים על אותה תחנה שוב, עצור את השידור
@@ -116,16 +115,15 @@
 
         // פונקציה לעצירת התחנה (מקומי או כרומקאסט)
         function stopStation() {
-            stopLocalPlayback();
+             stopLocalPlayback();
             if (isCasting) {
-                // אם משדרים לכרומקאסט, השאר את החיבור פעיל
-                // רק עצור את הניגון
-                if (castPlayer && castPlayer.isMediaLoaded) {
-                      castPlayer.load(new chrome.cast.media.LoadRequest(castPlayer.mediaInfo));
-                }
+                 if (castSession && castPlayer) {
+                    castPlayer.controller.stop(); // Use the controller to stop media
+                 }
+                updateButtonStatus(currentStation.id, 'מופסק');
             }
             isPlaying = false;
-            updateButtonStatus(currentStation.id, 'מופסק');
+           updateButtonStatus(currentStation.id, 'מופסק');
         }
 
         // פונקציה לעצירת ניגון מקומי
@@ -173,6 +171,7 @@
                       castSession = castContext.getCurrentSession();
                       castPlayer = new cast.framework.RemotePlayer();
                       castRemotePlayerController = new cast.framework.RemotePlayerController(castPlayer);
+                      castPlayerController = new cast.framework.RemotePlayerController(castPlayer);
                       isCasting = true;
                       castMedia(currentStation.url); // התחלת שידור בכרומקאסט לאחר חיבור
                       stopLocalPlayback(); //עצירת נגן מקומי
@@ -211,7 +210,7 @@
         }
 
         function castMedia(mediaURL) {
-            if (!castSession) {
+             if (!castSession) {
                 statusDiv.textContent = 'לא מחובר לכרומקאסט';
                 return;
             }
@@ -222,16 +221,38 @@
             mediaInfo.metadata.title = currentStation.name;
             mediaInfo.metadata.albumName = 'שידור חי';
 
-            const request = new chrome.cast.media.LoadRequest(mediaInfo);
-            castSession.loadMedia(request)
-                .then(function() {
-                    console.log('Loading started');
-                    updateButtonStatus(currentStation.id, 'מנגן בכרומקאסט');
-                })
-                .catch(function(error) {
-                    console.error('Media load failed', error);
-                    statusDiv.textContent = 'שגיאה בטעינת המדיה לכרומקאסט';
-                });
+             const request = new chrome.cast.media.LoadRequest(mediaInfo);
+
+            if (castSession.getMediaSession()) {
+            // If media is already playing, stop it before loading new media
+             castSession.getMediaSession().stop(new chrome.cast.media.StopRequest(),
+                  function() {
+                    console.log('Media stopped successfully before loading new media');
+                     castSession.loadMedia(request)
+                    .then(function() {
+                        console.log('Loading started');
+                        updateButtonStatus(currentStation.id, 'מנגן בכרומקאסט');
+                    })
+                    .catch(function(error) {
+                        console.error('Media load failed', error);
+                        statusDiv.textContent = 'שגיאה בטעינת המדיה לכרומקאסט';
+                    });
+
+                  },
+                  function(error) {
+                    console.log('Error stopping current media: ' + error);
+                  });
+            } else {
+                castSession.loadMedia(request)
+                    .then(function() {
+                        console.log('Loading started');
+                        updateButtonStatus(currentStation.id, 'מנגן בכרומקאסט');
+                    })
+                    .catch(function(error) {
+                        console.error('Media load failed', error);
+                        statusDiv.textContent = 'שגיאה בטעינת המדיה לכרומקאסט';
+                    });
+             }
         }
 
         function stopCast() {
@@ -283,7 +304,5 @@
 
     </script>
     <script src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-
-    4444
 </body>
 </html>
