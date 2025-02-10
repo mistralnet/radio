@@ -1,1 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>אפליקציית רדיו</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
 
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+    <!-- Include the cast SDK -->
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+</head>
+<body>
+    <h1>אפליקציית רדיו</h1>
+
+    <div id="stations">
+        </div>
+
+    <audio id="audioPlayer" controls></audio>
+
+    <button id="castButton">חפש כרומקאסט</button>
+    <div id="castStatus">לא מחובר</div>
+
+    <div id="status">מוכן</div>
+
+    <script>
+        const stations = [
+            {
+                "id": "station-kan",
+                "name": "כאן ב'",
+                "url": "https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net"
+            },
+            {
+                "id": "station-glz",
+                "name": "גלי צהל",
+                "url": "https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz"
+            },
+            {
+                "id": "glyisrael",
+                "name": "גלי ישראל",
+                "url": "https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio"
+            }
+        ];
+
+        let currentStation = null;
+        let castSession = null;
+        let castMedia = null;
+        let castInterval = null;
+        let castTimeout = null;
+
+        const audioPlayer = document.getElementById('audioPlayer');
+        const stationsDiv = document.getElementById('stations');
+        const statusDiv = document.getElementById('status');
+        const castButton = document.getElementById('castButton');
+        const castStatusDiv = document.getElementById('castStatus');
+
+        // Build the station buttons
+        stations.forEach(station => {
+            const button = document.createElement('button');
+            button.textContent = station.name;
+            button.id = station.id;
+            button.addEventListener('click', () => playStation(station));
+            stationsDiv.appendChild(button);
+        });
+
+        function playStation(station) {
+            if (currentStation === station) {
+                stopCast();
+                return;
+            }
+            currentStation = station;
+            audioPlayer.src = station.url;
+            audioPlayer.play();
+            updateButtonStatuses();
+            setStatus(`מנגן: ${station.name} במכשיר`);
+
+            // If casting, load the new station on Chromecast
+            if (castSession) {
+                loadMedia();
+            }
+        }
+
+        function stopStation() {
+            audioPlayer.pause();
+            audioPlayer.src = '';
+            currentStation = null;
+        }
+
+        function updateButtonStatuses() {
+            stations.forEach(station => {
+                const button = document.getElementById(station.id);
+                if (station === currentStation) {
+                    button.textContent = `${station.name} (מנגן במכשיר)`;
+                } else {
+                    button.textContent = station.name;
+                }
+            });
+        }
+
+        function setStatus(message) {
+            statusDiv.textContent = message;
+        }
+
+        // Chromecast functions
+
+        window['__onGCastApiAvailable'] = function(isAvailable) {
+            if (isAvailable) {
+                initializeCastApi();
+            } else {
+                setStatus("Chromecast not available");
+            }
+        };
+
+        function initializeCastApi() {
+            cast.framework.CastContext.getInstance().setOptions({
+                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+            });
+
+            castButton.onclick = async function() {
+                try {
+                    castSession = await cast.framework.CastContext.getInstance().requestSession();
+                    castStatusDiv.textContent = "מחובר לכרומקאסט";
+                    if (currentStation) {
+                        loadMedia(); // Call loadMedia AFTER the session is established and if a station is playing
+                    }
+
+                } catch (error) {
+                    console.error("Error connecting to Chromecast", error);
+                    setStatus("שגיאה בחיבור לכרומקאסט: " + error);
+                    castStatusDiv.textContent = "לא מחובר";
+                }
+            };
+        }
+
+
+        function loadMedia() {
+            if (!castSession) {
+                setStatus("לא מחובר לכרומקאסט. נסה להתחבר שוב.");
+                castStatusDiv.textContent = "לא מחובר";
+                return;
+            }
+
+            if (!currentStation) {
+                setStatus("בחר תחנה לפני שידור לכרומקאסט.");
+                return;
+            }
+
+            const mediaInfo = new chrome.cast.media.MediaInfo(currentStation.url, 'audio/mp3');
+            mediaInfo.metadata = new chrome.cast.media.GenericMediaMetadata();
+            mediaInfo.metadata.metadataType = chrome.cast.media.MetadataType.GENERIC;
+            mediaInfo.metadata.title = currentStation.name;
+
+            const request = new chrome.cast.media.LoadRequest(mediaInfo);
+
+            castSession.loadMedia(request).then(
+                function() {
+                    console.log('Load succeed');
+                    setStatus("מנגן: " + currentStation.name + " בכרומקאסט");
+                    castStatusDiv.textContent = "מנגן";
+                },
+                function(errorCode) {
+                    console.log('Error code: ' + errorCode);
+                    setStatus("שגיאה בהעלאת מדיה לכרומקאסט: " + errorCode);
+                    castStatusDiv.textContent = "שגיאה";
+                });
+        }
+
+        function stopCast() {
+            if (castSession) {
+                castSession.endSession(true); // true means stop the media
+                castSession = null;
+                setStatus("השידור בכרומקאסט הופסק");
+                castStatusDiv.textContent = "לא מחובר";
+            } else {
+                setStatus("לא מחובר לכרומקאסט.");
+            }
+        }
+
+
+    </script>
+</body>
+</html>
