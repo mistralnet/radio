@@ -1,71 +1,198 @@
 <!DOCTYPE html>
-<html lang="he" dir="rtl">
+<html>
 <head>
+    <title>רדיו אינטרנטי</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>רדיו ישראלי</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center; }
-        .stations { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-        .station-btn { padding: 10px; background-color: #f0f0f0; border: none; cursor: pointer; }
-        .active { background-color: #4CAF50; color: white; }
-        #status { margin: 15px 0; font-weight: bold; }
-        .controls { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .station-button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        #cast-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <div id="status">לחץ על תחנה להתחלת השידור</div>
-    <div class="stations" id="stations"></div>
-    <div class="controls">
-        <button onclick="changeVolume(-0.1)">הנמך קול</button>
-        <button onclick="changeVolume(0.1)">הגבר קול</button>
+    <h1>רדיו אינטרנטי</h1>
+
+    <div id="stations">
+        <!-- כפתורי תחנות רדיו יתווספו כאן -->
     </div>
 
-    <audio id="radioPlayer"></audio>
+    <div>
+        <button id="cast-button">חבר לכרומקאסט</button>
+    </div>
+
+    <div>
+        <button id="play-pause-button">נגן / עצור</button>
+        <button id="volume-up">הגבר עוצמה</button>
+        <button id="volume-down">הנמך עוצמה</button>
+    </div>
+
+    <p id="status-message"></p>
+
+    <audio id="audio-player" controls style="display:none"></audio>
+
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
     <script>
         const stations = [
-            {"id": "station-kan", "name": "כאן ב'", "url": "https://kan-16.cast.mmdlive.lldns.net/kan/live_b/kan_b/index.m3u8"},
-            {"id": "station-glz", "name": "גלי צהל", "url": "https://glzwizzlv.bynetcdn.com/glz_mp3"},
-            {"id": "glyisrael", "name": "גלי ישראל", "url": "https://stream.hari.fm:2199/rpc/gali/stream.php?type=.mp3"}
+            {
+                "id": "station-kan",
+                "name": "כאן ב'",
+                "url": "https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net"
+            },
+            {
+                "id": "station-glz",
+                "name": "גלי צהל",
+                "url": "https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz"
+            },
+            {
+                "id": "glyisrael",
+                "name": "גלי ישראל",
+                "url": "https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio"
+            }
         ];
 
-        const player = document.getElementById('radioPlayer');
-        const statusDisplay = document.getElementById('status');
-        const stationsContainer = document.getElementById('stations');
+        const audioPlayer = document.getElementById('audio-player');
+        const stationsDiv = document.getElementById('stations');
+        const castButton = document.getElementById('cast-button');
+        const playPauseButton = document.getElementById('play-pause-button');
+        const volumeUpButton = document.getElementById('volume-up');
+        const volumeDownButton = document.getElementById('volume-down');
+        const statusMessage = document.getElementById('status-message');
+
         let currentStation = null;
+        let isCasting = false;
+        let castSession = null;
 
-        function renderStations() {
-            stations.forEach(station => {
-                const btn = document.createElement('button');
-                btn.textContent = station.name;
-                btn.className = 'station-btn';
-                btn.id = station.id;
-                btn.onclick = () => playStation(station);
-                stationsContainer.appendChild(btn);
-            });
+        // Initialize Cast
+        window.onload = function() {
+            castButton.addEventListener('click', initializeCastApi);
         }
 
-        function playStation(station) {
-            if (currentStation) {
-                document.getElementById(currentStation.id).classList.remove('active');
+        function initializeCastApi() {
+            cast.framework.CastContext.getInstance().setOptions({
+                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+            });
+
+            cast.framework.CastContext.getInstance().addEventListener(
+              cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+              function(event) {
+                switch (event.sessionState) {
+                  case cast.framework.SessionState.SESSION_STARTED:
+                    console.log('Cast Session Started');
+                    castSession = cast.framework.CastContext.getInstance().getCurrentSession();
+                    isCasting = true;
+                    statusMessage.textContent = "מחובר לכרומקאסט";
+                    break;
+                  case cast.framework.SessionState.SESSION_ENDED:
+                    console.log('Cast Session Ended');
+                    isCasting = false;
+                    castSession = null;
+                    statusMessage.textContent = "לא מחובר לכרומקאסט";
+                    break;
+                }
+              });
+        }
+        
+        function loadMedia(station) {
+            if (isCasting) {
+                console.log('Loading...' + station.url);
+                const mediaInfo = new chrome.cast.media.MediaInfo(station.url, 'audio/mp3');
+                mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
+                mediaInfo.metadata.artist = 'Various Artists';
+                mediaInfo.metadata.title = station.name;
+
+                const request = new chrome.cast.media.LoadRequest(mediaInfo);
+                castSession.loadMedia(request).then(
+                    function() { console.log('Load succeed'); },
+                    function(errorCode) { console.log('Error code: ' + errorCode); });
+                
+            } else {
+                audioPlayer.src = station.url;
+                audioPlayer.play().catch(error => {
+                    statusMessage.textContent = "שגיאה: לא ניתן לטעון את התחנה.";
+                    console.error("Error playing station:", error);
+                });
+                statusMessage.textContent = "מנגן במכשיר";
             }
-
-            player.src = station.url;
-            player.play().catch(error => {
-                statusDisplay.textContent = `שגיאה: ${error.message}`;
-            });
-
             currentStation = station;
-            document.getElementById(station.id).classList.add('active');
-            statusDisplay.textContent = `משדר: ${station.name}`;
         }
 
-        function changeVolume(delta) {
-            player.volume = Math.max(0, Math.min(1, player.volume + delta));
-        }
+        // Create station buttons
+        stations.forEach(station => {
+            const button = document.createElement('button');
+            button.textContent = station.name;
+            button.classList.add('station-button');
+            button.addEventListener('click', () => loadMedia(station));
+            stationsDiv.appendChild(button);
+        });
 
-        renderStations();
+        // Play/Pause button functionality
+        playPauseButton.addEventListener('click', () => {
+            if (isCasting && castSession) {
+                if (castSession.getMediaSession() && castSession.getMediaSession().playerState === 'PLAYING') {
+                    castSession.getMediaSession().pause(new chrome.cast.media.PauseRequest());
+                } else {
+                    castSession.getMediaSession().play(new chrome.cast.media.PlayRequest());
+                }
+            } else {
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    statusMessage.textContent = "מנגן במכשיר";
+                } else {
+                    audioPlayer.pause();
+                    statusMessage.textContent = "עוצר במכשיר";
+                }
+            }
+        });
+
+        // Volume control
+        volumeUpButton.addEventListener('click', () => {
+            if (isCasting && castSession && castSession.getMediaSession()) {
+                 let currentVolume = castSession.getMediaSession().volume.level;
+                 currentVolume = Math.min(1, currentVolume + 0.1);
+                 const volume = new chrome.cast.Volume();
+                 volume.level = currentVolume;
+                 const request = new chrome.cast.media.VolumeRequest(volume);
+                 castSession.getMediaSession().setVolume(request).then(
+                    function() { console.log('Volume updated'); },
+                    function(errorCode) { console.log('Volume update failed: ' + errorCode); });
+            } else {
+                audioPlayer.volume = Math.min(1, audioPlayer.volume + 0.1);
+            }
+        });
+
+        volumeDownButton.addEventListener('click', () => {
+            if (isCasting && castSession && castSession.getMediaSession()) {
+                let currentVolume = castSession.getMediaSession().volume.level;
+                currentVolume = Math.max(0, currentVolume - 0.1);
+                const volume = new chrome.cast.Volume();
+                volume.level = currentVolume;
+                const request = new chrome.cast.media.VolumeRequest(volume);
+                castSession.getMediaSession().setVolume(request).then(
+                   function() { console.log('Volume updated'); },
+                   function(errorCode) { console.log('Volume update failed: ' + errorCode); });
+           } else {
+                audioPlayer.volume = Math.max(0, audioPlayer.volume - 0.1);
+            }
+        });
     </script>
 </body>
 </html>
