@@ -87,6 +87,7 @@
         });
 
        function playStation(station) {
+            console.log('playStation', station); // הוספתי כאן
             if (currentStation === station) {
                 // אם לוחצים על אותה תחנה שוב, עצור את השידור
                 stopStation();
@@ -115,6 +116,7 @@
 
         // פונקציה לעצירת התחנה (מקומי או כרומקאסט)
          function stopStation() {
+            console.log('stopStation'); // הוספתי כאן
             stopLocalPlayback();
             if (isCasting && castSession && castSession.getMediaSession()) {
                castSession.getMediaSession().stop(null,
@@ -218,6 +220,7 @@
         }
 
        function castMedia(mediaURL) {
+            console.log('castMedia', mediaURL); // הוספתי כאן
             if (!castSession) {
                 statusDiv.textContent = 'לא מחובר לכרומקאסט';
                 return;
@@ -305,6 +308,5 @@
 
     </script>
     <script src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-    555
 </body>
 </html>
