@@ -1,341 +1,257 @@
 <!DOCTYPE html>
-<html lang="he">
+<html>
 <head>
-    <!-- תגית גוגל (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-J5WT91REYB');
-    </script>
-    <!-- תגית Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
-    <!-- סוף Google Tag Manager -->
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>אפליקציית תחנות רדיו</title>
-    <link rel="icon" href="icon.png" type="image/png">
-    <link rel="apple-touch-icon" href="icon.png">
-    <!-- Google Cast SDK -->
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
+    <title>רדיו אינטרנטי</title>
     <style>
-        /* משתנים CSS לשימוש חוזר ונוחות שינוי */
-        :root {
-            --main-font: Arial, sans-serif;
-            --main-bg-color: #000;
-            --main-text-color: #fff;
-            --secondary-text-color: #989494;
-            --highlight-color: #ffff00;
-        }
-
         body {
-            font-family: var(--main-font);
+            font-family: Arial, sans-serif;
             text-align: center;
-            direction: rtl;
-            margin: 0;
-            padding: 0;
-            background-color: var(--main-bg-color);
-            color: var(--main-text-color);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
         }
-
-        .container {
-            max-width: 600px;
-            margin: auto;
-            padding: 20px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .battery-info {
-            font-size: 1rem;
-            margin-top: 10px;
-            color: var(--secondary-text-color);
-        }
-
-        .clock {
-            font-size: 3rem;
-            font-weight: bold;
-            background-color: var(--highlight-color);
-            color: black;
-            padding: 10px;
-            border-radius: 10px;
-            display: inline-block;
-            margin-top: 20px;
-            cursor: pointer;
-            user-select: none;
-        }
-
-        .station-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 20px 0;
-            flex-wrap: wrap;
-        }
-
-        .station-button {
-            width: 120px;
-            height: 120px;
-            cursor: pointer;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 4px solid transparent;
-            box-sizing: border-box;
-            padding: 0;
-            transition: border-color 0.3s ease;
-        }
-
-        .station-button img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-        }
-
-        .station-button.active {
-            border-color: var(--highlight-color);
-           background: var(--highlight-color);  
-        }
-
-        @media (max-width: 480px) {
-            .station-button {
-                width: 90px;
-                height: 90px;
-            }
-
-            .clock {
-                font-size: 2rem;
-            }
-        }
-
-        .contaibox {
-            padding: 20px;
-            color: var(--secondary-text-color);
-            text-align: center;
-            margin-top: auto;
-        }
-
-        .contailink {
-            text-align: center;
-            margin-bottom: 10px;
-        }
-
-        .chromecast-button {
-            margin-top: 20px;
+        button {
             padding: 10px 20px;
-            background-color: var(--highlight-color);
-            color: black;
-            border: none;
-            border-radius: 5px;
+            margin: 5px;
+            font-size: 16px;
             cursor: pointer;
-            font-size: 1rem;
         }
-
-        .chromecast-button.disabled {
-            background-color: var(--secondary-text-color);
-            cursor: not-allowed;
+        #cast-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+        #status {
+            margin-top: 20px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
-        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <h1>רדיו אינטרנטי</h1>
 
-    <div class="container">
-        <audio id="audio-player">
-            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
-            הדפדפן שלך לא תומך בהשמעת אודיו.
-        </audio>
-        <!-- הוספת אודיו שקט -->
-        <audio id="silent-audio" loop>
-            <source src="silent.mp3" type="audio/mpeg">
-        </audio>
-        
-        <h4>רדיו נגיש עבור אבא</h4>
-        <div>לחץ ובחר תחנה להאזנה</div>
-        
-        <div class="station-buttons">
-            <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
-                <img src="kan_logo.png" alt="כאן ב'">
-            </button>
-            <button class="station-button" id="station-glz" data-url="https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz">
-                <img src="glz_logo.png" alt="גלי צהל">
-            </button>
-            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
-                <img src="glyisrael_logo.png" alt="גלי ישראל">
-            </button>
-        </div>
-        <button id="chromecast-button" class="chromecast-button disabled" title="שידור ל-Chromecast">
-            שידור ל-Chromecast
-        </button>
-        <div class="clock" id="clock"></div>
-        <div id="battery-info" class="battery-info"></div>
+    <div id="stations">
+        <!-- תחנות רדיו יתווספו כאן -->
     </div>
 
-    <div class="contaibox">
-        גרסה 6.3
-    </div>
-    <div class="contailink">
-        <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
-        <a href="https://mistralnet.github.io/radio/index4.html">4-test</a></p>
-    </div>
+    <button id="cast-button">התחבר לכרומקאסט</button>
+
+    <audio id="audio-player" controls autoplay style="display: none;"></audio>
+
+    <div id="status">מוכן</div>
 
     <script>
-        // משתנים גלובליים
-        let isAnnouncing = false;
-        let radioVolume = 1.0;
-        let wakeLock = null;
-        let wakeLockInterval = null;
-        let silentAudioStarted = false;
-        const audioPlayer = document.getElementById('audio-player');
-        const stationButtons = document.querySelectorAll('.station-button');
-        let currentStationButton = null;
-        const silentAudio = document.getElementById('silent-audio');
-        const batteryInfo = document.getElementById('battery-info');
-        let lastBatteryLevel = 100;
+        // הגדרות תחנות רדיו
+        const stations = [
+            {
+                "id": "station-kan",
+                "name": "כאן ב'",
+                "url": "https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net"
+            },
+            {
+                "id": "station-glz",
+                "name": "גלי צהל",
+                "url": "https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz"
+            },
+            {
+                "id": "glyisrael",
+                "name": "גלי ישראל",
+                "url": "https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio"
+            }
+        ];
 
-        // Chromecast
+        let currentStation = null;
+        let castSession = null;
+        let castPlayer = null;
         let castContext = null;
-        let currentMediaUrl = null;
-        const chromecastButton = document.getElementById('chromecast-button');
+        let inactivityTimer = null;
+        const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 דקות
 
-        // אתחול Chromecast
+        const audioPlayer = document.getElementById('audio-player');
+        const stationsDiv = document.getElementById('stations');
+        const castButton = document.getElementById('cast-button');
+        const statusDiv = document.getElementById('status');
+
+        // פונקציה ליצירת כפתור תחנה
+        function createStationButton(station) {
+            const button = document.createElement('button');
+            button.textContent = station.name;
+            button.id = station.id;
+            button.addEventListener('click', () => playStation(station));
+            return button;
+        }
+
+        // הוספת תחנות רדיו לממשק
+        stations.forEach(station => {
+            const button = createStationButton(station);
+            stationsDiv.appendChild(button);
+        });
+
+        // פונקציה להפעלת תחנה
+        function playStation(station) {
+            if (currentStation === station) {
+                stopCast(); // עצירת שידור בכרומקאסט אם התחנה כבר מתנגנת
+                return;
+            }
+
+            currentStation = station;
+
+            // עצירת תחנה קודמת
+            if (audioPlayer.src) {
+                audioPlayer.pause();
+                audioPlayer.src = '';
+            }
+
+            // הפעלת התחנה החדשה
+            audioPlayer.src = station.url;
+            audioPlayer.play();
+
+            // עדכון סטטוס כפתורים
+            updateButtonStatus(station.id, 'מנגן במכשיר');
+
+            // איפוס טיימר חוסר פעילות
+            resetInactivityTimer();
+
+            // שידור לכרומקאסט אם מחובר
+            if (castSession) {
+                castMedia(station.url);
+            }
+        }
+
+        // פונקציה לעדכון סטטוס כפתור
+        function updateButtonStatus(stationId, status) {
+            stations.forEach(station => {
+                const button = document.getElementById(station.id);
+                if (station.id === stationId) {
+                    button.textContent = `${station.name} (${status})`;
+                } else {
+                    button.textContent = station.name; // איפוס טקסט לכפתורים אחרים
+                }
+            });
+        }
+
+        // פונקציות כרומקאסט
         function initializeCastApi() {
-            cast.framework.CastContext.getInstance().setOptions({
+            castContext = cast.framework.CastContext.getInstance();
+            castContext.setOptions({
                 receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
                 autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
             });
 
-            castContext = cast.framework.CastContext.getInstance();
-            castContext.addEventListener(
+            castButton.addEventListener('click', connectToCast);
+
+             castContext.addEventListener(
                 cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
-                onCastSessionStateChanged
-            );
-
-            chromecastButton.classList.remove('disabled');
-            chromecastButton.addEventListener('click', toggleChromecast);
-        }
-
-        // טיפול בשינוי מצב Chromecast
-        function onCastSessionStateChanged(event) {
-            switch (event.sessionState) {
-                case cast.framework.SessionState.SESSION_STARTED:
-                case cast.framework.SessionState.SESSION_RESUMED:
-                    startCasting(currentMediaUrl);
-                    break;
-                case cast.framework.SessionState.SESSION_ENDED:
-                    stopCasting();
-                    break;
-            }
-        }
-
-        // התחלת שידור ל-Chromecast
-        function startCasting(url) {
-            if (!castContext || !url) return;
-
-            const mediaInfo = new chrome.cast.media.MediaInfo(url, 'audio/mpeg');
-            const request = new chrome.cast.media.LoadRequest(mediaInfo);
-
-            const session = castContext.getCurrentSession();
-            if (session) {
-                session.loadMedia(request).then(
-                    () => {
-                        console.log('שידור ל-Chromecast התחיל');
-                        updateChromecastButton(true);
-                    },
-                    (error) => {
-                        console.error('שגיאה בהתחלת שידור ל-Chromecast:', error);
-                        updateChromecastButton(false);
-                    }
-                );
-            }
-        }
-
-        // עצירת שידור ל-Chromecast
-        function stopCasting() {
-            if (castContext) {
-                const session = castContext.getCurrentSession();
-                if (session) {
-                    session.endSession(true);
-                    console.log('שידור ל-Chromecast נעצר');
-                }
-            }
-            updateChromecastButton(false);
-        }
-
-        // עדכון כפתור Chromecast
-        function updateChromecastButton(isCasting) {
-            if (isCasting) {
-                chromecastButton.textContent = 'מפסיק שידור ל-Chromecast';
-                chromecastButton.classList.add('active');
-            } else {
-                chromecastButton.textContent = 'שידור ל-Chromecast';
-                chromecastButton.classList.remove('active');
-            }
-        }
-
-        // טיפול בלחיצה על כפתור Chromecast
-        function toggleChromecast() {
-            if (castContext.getCurrentSession()) {
-                stopCasting();
-            } else {
-                if (currentMediaUrl) {
-                    castContext.requestSession().then(() => {
-                        startCasting(currentMediaUrl);
-                    });
-                } else {
-                    console.error('לא נבחרה תחנה לשידור');
-                }
-            }
-        }
-
-        // שאר הפונקציות (updateBatteryStatus, speakBatteryAlert, requestWakeLock, releaseWakeLock, updateClock, switchStation, speakTime, fadeAudio, scheduleNextAnnouncement, startKeepAwake, stopKeepAwake, restartApp) נשארות ללא שינוי.
-
-        // אתחול האפליקציה
-        document.addEventListener('DOMContentLoaded', async () => {
-            updateBatteryStatus();
-            await requestWakeLock();
-            startKeepAwake();
-            if (!silentAudioStarted) {
-                silentAudio.play().then(() => {
-                    silentAudio.volume = 0;
-                    silentAudioStarted = true;
-                    console.log("Silence track started.");
-                }).catch(error => {
-                    console.error("Error playing silent track:", error);
+                function(event) {
+                  switch (event.sessionState) {
+                    case cast.framework.SessionState.SESSION_STARTED:
+                      console.log('Cast Session Started');
+                      castSession = castContext.getCurrentSession();
+                      castPlayer = new cast.framework.RemotePlayer();
+                      castRemotePlayerController = new cast.framework.RemotePlayerController(castPlayer);
+                      castMedia(currentStation.url); // התחלת שידור בכרומקאסט לאחר חיבור
+                      break;
+                    case cast.framework.SessionState.SESSION_ENDED:
+                      console.log('Cast Session Ended');
+                      castSession = null;
+                      castPlayer = null;
+                      castRemotePlayerController = null;
+                      updateButtonStatus(currentStation.id, 'מנגן במכשיר');
+                      break;
+                  }
                 });
+        }
+
+
+        function connectToCast() {
+             castContext.requestSession()
+              .then(function(session) {
+                castSession = session;
+                console.log('Connected to Chromecast');
+                castMedia(currentStation.url);
+
+              })
+              .catch(function(error) {
+                console.error('Error connecting to Chromecast:', error);
+                statusDiv.textContent = 'שגיאה: לא ניתן להתחבר לכרומקאסט. אנא ודא שהכרומקאסט זמין ובאותה רשת.';
+              });
+        }
+
+        function castMedia(mediaURL) {
+            if (!castSession) {
+                statusDiv.textContent = 'לא מחובר לכרומקאסט';
+                return;
             }
-            scheduleNextAnnouncement();
-            document.getElementById('clock').addEventListener('click', speakTime);
-            stationButtons.forEach(button => {
-                button.addEventListener('click', () => switchStation(button));
-            });
-            switchStation(document.getElementById('station-kan'));
 
-            // אתחול Chromecast
-            window['__onGCastApiAvailable'] = (isAvailable) => {
-                if (isAvailable) {
-                    initializeCastApi();
-                }
-            };
+            const mediaInfo = new chrome.cast.media.MediaInfo(mediaURL, 'audio/mp3');
+            mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
+            mediaInfo.metadata.artist = 'רדיו אינטרנטי';
+            mediaInfo.metadata.title = currentStation.name;
+            mediaInfo.metadata.albumName = 'שידור חי';
 
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' && !wakeLock) {
-                    restartApp();
-                }
-            });
-        });
+            const request = new chrome.cast.media.LoadRequest(mediaInfo);
+            castSession.loadMedia(request)
+                .then(function() {
+                    console.log('Loading started');
+                    updateButtonStatus(currentStation.id, 'מנגן בכרומקאסט');
+                })
+                .catch(function(error) {
+                    console.error('Media load failed', error);
+                    statusDiv.textContent = 'שגיאה בטעינת המדיה לכרומקאסט';
+                });
+        }
+
+        function stopCast() {
+            if (castSession) {
+                castSession.endSession(true)
+                    .then(function() {
+                        console.log('Session ended');
+                        updateButtonStatus(currentStation.id, 'מופסק');
+                    })
+                    .catch(function(error) {
+                        console.error('Error ending session', error);
+                    });
+            }
+        }
+
+        // טיימר חוסר פעילות
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                disconnectFromCast();
+            }, INACTIVITY_TIMEOUT);
+        }
+
+        function disconnectFromCast() {
+            if (castSession) {
+                castSession.endSession(true);
+                castSession = null;
+                statusDiv.textContent = 'הכרומקאסט התנתק עקב חוסר פעילות';
+            }
+        }
+
+        // טיפול בהפרעות חיצוניות (צריך בדיקה נוספת - תלוי במימוש של Cast SDK)
+        // (יש צורך ב API כדי לבדוק סטטוס נוכחי של הכרומקאסט)
+        // function handleCastInterruption() {
+        //     audioPlayer.pause();
+        //     audioPlayer.src = '';
+        //     updateButtonStatus(currentStation.id, 'מופסק');
+        //     statusDiv.textContent = 'השידור הופסק על ידי מכשיר אחר';
+        //     resetInactivityTimer();
+        // }
+
+
+        // אתחול ה-Cast API כאשר הדף נטען
+        window.onload = function() {
+            if (chrome.cast && chrome.cast.isAvailable) {
+                 cast.framework.CastContext.getInstance().setOptions({
+                        receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+                        autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+                });
+                initializeCastApi();
+            } else {
+                setTimeout(initializeCastApi, 1000);
+            }
+        };
+
     </script>
+    <script src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 </body>
 </html>
