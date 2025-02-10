@@ -63,6 +63,7 @@
         let castContext = null;
         let inactivityTimer = null;
         const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 דקות
+        let isCasting = false; // מציין אם משדרים לכרומקאסט
 
         const audioPlayer = document.getElementById('audio-player');
         const stationsDiv = document.getElementById('stations');
@@ -94,25 +95,35 @@
             currentStation = station;
 
             // עצירת תחנה קודמת
-            if (audioPlayer.src) {
-                audioPlayer.pause();
-                audioPlayer.src = '';
-            }
+            stopLocalPlayback();
 
             // הפעלת התחנה החדשה
-            audioPlayer.src = station.url;
-            audioPlayer.play();
+            if (!isCasting) {
+                startLocalPlayback(station);
+            } else {
+                castMedia(station.url);
+            }
 
             // עדכון סטטוס כפתורים
-            updateButtonStatus(station.id, 'מנגן במכשיר');
+            updateButtonStatus(station.id, isCasting ? 'מנגן בכרומקאסט' : 'מנגן במכשיר');
 
             // איפוס טיימר חוסר פעילות
             resetInactivityTimer();
 
-            // שידור לכרומקאסט אם מחובר
-            if (castSession) {
-                castMedia(station.url);
+        }
+
+        // פונקציה לעצירת ניגון מקומי
+        function stopLocalPlayback() {
+            if (audioPlayer.src) {
+                audioPlayer.pause();
+                audioPlayer.src = '';
             }
+        }
+
+        // פונקציה להתחלת ניגון מקומי
+        function startLocalPlayback(station) {
+            audioPlayer.src = station.url;
+            audioPlayer.play();
         }
 
         // פונקציה לעדכון סטטוס כפתור
@@ -146,14 +157,18 @@
                       castSession = castContext.getCurrentSession();
                       castPlayer = new cast.framework.RemotePlayer();
                       castRemotePlayerController = new cast.framework.RemotePlayerController(castPlayer);
+                      isCasting = true;
                       castMedia(currentStation.url); // התחלת שידור בכרומקאסט לאחר חיבור
+                      stopLocalPlayback(); //עצירת נגן מקומי
                       break;
                     case cast.framework.SessionState.SESSION_ENDED:
                       console.log('Cast Session Ended');
                       castSession = null;
                       castPlayer = null;
                       castRemotePlayerController = null;
+                      isCasting = false;
                       updateButtonStatus(currentStation.id, 'מנגן במכשיר');
+                      startLocalPlayback(currentStation); // המשך ניגון מקומי
                       break;
                   }
                 });
@@ -165,7 +180,8 @@
               .then(function(session) {
                 castSession = session;
                 console.log('Connected to Chromecast');
-                castMedia(currentStation.url);
+                //castMedia(currentStation.url); //העברה ל session start
+                isCasting = true;
 
               })
               .catch(function(error) {
@@ -204,6 +220,8 @@
                     .then(function() {
                         console.log('Session ended');
                         updateButtonStatus(currentStation.id, 'מופסק');
+                        isCasting = false;
+                        startLocalPlayback(currentStation); // חזרה לניגון מקומי
                     })
                     .catch(function(error) {
                         console.error('Error ending session', error);
@@ -223,20 +241,10 @@
             if (castSession) {
                 castSession.endSession(true);
                 castSession = null;
+                isCasting = false;
                 statusDiv.textContent = 'הכרומקאסט התנתק עקב חוסר פעילות';
             }
         }
-
-        // טיפול בהפרעות חיצוניות (צריך בדיקה נוספת - תלוי במימוש של Cast SDK)
-        // (יש צורך ב API כדי לבדוק סטטוס נוכחי של הכרומקאסט)
-        // function handleCastInterruption() {
-        //     audioPlayer.pause();
-        //     audioPlayer.src = '';
-        //     updateButtonStatus(currentStation.id, 'מופסק');
-        //     statusDiv.textContent = 'השידור הופסק על ידי מכשיר אחר';
-        //     resetInactivityTimer();
-        // }
-
 
         // אתחול ה-Cast API כאשר הדף נטען
         window.onload = function() {
