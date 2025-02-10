@@ -1,90 +1,183 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>רדיו עם כרומקאסט</title>
-    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
-        button { padding: 10px; margin: 5px; cursor: pointer; }
-        #status { margin-top: 20px; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>רדיו פשוט</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+    }
+    .station-button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 200px;
+    }
+    .station-button.playing {
+      background-color: #28a745;
+    }
+    .controls {
+      margin-top: 20px;
+    }
+    .controls button {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .status {
+      margin-top: 20px;
+      font-size: 18px;
+      color: #333;
+    }
+    @media (max-width: 600px) {
+      .station-button, .controls button {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
-    <h1>רדיו</h1>
-    <button onclick="playStation('https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net')">כאן ב'</button>
-    <button onclick="playStation('https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz')">גלי צה"ל</button>
-    <button onclick="playStation('https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio')">גלי ישראל</button>
-    
-    <br>
-    <button onclick="toggleCast()">שלח לכרומקאסט</button>
-    <button onclick="stopCast()">עצור כרומקאסט</button>
-    <br>
-    <button onclick="changeVolume(-0.1)">🔉</button>
-    <button onclick="changeVolume(0.1)">🔊</button>
-    
-    <p id="status">בחר תחנה להפעלה</p>
-    
-    <audio id="audio" controls style="width: 100%; margin-top: 10px;"></audio>
-    
-    <script>
-        let audio = document.getElementById("audio");
-        let castSession = null;
-        let media = null;
-        let currentStation = "";
+  <h1>רדיו פשוט</h1>
+  <div id="stations">
+    <button class="station-button" data-id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">כאן ב'</button>
+    <button class="station-button" data-id="station-glz" data-url="https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz">גלי צהל</button>
+    <button class="station-button" data-id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">גלי ישראל</button>
+  </div>
+  <div class="controls">
+    <button id="cast-button" disabled>העבר לכרומקאסט</button>
+    <button id="pause-button" disabled>עצור/המשך</button>
+    <button id="volume-up">הגבר קול</button>
+    <button id="volume-down">הנמך קול</button>
+  </div>
+  <div class="status" id="status">מוכן להפעלה</div>
 
-        function playStation(url) {
-            currentStation = url;
-            if (castSession) {
-                loadMedia(url);
-                document.getElementById("status").innerText = "מנגן בכרומקאסט";
-            } else {
-                audio.src = url;
-                audio.play();
-                document.getElementById("status").innerText = "מנגן במכשיר";
-            }
-        }
-        
-        function toggleCast() {
-            if (!castSession) {
-                chrome.cast.requestSession(session => {
-                    castSession = session;
-                    loadMedia(currentStation);
-                }, error => console.log("Error: ", error));
-            } else {
-                loadMedia(currentStation);
-            }
-        }
+  <script>
+    // מצב השידור
+    let currentAudio = null;
+    let isCasting = false;
+    let castSession = null;
 
-        function loadMedia(url) {
-            if (!castSession) return;
-            let mediaInfo = new chrome.cast.media.MediaInfo(url, "audio/mp3");
-            let request = new chrome.cast.media.LoadRequest(mediaInfo);
-            castSession.loadMedia(request, function(media) {
-                document.getElementById("status").innerText = "מנגן בכרומקאסט";
-            }, function(error) { console.log("Error loading media: ", error); });
+    // מצב כפתורים
+    const stationButtons = document.querySelectorAll('.station-button');
+    const castButton = document.getElementById('cast-button');
+    const pauseButton = document.getElementById('pause-button');
+    const volumeUpButton = document.getElementById('volume-up');
+    const volumeDownButton = document.getElementById('volume-down');
+    const statusText = document.getElementById('status');
+
+    // טעינת ספריית Chromecast
+    const initializeCast = () => {
+      cast.framework.CastContext.getInstance().setOptions({
+        receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+        autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+      });
+      castButton.disabled = false;
+    };
+
+    // הפעלת תחנה
+    const playStation = (url) => {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      currentAudio = new Audio(url);
+      currentAudio.play();
+      statusText.textContent = "מנגן במכשיר";
+      pauseButton.disabled = false;
+      updateButtons();
+    };
+
+    // עצירה/המשך
+    const togglePause = () => {
+      if (currentAudio.paused) {
+        currentAudio.play();
+        statusText.textContent = "מנגן במכשיר";
+      } else {
+        currentAudio.pause();
+        statusText.textContent = "עצור";
+      }
+    };
+
+    // העברה לכרומקאסט
+    const castStation = () => {
+      if (!castSession) {
+        castSession = cast.framework.CastContext.getInstance().getCurrentSession();
+      }
+      if (currentAudio && castSession) {
+        const mediaInfo = new chrome.cast.media.MediaInfo(currentAudio.src, 'audio/mp3');
+        const request = new chrome.cast.media.LoadRequest(mediaInfo);
+        castSession.loadMedia(request).then(() => {
+          isCasting = true;
+          statusText.textContent = "מנגן בכרומקאסט";
+          currentAudio.pause();
+          updateButtons();
+        });
+      }
+    };
+
+    // עדכון כפתורים
+    const updateButtons = () => {
+      stationButtons.forEach(button => {
+        if (button.classList.contains('playing')) {
+          button.classList.remove('playing');
         }
-        
-        function stopCast() {
-            if (castSession) {
-                castSession.stop(() => {
-                    castSession = null;
-                    document.getElementById("status").innerText = "מנגן במכשיר";
-                }, error => console.log("Error stopping cast: ", error));
-            }
+      });
+      if (currentAudio && !currentAudio.paused) {
+        const playingButton = document.querySelector(`[data-url="${currentAudio.src}"]`);
+        if (playingButton) {
+          playingButton.classList.add('playing');
         }
-        
-        function changeVolume(delta) {
-            if (castSession && castSession.media) {
-                let newVolume = castSession.media.volume.level + delta;
-                newVolume = Math.min(1, Math.max(0, newVolume));
-                let volumeRequest = new chrome.cast.media.VolumeRequest(newVolume);
-                castSession.media.setVolume(volumeRequest, null, null);
-            } else {
-                audio.volume = Math.min(1, Math.max(0, audio.volume + delta));
-            }
-        }
-    </script>
+      }
+    };
+
+    // אירועי כפתורים
+    stationButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        playStation(button.dataset.url);
+      });
+    });
+
+    pauseButton.addEventListener('click', togglePause);
+    castButton.addEventListener('click', castStation);
+    volumeUpButton.addEventListener('click', () => {
+      if (currentAudio) {
+        currentAudio.volume = Math.min(1, currentAudio.volume + 0.1);
+      }
+    });
+    volumeDownButton.addEventListener('click', () => {
+      if (currentAudio) {
+        currentAudio.volume = Math.max(0, currentAudio.volume - 0.1);
+      }
+    });
+
+    // טעינת Chromecast
+    window['__onGCastApiAvailable'] = (isAvailable) => {
+      if (isAvailable) {
+        initializeCast();
+      }
+    };
+  </script>
+  <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js"></script>
 </body>
 </html>
