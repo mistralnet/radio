@@ -142,8 +142,15 @@
 
                 } catch (error) {
                     console.error("Error connecting to Chromecast", error);
-                    setStatus("שגיאה בחיבור לכרומקאסט: " + error);
-                    castStatusDiv.textContent = "לא מחובר";
+                    // Check if the error is due to the user cancelling the connection
+                    if (error.message === 'Not connected to a Cast device.') {
+                        setStatus("החיבור לכרומקאסט בוטל על ידי המשתמש.");
+                        castStatusDiv.textContent = "לא מחובר";
+                    } else {
+                        setStatus("שגיאה בחיבור לכרומקאסט: " + error);
+                        castStatusDiv.textContent = "לא מחובר";
+                    }
+                    castSession = null; // Reset castSession
                 }
             };
         }
