@@ -163,46 +163,48 @@
         }
 
         // פונקציות כרומקאסט
-        function initializeCastApi() {
-            castContext = cast.framework.CastContext.getInstance();
-            castContext.setOptions({
-                receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
-                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-            });
+function initializeCastApi() {
+    castContext = cast.framework.CastContext.getInstance();
+    castContext.setOptions({
+        receiverApplicationId: chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID,
+        autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+    });
 
-            castButton.addEventListener('click', connectToCast);
+    castButton.addEventListener('click', connectToCast);
 
-             castContext.addEventListener(
-                cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
-                function(event) {
-                  switch (event.sessionState) {
-                    case cast.framework.SessionState.SESSION_STARTED:
-                      console.log('Cast Session Started');
-                      castSession = castContext.getCurrentSession();
-                      castPlayer = new cast.framework.RemotePlayer();
-                      castRemotePlayerController = new cast.framework.RemotePlayerController(castPlayer);
-                      castPlayerController = new cast.framework.RemotePlayerController(castPlayer);
-                      isCasting = true;
-                      castMedia(currentStation.url); // התחלת שידור בכרומקאסט לאחר חיבור
-                      stopLocalPlayback(); //עצירת נגן מקומי
-                      break;
-                    case cast.framework.SessionState.SESSION_ENDED:
-                      console.log('Cast Session Ended');
-                      castSession = null;
-                      castPlayer = null;
-                      castRemotePlayerController = null;
-                      isCasting = false;
-                      if (isPlaying){
-                        updateButtonStatus(currentStation.id, 'מנגן במכשיר');
-                        startLocalPlayback(currentStation); // המשך ניגון מקומי
-                      } else {
-                        updateButtonStatus(currentStation.id, 'מופסק');
-                      }
+     castContext.addEventListener(
+        cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+        function(event) {
+          switch (event.sessionState) {
+            case cast.framework.SessionState.SESSION_STARTED:
+              console.log('Cast Session Started');
+              castSession = castContext.getCurrentSession();
+              castPlayer = new cast.framework.RemotePlayer();
+              castRemotePlayerController = new cast.framework.RemotePlayerController(castPlayer);
+              castPlayerController = new cast.framework.RemotePlayerController(castPlayer);
+              isCasting = true;
+              if (currentStation) { // הוספנו את הבדיקה הזו
+                  castMedia(currentStation.url); // התחלת שידור בכרומקאסט לאחר חיבור
+              }
+              stopLocalPlayback(); //עצירת נגן מקומי
+              break;
+            case cast.framework.SessionState.SESSION_ENDED:
+              console.log('Cast Session Ended');
+              castSession = null;
+              castPlayer = null;
+              castRemotePlayerController = null;
+              isCasting = false;
+              if (isPlaying){
+                updateButtonStatus(currentStation.id, 'מנגן במכשיר');
+                startLocalPlayback(currentStation); // המשך ניגון מקומי
+              } else {
+                updateButtonStatus(currentStation.id, 'מופסק');
+              }
 
-                      break;
-                  }
-                });
-        }
+              break;
+          }
+        });
+}
 
 
         function connectToCast() {
@@ -308,5 +310,6 @@
 
     </script>
     <script src="//www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    11111
 </body>
 </html>
