@@ -5,112 +5,120 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>רדיו - KAN BET, GLZ, גלי ישראל</title>
-  <link rel="icon" type="image/x-icon" href="https://28503.live.streamtheworld.com/favicon.ico">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
   <style>
     body {
-      font-family: 'Roboto', sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      background-color: #f4f4f4;
+      background-color: #f9f9f9;
       color: #333;
       text-align: center;
+      line-height: 1.6;
     }
 
     header {
-      background-color: #333;
+      background-color: #0056b3; /* Darker blue for better contrast */
       color: #fff;
       padding: 20px;
-      font-size: 24px;
+      font-size: 28px;
+      font-weight: bold;
     }
 
-    #stations {
-      margin: 20px auto;
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-
+    #stations,
     #controls {
       margin: 20px auto;
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 15px;
+      flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
     }
 
     button {
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 12px 24px;
+      font-size: 18px;
       cursor: pointer;
-      background-color: #007bff;
-      color: #fff;
       border: none;
-      border-radius: 5px;
+      border-radius: 8px;
+      transition: background-color 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
     }
 
+    button:focus {
+      outline: 2px solid #007bff; /* Focus outline for accessibility */
+    }
+
+    /* Colors for better visibility and differentiation */
     button.active {
-      background-color: green;
+      background-color: #28a745; /* Green */
+      color: #fff;
     }
 
     button.inactive {
-      background-color: red;
+      background-color: #dc3545; /* Red */
+      color: #fff;
     }
 
     button:hover {
-      opacity: 0.8;
+      opacity: 0.9;
     }
 
     #volume {
       margin-top: 20px;
     }
 
+    #volume label {
+      font-size: 18px;
+      margin-right: 10px;
+    }
+
+    #volumeSlider {
+      width: 80%;
+      max-width: 300px;
+    }
+
     #status {
       margin-top: 20px;
-      font-size: 18px;
+      font-size: 20px;
+      font-weight: bold;
     }
 
     footer {
       margin-top: 40px;
-      padding: 10px;
-      background-color: #333;
+      padding: 15px;
+      background-color: #0056b3; /* Consistent dark blue */
       color: #fff;
-      font-size: 14px;
+      font-size: 16px;
     }
 
+    /* Media Queries for Responsiveness */
     @media (max-width: 600px) {
       header {
-        font-size: 20px;
+        font-size: 24px;
+        padding: 15px;
       }
 
       button {
-        padding: 8px 16px;
-        font-size: 14px;
+        padding: 10px 20px;
+        font-size: 16px;
       }
 
       #status {
+        font-size: 18px;
+      }
+
+      #volume label {
         font-size: 16px;
       }
 
       footer {
-        font-size: 12px;
+        font-size: 14px;
       }
-    }
 
-    /* סגנון עבור כפתור Chromecast */
-    google-cast-launcher {
-      cursor: pointer;
-      width: 40px;
-      height: 40px;
-      background-color: #007bff;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 20px;
-    }
-
-    google-cast-launcher:hover {
-      opacity: 0.8;
+      #stations,
+      #controls {
+        gap: 10px;
+      }
     }
   </style>
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
@@ -122,21 +130,21 @@
   </header>
 
   <div id="stations">
-    <button id="kanBetBtn" class="inactive">KAN BET</button>
-    <button id="glzBtn" class="inactive">GLZ</button>
-    <button id="galeiIsraelBtn" class="inactive">גלי ישראל</button>
+    <button id="kanBetBtn" class="inactive" aria-label="תחנת רדיו כאן ב">KAN BET</button>
+    <button id="glzBtn" class="inactive" aria-label="תחנת רדיו גלצ">GLZ</button>
+    <button id="galeiIsraelBtn" class="inactive" aria-label="תחנת רדיו גלי ישראל">גלי ישראל</button>
   </div>
 
   <div id="controls">
-    <button id="playBtn">הפעל</button>
-    <button id="pauseBtn">השהה</button>
-    <button id="stopBtn">עצור</button>
+    <button id="playBtn" aria-label="הפעל">הפעל</button>
+    <button id="pauseBtn" aria-label="השהה">השהה</button>
+    <button id="stopBtn" aria-label="עצור">עצור</button>
     <google-cast-launcher id="castButton"></google-cast-launcher>
   </div>
 
   <div id="volume">
     <label for="volumeSlider">עוצמת שמע:</label>
-    <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
+    <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5" aria-label="כיוון עוצמת שמע">
   </div>
 
   <div id="status">
@@ -144,7 +152,7 @@
   </div>
 
   <footer>
-    גרסה: 1.0.5 | נוצר בתאריך: 2023-10-10 19:00
+    גרסה: 1.0.4 | נוצר בתאריך: 2024-05-06 14:30
   </footer>
 
   <script>
@@ -195,11 +203,11 @@
               isCasting = true;
               stopLocalPlayback(); // עצור שידור מקומי אם מתחבר ל-Chromecast
               playOnChromecast(); // הפעל שידור אוטומטי ב-Chromecast
-              updateStatus('מנגן ב-Chromecast');
+              statusText.innerText = 'מצב: מנגן ב-Chromecast';
             } else if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
               isCasting = false;
               stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתנתק
-              updateStatus('מוכן');
+              statusText.innerText = 'מצב: מוכן';
             }
           }
         );
