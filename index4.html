@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>רדיו - KAN BET, GLZ, גלי ישראל</title>
+  <title>רדיו - GLZ, גלי ישראל</title>
   <link rel="icon" type="image/x-icon" href="https://28503.live.streamtheworld.com/favicon.ico">
   <style>
     body {
@@ -47,8 +47,12 @@
       border-radius: 5px;
     }
 
-    button.active {
+    button.active-local {
       background-color: green;
+    }
+
+    button.active-cast {
+      background-color: purple;
     }
 
     button.inactive {
@@ -94,17 +98,34 @@
         font-size: 12px;
       }
     }
+
+    /* סגנון עבור כפתור Chromecast */
+    google-cast-launcher {
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      background-color: #007bff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+    }
+
+    google-cast-launcher:hover {
+      opacity: 0.8;
+    }
   </style>
   <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 </head>
 
 <body>
   <header>
-    רדיו - KAN BET, GLZ, גלי ישראל
+    רדיו - GLZ, גלי ישראל
   </header>
 
   <div id="stations">
-    <button id="kanBetBtn" class="inactive">KAN BET</button>
     <button id="glzBtn" class="inactive">GLZ</button>
     <button id="galeiIsraelBtn" class="inactive">גלי ישראל</button>
   </div>
@@ -126,15 +147,11 @@
   </div>
 
   <footer>
-    גרסה: 1.0.4 | נוצר בתאריך: 2023-10-10 18:00
+    גרסה: 1.0.6 | נוצר בתאריך: 2023-10-10 20:00
   </footer>
 
   <script>
     const stations = {
-      kanBet: {
-        url: 'https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net',
-        button: document.getElementById('kanBetBtn')
-      },
       glz: {
         url: 'https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz',
         button: document.getElementById('glzBtn')
@@ -177,11 +194,11 @@
               isCasting = true;
               stopLocalPlayback(); // עצור שידור מקומי אם מתחבר ל-Chromecast
               playOnChromecast(); // הפעל שידור אוטומטי ב-Chromecast
-              statusText.innerText = 'מצב: מנגן ב-Chromecast';
+              updateStatus('מנגן ב-Chromecast');
             } else if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
               isCasting = false;
               stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתנתק
-              statusText.innerText = 'מצב: מוכן';
+              updateStatus('מוכן');
             }
           }
         );
@@ -215,7 +232,7 @@
     // Function to reset buttons
     function resetButtons() {
       for (const station of Object.values(stations)) {
-        station.button.classList.remove('active');
+        station.button.classList.remove('active-local', 'active-cast');
         station.button.classList.add('inactive');
       }
     }
@@ -223,12 +240,17 @@
     // Function to set active station
     function setActiveStation(station) {
       if (activeStation) {
-        activeStation.button.classList.remove('active');
+        activeStation.button.classList.remove('active-local', 'active-cast');
         activeStation.button.classList.add('inactive');
       }
       activeStation = station;
-      activeStation.button.classList.remove('inactive');
-      activeStation.button.classList.add('active');
+      if (isCasting) {
+        activeStation.button.classList.remove('inactive');
+        activeStation.button.classList.add('active-cast');
+      } else {
+        activeStation.button.classList.remove('inactive');
+        activeStation.button.classList.add('active-local');
+      }
       audio.src = station.url;
     }
 
