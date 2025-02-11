@@ -5,126 +5,116 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>רדיו - GLZ, גלי ישראל</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/x-icon" href="https://28503.live.streamtheworld.com/favicon.ico">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
+            background-color: #f4f4f4;
             color: #333;
             text-align: center;
-            line-height: 1.6;
         }
 
         header {
-            background-color: #0056b3;
+            background-color: #333;
             color: #fff;
             padding: 20px;
-            font-size: 28px;
-            font-weight: bold;
+            font-size: 24px;
         }
 
-        #stations,
+        #stations {
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
         #controls {
             margin: 20px auto;
             display: flex;
             justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
+            gap: 10px;
         }
 
         button {
-            padding: 12px 24px;
-            font-size: 18px;
+            padding: 10px 20px;
+            font-size: 16px;
             cursor: pointer;
-            border: none;
-            border-radius: 8px;
-            transition: background-color 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-
-        button:focus {
-            outline: 2px solid #007bff;
-        }
-
-        button.active {
-            background-color: #00aaff;
+            background-color: #007bff;
             color: #fff;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button.active-local {
+            background-color: green;
+        }
+
+        button.active-cast {
+            background-color: purple;
         }
 
         button.inactive {
-            background-color: #dc3545;
-            color: #fff;
+            background-color: red;
         }
 
         button:hover {
-            opacity: 0.9;
-        }
-
-        google-cast-launcher {
-            display: block; /* Make sure it's a block element */
-            width: 36px;
-            height: 36px;
-            margin: 0 auto; /* Center the button */
+            opacity: 0.8;
         }
 
         #volume {
             margin-top: 20px;
         }
 
-        #volume label {
-            font-size: 18px;
-            margin-right: 10px;
-        }
-
-        #volumeSlider {
-            width: 80%;
-            max-width: 300px;
-        }
-
         #status {
             margin-top: 20px;
-            font-size: 20px;
-            font-weight: bold;
+            font-size: 18px;
         }
 
         footer {
             margin-top: 40px;
-            padding: 15px;
-            background-color: #0056b3;
+            padding: 10px;
+            background-color: #333;
             color: #fff;
-            font-size: 16px;
+            font-size: 14px;
         }
 
-        /* Media Queries for Responsiveness */
         @media (max-width: 600px) {
             header {
-                font-size: 24px;
-                padding: 15px;
+                font-size: 20px;
             }
 
             button {
-                padding: 10px 20px;
-                font-size: 16px;
+                padding: 8px 16px;
+                font-size: 14px;
             }
 
             #status {
-                font-size: 18px;
-            }
-
-            #volume label {
                 font-size: 16px;
             }
 
             footer {
-                font-size: 14px;
+                font-size: 12px;
             }
+        }
 
-            #stations,
-            #controls {
-                gap: 10px;
-            }
+        /* סגנון עבור כפתור Chromecast */
+        google-cast-launcher {
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            background-color: #007bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        google-cast-launcher:hover {
+            opacity: 0.8;
         }
     </style>
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
@@ -136,20 +126,20 @@
     </header>
 
     <div id="stations">
-        <button id="glzBtn" class="inactive" aria-label="תחנת רדיו גלצ">GLZ</button>
-        <button id="galeiIsraelBtn" class="inactive" aria-label="תחנת רדיו גלי ישראל">גלי ישראל</button>
+        <button id="glzBtn" class="inactive">GLZ</button>
+        <button id="galeiIsraelBtn" class="inactive">גלי ישראל</button>
     </div>
 
     <div id="controls">
-        <button id="playBtn" aria-label="הפעל">הפעל</button>
-        <button id="pauseBtn" aria-label="השהה">השהה</button>
-        <button id="stopBtn" aria-label="עצור">עצור</button>
+        <button id="playBtn">הפעל</button>
+        <button id="pauseBtn">השהה</button>
+        <button id="stopBtn">עצור</button>
         <google-cast-launcher id="castButton"></google-cast-launcher>
     </div>
 
     <div id="volume">
         <label for="volumeSlider">עוצמת שמע:</label>
-        <input type="range" id="volumeSlider" min="0" max="1" step="0.01" value="0.5" aria-label="כיוון עוצמת שמע">
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="0.5">
     </div>
 
     <div id="status">
@@ -157,7 +147,7 @@
     </div>
 
     <footer>
-        גרסה: 1.0.9 | נוצר בתאריך: 2024-05-06 15:15
+        גרסה: 1.1.0 | נוצר בתאריך: 2024-05-07 10:00
     </footer>
 
     <script>
@@ -181,11 +171,9 @@
         const castButton = document.getElementById('castButton');
 
         let isCasting = false;
-        let castSession = null;
-        let currentMediaSession = null;
+        let castPlayer;
+        let currentMediaSession;
         let activeStation = null;
-        let currentVolume = 0.5;
-        let isPlaying = false;
 
         // Initialize Cast
         window['__onGCastApiAvailable'] = function (isAvailable) {
@@ -196,33 +184,36 @@
                     autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
                 });
 
+                castPlayer = new cast.framework.RemotePlayer();
+                new cast.framework.RemotePlayerController(castPlayer);
+
                 castContext.addEventListener(
                     cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
                     (event) => {
-                        castSession = castContext.getCurrentSession();
                         if (event.sessionState === cast.framework.SessionState.SESSION_STARTED) {
                             isCasting = true;
                             stopLocalPlayback();
                             playOnChromecast();
-                            updateStatus('מצב: מנגן ב-Chromecast');
+                            updateStatus('מנגן ב-Chromecast');
                         } else if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
                             isCasting = false;
                             stopChromecastPlayback();
-                            updateStatus('מצב: מוכן');
+                            updateStatus('מוכן');
                         }
                     }
                 );
             }
         };
 
+        // Function to stop local playback
         function stopLocalPlayback() {
             audio.pause();
             audio.currentTime = 0;
             updateStatus('עצור');
             resetButtons();
-            isPlaying = false;
         }
 
+        // Function to stop Chromecast playback
         function stopChromecastPlayback() {
             if (currentMediaSession) {
                 currentMediaSession.stop(null, () => {
@@ -230,58 +221,65 @@
                 }, (error) => {
                     console.error('Error stopping Chromecast playback:', error);
                 });
-                currentMediaSession = null;
             }
-            isPlaying = false;
         }
 
+        // Function to update status
         function updateStatus(status) {
             statusText.innerText = `מצב: ${status}`;
         }
 
+        // Function to reset buttons
         function resetButtons() {
             for (const station of Object.values(stations)) {
-                station.button.classList.remove('active');
+                station.button.classList.remove('active-local', 'active-cast');
                 station.button.classList.add('inactive');
             }
         }
 
+        // Function to set active station
         function setActiveStation(station) {
             if (activeStation) {
-                activeStation.button.classList.remove('active');
+                activeStation.button.classList.remove('active-local', 'active-cast');
                 activeStation.button.classList.add('inactive');
             }
             activeStation = station;
-            if (activeStation) {
-                activeStation.button.classList.remove('inactive');
-                activeStation.button.classList.add('active');
-            }
-        }
-
-        // Function to toggle play/pause on station click
-        function toggleStation(station) {
-            setActiveStation(station);
-            if (isPlaying && activeStation === station) {
-                pauseAudio();
-            } else {
-                playAudio(station);
-            }
-        }
-
-        // Play audio based on casting status
-        function playAudio(station) {
             if (isCasting) {
-                playOnChromecast(station);
+                activeStation.button.classList.remove('inactive');
+                activeStation.button.classList.add('active-cast');
+            } else {
+                activeStation.button.classList.remove('inactive');
+                activeStation.button.classList.add('active-local');
+            }
+            audio.src = station.url;
+        }
+
+        // Set up station buttons
+        for (const [key, station] of Object.entries(stations)) {
+            station.button.addEventListener('click', () => {
+                setActiveStation(station);
+                if (isCasting) {
+                    playOnChromecast();
+                } else {
+                    stopChromecastPlayback();
+                    audio.play();
+                    updateStatus(`מנגן - ${station.button.innerText}`);
+                }
+            });
+        }
+
+        // Play locally or on Chromecast
+        playBtn.addEventListener('click', () => {
+            if (isCasting) {
+                playOnChromecast();
             } else {
                 stopChromecastPlayback();
-                audio.src = station.url;
                 audio.play();
-                updateStatus(`מנגן - ${station.button.innerText}`);
+                updateStatus(`מנגן - ${activeStation.button.innerText}`);
             }
-            isPlaying = true;
-        }
+        });
 
-        function pauseAudio() {
+        pauseBtn.addEventListener('click', () => {
             if (isCasting && currentMediaSession) {
                 currentMediaSession.pause(null, () => {
                     updateStatus('מושהה ב-Chromecast');
@@ -292,99 +290,70 @@
                 audio.pause();
                 updateStatus('מושהה');
             }
-            isPlaying = false;
-        }
-
-        // Attach event listeners to station buttons
-        for (const [key, station] of Object.entries(stations)) {
-            station.button.addEventListener('click', () => {
-                toggleStation(station);
-            });
-        }
-
-        playBtn.addEventListener('click', () => {
-            if (activeStation) {
-                playAudio(activeStation);
-            }
-        });
-
-        pauseBtn.addEventListener('click', () => {
-            pauseAudio();
         });
 
         stopBtn.addEventListener('click', () => {
-            stopLocalPlayback();
-            stopChromecastPlayback();
+            if (isCasting && currentMediaSession) {
+                currentMediaSession.stop(null, () => {
+                    updateStatus('עצור ב-Chromecast');
+                }, (error) => {
+                    console.error('Error stopping media:', error);
+                });
+            } else {
+                stopLocalPlayback();
+                updateStatus('עצור');
+            }
         });
 
         volumeSlider.addEventListener('input', () => {
-            currentVolume = parseFloat(volumeSlider.value);
-
-            if (isCasting && currentMediaSession) {
-                const volumeRequest = new chrome.cast.media.VolumeRequest();
-                volumeRequest.volume = currentVolume;
-                currentMediaSession.setVolume(volumeRequest, () => {
-                    console.log('Chromecast volume updated to ' + currentVolume);
-                }, (error) => {
-                    console.error('Error setting volume:', error);
-                });
-            } else {
-                audio.volume = currentVolume;
-            }
-        });
-
-        function playOnChromecast(station) {
-            if (!station) return;
-
-            stopLocalPlayback();
-
-            const mediaInfo = new chrome.cast.media.MediaInfo(
-                station.url,
-                'audio/mp3'
-            );
-            mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
-            mediaInfo.metadata.title = station.button.innerText;
-            mediaInfo.contentType = 'audio/mp3';
-
-            const request = new chrome.cast.media.LoadRequest(mediaInfo);
-            request.autoplay = true;
-
-            if (castSession) {
-                castSession.loadMedia(request).then(
-                    (mediaSession) => {
-                        currentMediaSession = mediaSession;
-                        setChromecastVolume(currentVolume);
-                        updateStatus(`מנגן ב-Chromecast - ${station.button.innerText}`);
-                        isPlaying = true;
-
-                        // Automatically start playback after loading
-                        if (currentMediaSession && currentMediaSession.playerState !== 'PLAYING') {
-                            currentMediaSession.play(null, () => {
-                                console.log('Chromecast playback started automatically');
-                            }, (error) => {
-                                console.error('Error starting Chromecast playback:', error);
-                            });
-                        }
-
-                    },
-                    (error) => {
-                        console.error('Error loading media:', error);
-                        updateStatus('שגיאה: לא ניתן לשדר ב-Chromecast');
-                        isPlaying = false;
-                    }
-                );
-            }
-        }
-
-        function setChromecastVolume(volume) {
+            const volume = volumeSlider.value;
             if (isCasting && currentMediaSession) {
                 const volumeRequest = new chrome.cast.media.VolumeRequest();
                 volumeRequest.volume = volume;
                 currentMediaSession.setVolume(volumeRequest, () => {
-                    console.log('Chromecast volume updated to ' + volume);
+                    console.log('Volume changed on Chromecast:', volume);
                 }, (error) => {
-                    console.error('Error setting Chromecast volume:', error);
+                    console.error('Error setting volume:', error);
                 });
+            } else {
+                audio.volume = volume;
+            }
+        });
+
+        // Function to play on Chromecast
+        function playOnChromecast() {
+            if (!activeStation) return;
+
+            stopLocalPlayback();
+
+            const mediaInfo = new chrome.cast.media.MediaInfo(
+                activeStation.url,
+                'audio/mp3'
+            );
+            mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
+            mediaInfo.metadata.title = activeStation.button.innerText;
+
+            const request = new chrome.cast.media.LoadRequest(mediaInfo);
+            request.autoplay = true;
+
+            const session = cast.framework.CastContext.getInstance().getCurrentSession();
+            if (session) {
+                session.loadMedia(request).then(
+                    () => {
+                        currentMediaSession = session.getMediaSession();
+                        updateStatus(`מנגן ב-Chromecast - ${activeStation.button.innerText}`);
+                        // Auto play on Chromecast
+                        currentMediaSession.play(null, () => {
+                            console.log('Started playing on Chromecast');
+                        }, (error) => {
+                            console.error('Error starting playback on Chromecast', error);
+                        });
+                    },
+                    (error) => {
+                        console.error('Error loading media:', error);
+                        updateStatus('שגיאה: לא ניתן לשדר ב-Chromecast');
+                    }
+                );
             }
         }
     </script>
