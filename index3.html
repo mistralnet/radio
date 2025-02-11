@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>רדיו כאן ב</title>
+    <title>רדיו כאן ועכשיו</title>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <style>
         body {
@@ -59,9 +59,8 @@
 
 <body>
     <div id="app">
-        <h1>רדיו כאן ב</h1>
-        <audio id="audioPlayer" src="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net" controls
-            preload="none"></audio>
+        <h1>רדיו כאן ועכשיו</h1>
+        <audio id="audioPlayer" src="" controls preload="none"></audio>
         <div id="volume-controls">
             <label for="volume-slider">עוצמת שמע:</label>
             <input type="range" id="volume-slider" min="0" max="1" step="0.1" value="1">
@@ -70,10 +69,11 @@
         <button id="pauseButton">עצור</button>
         <button id="castButton">העבר ל-Chromecast</button>
         <p id="cast-status"></p>
-        <p>גרסה: 3.0</p>
-        <p>נוצר בתאריך: 6/6/2024 שעה: 17:00</p>
+        <button id="kanButton">כאן ב</button>
+        <button id="glzButton">גל"צ</button>
+        <p>גרסה: 4.0</p>
+        <p>נוצר בתאריך: 6/6/2024 שעה: 17:30</p>
     </div>
-
     <script>
         const audioPlayer = document.getElementById('audioPlayer');
         const playButton = document.getElementById('playButton');
@@ -81,6 +81,12 @@
         const volumeSlider = document.getElementById('volume-slider');
         const castButton = document.getElementById('castButton');
         const castStatus = document.getElementById('cast-status');
+        const kanButton = document.getElementById('kanButton');
+        const glzButton = document.getElementById('glzButton');
+
+        let currentStation = "";
+        const KAN_STATION = "https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net";
+        const GLZ_STATION = "https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz";
 
         playButton.addEventListener('click', () => {
             audioPlayer.play();
@@ -94,7 +100,28 @@
             audioPlayer.volume = volumeSlider.value;
         });
 
+        kanButton.addEventListener('click', () => {
+            loadStation(KAN_STATION);
+        });
+
+        glzButton.addEventListener('click', () => {
+            loadStation(GLZ_STATION);
+        });
+
         castButton.addEventListener('click', castMedia);
+
+        function loadStation(stationURL) {
+            currentStation = stationURL;
+            audioPlayer.src = stationURL;
+            audioPlayer.load();
+            audioPlayer.play();
+            castStatus.textContent = "טוען תחנה...";
+
+            if (session) {
+                loadMediaOnCast();
+            }
+
+        }
 
         function castMedia() {
             castStatus.textContent = "מחפש Chromecast...";
@@ -132,6 +159,7 @@
 
         function onInitSuccess() {
             castStatus.textContent = "אתחול הצליח!";
+            checkExistingSession(); // Check for existing session on init
         }
 
         function onError(message) {
@@ -143,7 +171,7 @@
             session = newSession;
             // Stop local playback when casting starts
             audioPlayer.pause();
-            loadMedia();
+            loadMediaOnCast();
         }
 
         function receiverListener(receiver) {
@@ -155,9 +183,9 @@
                 function (newSession) {
                     session = newSession;
                     castStatus.textContent = 'אפליקציה הושקה.';
-                     // Stop local playback when casting starts
+                    // Stop local playback when casting starts
                     audioPlayer.pause();
-                    loadMedia();
+                    loadMediaOnCast();
                 },
                 function (err) {
                     castStatus.textContent = 'שגיאת השקה: ' + err.message;
@@ -165,15 +193,15 @@
             );
         }
 
-        function loadMedia() {
+        function loadMediaOnCast() {
             if (!session) {
                 castStatus.textContent = 'אין סשן פעיל.';
                 return;
             }
 
-            castStatus.textContent = 'טוען מדיה...';
+            castStatus.textContent = 'טוען מדיה ב-Chromecast...';
             const mediaInfo = new chrome.cast.media.MediaInfo(
-                'https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net',
+                currentStation,
                 'audio/mp3');
             mediaInfo.streamType = chrome.cast.media.StreamType.LIVE;
 
@@ -187,6 +215,13 @@
                 });
         }
 
+        function checkExistingSession() {
+            if (chrome.cast.framework.CastContext.getInstance().getCurrentSession()) {
+                castStatus.textContent = "נמצא שידור קודם. אנא נתק את השידור הקודם לפני חיבור מחדש.";
+                // Optionally provide a button to disconnect the existing session
+                // e.g., <button onclick="disconnectSession()">Disconnect</button>
+            }
+        }
         // Initialize Cast API after the page has loaded
         window.onload = function () {
             castStatus.textContent = "טוען Chromecast API...";
@@ -201,7 +236,6 @@
         };
     </script>
     <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
-
 </body>
 
 </html>
