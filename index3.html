@@ -79,8 +79,8 @@
         <button id="kanButton">כאן ב</button>
         <button id="glzButton">גל"צ</button>
         <button id="disconnectButton" style="display:none;">נתק Chromecast</button>
-        <p>גרסה: 9.0</p>
-        <p>נוצר בתאריך: 6/6/2024 שעה: 20:00</p>
+        <p>גרסה: 10.0</p>
+        <p>נוצר בתאריך: 6/6/2024 שעה: 20:30</p>
     </div>
 
     <script>
@@ -244,6 +244,7 @@
                 function () {
                     castStatus.textContent = 'מדיה נטענה בהצלחה ב-Chromecast!';
                     updateStatus("מנגן בכרומקאסט");
+                    playMediaOnCast();
                 },
                 function (err) {
                     castStatus.textContent = 'שגיאת טעינה: ' + err.message;
@@ -304,6 +305,7 @@
                 disconnectButton.style.display = 'none';
                 isCasting = false;
                 audioPlayer.src = "";
+                isPlaying = false;
             }, function (err) {
                 castStatus.textContent = "שגיאה בניסיון ניתוק: " + err.message;
             });
