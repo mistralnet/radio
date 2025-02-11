@@ -147,7 +147,7 @@
   </div>
 
   <footer>
-    גרסה: 1.0.6 | נוצר בתאריך: 2023-10-10 20:00
+    גרסה: 1.0.7 | נוצר בתאריך: 2023-10-10 21:00
   </footer>
 
   <script>
@@ -308,7 +308,9 @@
     volumeSlider.addEventListener('input', () => {
       const volume = volumeSlider.value;
       if (isCasting && currentMediaSession) {
-        currentMediaSession.setVolume(volume, () => {}, (error) => {
+        currentMediaSession.setVolume(volume, () => {
+          console.log('Volume changed on Chromecast:', volume);
+        }, (error) => {
           console.error('Error setting volume:', error);
         });
       } else {
