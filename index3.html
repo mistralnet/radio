@@ -241,7 +241,7 @@
     </div>
 
     <div class="contaibox">
-        גרסה 1.2.0
+        גרסה 1.2.1
     </div>
     <div class="contailink">
         <p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
@@ -385,12 +385,18 @@
                 stopChromecastPlayback();
                 audioPlayer.src = station.url;
                 audioPlayer.volume = radioVolume;
-                audioPlayer.play();
-                updateStatus(`מנגן - ${station.button.innerText}`);
-                isPlaying = true;
+                audioPlayer.play().then(() => {
+                    updateStatus(`מנגן - ${station.button.innerText}`);
+                    isPlaying = true;
+                    activeStation = station;
+                    updateActiveButtonStyles();
+                }).catch(error => {
+                    console.error('Error playing audio:', error);
+                    updateStatus('שגיאה בהפעלת השידור');
+                    isPlaying = false;
+                    updateActiveButtonStyles();
+                });
             }
-            activeStation = station;
-            updateActiveButtonStyles();
         }
 
         function pauseAudio() {
