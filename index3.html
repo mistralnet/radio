@@ -19,7 +19,7 @@
             min-height: 100vh;
             background-color: #f0f0f0;
             margin: 0;
-            padding: 0;
+            padding: 20px;
         }
 
         #app {
@@ -61,6 +61,18 @@
             font-style: italic;
             color: #777;
         }
+
+        .station-name {
+            cursor: pointer;
+            margin: 5px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        }
+
+        .station-name:hover {
+            background-color: #e0e0e0;
+        }
     </style>
 </head>
 
@@ -76,11 +88,11 @@
         <button id="pauseButton">עצור/השהה</button>
         <button id="castButton">העבר ל-Chromecast</button>
         <p id="cast-status"></p>
-        <button id="kanButton">כאן ב</button>
-        <button id="glzButton">גל"צ</button>
+        <span id="kanButton" class="station-name">כאן ב</span>
+        <span id="glzButton" class="station-name">גל"צ</span>
         <button id="disconnectButton" style="display:none;">נתק Chromecast</button>
-        <p>גרסה: 11.0</p>
-        <p>נוצר בתאריך: 6/6/2024 שעה: 21:00</p>
+        <p>גרסה: 12.0</p>
+        <p>נוצר בתאריך: 6/6/2024 שעה: 21:30</p>
     </div>
 
     <script>
@@ -99,6 +111,7 @@
         const GLZ_STATION = "https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz";
         let isPlaying = false;
         let isCasting = false;
+        let whiteNoiseInterval;
 
         playButton.addEventListener('click', () => {
             if (!session) {
@@ -134,11 +147,11 @@
         });
 
         kanButton.addEventListener('click', () => {
-            loadStation(KAN_STATION);
+            toggleStation(KAN_STATION);
         });
 
         glzButton.addEventListener('click', () => {
-            loadStation(GLZ_STATION);
+            toggleStation(GLZ_STATION);
         });
 
         castButton.addEventListener('click', castMedia);
@@ -156,6 +169,23 @@
                 loadMediaOnCast();
                 updateStatus("טוען ומנגן בכרומקאסט");
             }
+        }
+
+        function toggleStation(stationURL) {
+            if (currentStation === stationURL && isPlaying) {
+                pauseStation();
+            } else {
+                loadStation(stationURL);
+            }
+        }
+
+        function pauseStation() {
+            audioPlayer.pause();
+            isPlaying = false;
+            if (session) {
+                pauseMediaOnCast();
+            }
+            updateStatus(session ? "הושהה בכרומקאסט" : "הושהה במכשיר שלך");
         }
 
         function castMedia() {
@@ -203,6 +233,7 @@
             isPlaying = false;
             loadMediaOnCast();
             updateStatus("מנגן בכרומקאסט");
+            startWhiteNoise();
         }
 
         function receiverListener(receiver) {
@@ -219,6 +250,7 @@
                     isPlaying = false;
                     loadMediaOnCast();
                     updateStatus("מנגן בכרומקאסט");
+                    startWhiteNoise();
                 },
                 function (err) {
                     castStatus.textContent = 'שגיאת השקה: ' + err.message;
@@ -255,39 +287,39 @@
             if (session && !isPlaying) {
                 const media = session.getMediaSession();
                 if (media) {
-                     media.play(null,
-                    function () {
-                        castStatus.textContent = 'השידור בכרומקאסט הופעל';
-                        isPlaying = true;
-                        updateStatus("מנגן בכרומקאסט");
-                    },
-                    function (err) {
-                        castStatus.textContent = 'הפעלת השידור בכרומקאסט נכשלה: ' + err.message;
-                    });
-                 } else {
+                    media.play(null,
+                        function () {
+                            castStatus.textContent = 'השידור בכרומקאסט הופעל';
+                            isPlaying = true;
+                            updateStatus("מנגן בכרומקאסט");
+                        },
+                        function (err) {
+                            castStatus.textContent = 'הפעלת השידור בכרומקאסט נכשלה: ' + err.message;
+                        });
+                } else {
                     loadMediaOnCast(); // if no media session, load the media
                 }
-               
+
             }
         }
 
         function pauseMediaOnCast() {
             if (session && isPlaying) {
                 const media = session.getMediaSession();
-                if (media){
-                     media.pause(null,
-                    function () {
-                        castStatus.textContent = 'השידור בכרומקאסט הושהה';
-                        isPlaying = false;
-                        updateStatus("הושהה בכרומקאסט");
-                    },
-                    function (err) {
-                        castStatus.textContent = 'השהיית השידור בכרומקאסט נכשלה: ' + err.message;
-                    });
-                 } else {
+                if (media) {
+                    media.pause(null,
+                        function () {
+                            castStatus.textContent = 'השידור בכרומקאסט הושהה';
+                            isPlaying = false;
+                            updateStatus("הושהה בכרומקאסט");
+                        },
+                        function (err) {
+                            castStatus.textContent = 'השהיית השידור בכרומקאסט נכשלה: ' + err.message;
+                        });
+                } else {
                     loadMediaOnCast(); // if no media session, load the media
                 }
-               
+
             }
         }
 
@@ -318,6 +350,7 @@
                 isCasting = false;
                 audioPlayer.src = "";
                 isPlaying = false;
+                stopWhiteNoise();
             }, function (err) {
                 castStatus.textContent = "שגיאה בניסיון ניתוק: " + err.message;
             });
@@ -340,12 +373,40 @@
                 castStatus.textContent = "שגיאה באתחול Cast Framework: " + e.message;
             }
         }
+                function startWhiteNoise() {
+            // You can replace this URL with a silent audio file or white noise stream
+            const whiteNoiseURL = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhUAAABAAgAZGF0YQAAAAA=";
+            if (!audioPlayer.src || audioPlayer.src === "") {
+                audioPlayer.src = whiteNoiseURL;
+                audioPlayer.loop = true;
+                audioPlayer.muted = true;
+                audioPlayer.play().catch(error => console.error("Error playing white noise:", error));
+                whiteNoiseInterval = setInterval(() => {
+                    if (session && !isPlaying) {
+                      session.getMediaSession().stop(null, function () {
+                       console.log('שקט הושמע.');
+                      }, function (err) {
+                       console.error('כשל השמעה:', err);
+                       });
+                      }
+                },1000);
+            }
+        }
 
+        function stopWhiteNoise() {
+            if (whiteNoiseInterval) {
+                clearInterval(whiteNoiseInterval);
+            }
+           audioPlayer.pause();
+           audioPlayer.muted = false;
+           audioPlayer.removeAttribute('src'); // remove it from the buffer
+           audioPlayer.load();
+        }
         // Initialize Cast API after the page has loaded
         window.onload = function () {
             castStatus.textContent = "טוען Chromecast API...";
             if (typeof chrome.cast !== 'undefined' && chrome.cast && chrome.cast.isAvailable) {
-                initializeCastFramework();  // Initialize Cast Framework first
+                initializeCastFramework(); // Initialize Cast Framework first
             } else {
                 castStatus.textContent = "Chromecast לא זמין, נסה שוב מאוחר יותר. ממתין לזמינות...";
                 setTimeout(function () {
