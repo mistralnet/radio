@@ -126,7 +126,7 @@
   </div>
 
   <footer>
-    גרסה: 1.0.3 | נוצר בתאריך: 2023-10-10 17:00
+    גרסה: 1.0.4 | נוצר בתאריך: 2023-10-10 18:00
   </footer>
 
   <script>
@@ -176,7 +176,8 @@
             if (event.sessionState === cast.framework.SessionState.SESSION_STARTED) {
               isCasting = true;
               stopLocalPlayback(); // עצור שידור מקומי אם מתחבר ל-Chromecast
-              statusText.innerText = 'מצב: מחובר ל-Chromecast';
+              playOnChromecast(); // הפעל שידור אוטומטי ב-Chromecast
+              statusText.innerText = 'מצב: מנגן ב-Chromecast';
             } else if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
               isCasting = false;
               stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתנתק
@@ -191,17 +192,31 @@
     function stopLocalPlayback() {
       audio.pause();
       audio.currentTime = 0;
-      statusText.innerText = 'מצב: מוכן';
+      updateStatus('עצור');
+      resetButtons();
     }
 
     // Function to stop Chromecast playback
     function stopChromecastPlayback() {
       if (currentMediaSession) {
         currentMediaSession.stop(null, () => {
-          statusText.innerText = 'מצב: עצור ב-Chromecast';
+          updateStatus('עצור ב-Chromecast');
         }, (error) => {
           console.error('Error stopping Chromecast playback:', error);
         });
+      }
+    }
+
+    // Function to update status
+    function updateStatus(status) {
+      statusText.innerText = `מצב: ${status}`;
+    }
+
+    // Function to reset buttons
+    function resetButtons() {
+      for (const station of Object.values(stations)) {
+        station.button.classList.remove('active');
+        station.button.classList.add('inactive');
       }
     }
 
@@ -226,7 +241,7 @@
         } else {
           stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתחיל שידור מקומי
           audio.play();
-          statusText.innerText = `מצב: משדר - ${station.button.innerText}`;
+          updateStatus(`מנגן - ${station.button.innerText}`);
         }
       });
     }
@@ -238,33 +253,33 @@
       } else {
         stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתחיל שידור מקומי
         audio.play();
-        statusText.innerText = `מצב: משדר - ${activeStation.button.innerText}`;
+        updateStatus(`מנגן - ${activeStation.button.innerText}`);
       }
     });
 
     pauseBtn.addEventListener('click', () => {
       if (isCasting && currentMediaSession) {
         currentMediaSession.pause(null, () => {
-          statusText.innerText = 'מצב: מושהה ב-Chromecast';
+          updateStatus('מושהה ב-Chromecast');
         }, (error) => {
           console.error('Error pausing media:', error);
         });
       } else {
         audio.pause();
-        statusText.innerText = 'מצב: מושהה';
+        updateStatus('מושהה');
       }
     });
 
     stopBtn.addEventListener('click', () => {
       if (isCasting && currentMediaSession) {
         currentMediaSession.stop(null, () => {
-          statusText.innerText = 'מצב: עצור ב-Chromecast';
+          updateStatus('עצור ב-Chromecast');
         }, (error) => {
           console.error('Error stopping media:', error);
         });
       } else {
         stopLocalPlayback();
-        statusText.innerText = 'מצב: עצור';
+        updateStatus('עצור');
       }
     });
 
@@ -300,11 +315,11 @@
         session.loadMedia(request).then(
           () => {
             currentMediaSession = session.getMediaSession();
-            statusText.innerText = `מצב: משדר ב-Chromecast - ${activeStation.button.innerText}`;
+            updateStatus(`מנגן ב-Chromecast - ${activeStation.button.innerText}`);
           },
           (error) => {
             console.error('Error loading media:', error);
-            statusText.innerText = 'שגיאה: לא ניתן לשדר ב-Chromecast';
+            updateStatus('שגיאה: לא ניתן לשדר ב-Chromecast');
           }
         );
       }
