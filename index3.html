@@ -1,3 +1,6 @@
+ 
+
+```html
 <!DOCTYPE html>
 <html lang="he">
 
@@ -18,7 +21,8 @@
     }
 
     header {
-      background-color: #0056b3; /* Darker blue for better contrast */
+      background-color: #0056b3;
+      /* Darker blue for better contrast */
       color: #fff;
       padding: 20px;
       font-size: 28px;
@@ -31,7 +35,8 @@
       display: flex;
       justify-content: center;
       gap: 15px;
-      flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+      flex-wrap: wrap;
+      /* Allow buttons to wrap on smaller screens */
     }
 
     button {
@@ -41,26 +46,38 @@
       border: none;
       border-radius: 8px;
       transition: background-color 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      /* Subtle shadow for depth */
     }
 
     button:focus {
-      outline: 2px solid #007bff; /* Focus outline for accessibility */
+      outline: 2px solid #007bff;
+      /* Focus outline for accessibility */
     }
 
     /* Colors for better visibility and differentiation */
     button.active {
-      background-color: #28a745; /* Green */
+      background-color: #28a745;
+      /* Green */
       color: #fff;
     }
 
     button.inactive {
-      background-color: #dc3545; /* Red */
+      background-color: #dc3545;
+      /* Red */
       color: #fff;
     }
 
     button:hover {
       opacity: 0.9;
+    }
+
+    /* Style the cast button */
+    google-cast-launcher {
+      /* Add some basic styling to make the cast button visible */
+      display: inline-block;
+      height: 36px;
+      width: 36px;
     }
 
     #volume {
@@ -86,7 +103,8 @@
     footer {
       margin-top: 40px;
       padding: 15px;
-      background-color: #0056b3; /* Consistent dark blue */
+      background-color: #0056b3;
+      /* Consistent dark blue */
       color: #fff;
       font-size: 16px;
     }
@@ -139,6 +157,7 @@
     <button id="playBtn" aria-label="הפעל">הפעל</button>
     <button id="pauseBtn" aria-label="השהה">השהה</button>
     <button id="stopBtn" aria-label="עצור">עצור</button>
+    <!-- Place the cast button in a more visible location -->
     <google-cast-launcher id="castButton"></google-cast-launcher>
   </div>
 
@@ -152,7 +171,7 @@
   </div>
 
   <footer>
-    גרסה: 1.0.4 | נוצר בתאריך: 2024-05-06 14:30
+    גרסה: 1.0.5 | נוצר בתאריך: 2024-05-06 15:15
   </footer>
 
   <script>
@@ -354,3 +373,4 @@
 </body>
 
 </html>
+ 
