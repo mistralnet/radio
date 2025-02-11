@@ -75,8 +75,8 @@
         <button id="kanButton">כאן ב</button>
         <button id="glzButton">גל"צ</button>
         <button id="disconnectButton" style="display:none;">נתק Chromecast</button>
-        <p>גרסה: 7.0</p>
-        <p>נוצר בתאריך: 6/6/2024 שעה: 19:00</p>
+        <p>גרסה: 8.0</p>
+        <p>נוצר בתאריך: 6/6/2024 שעה: 19:30</p>
     </div>
 
     <script>
@@ -96,9 +96,10 @@
         let isPlaying = false;
 
         playButton.addEventListener('click', () => {
-            audioPlayer.play();
-            isPlaying = true;
-            if (session) {
+            if (!session) {
+                audioPlayer.play();
+                isPlaying = true;
+            } else {
                 playMediaOnCast();
             }
         });
@@ -107,13 +108,13 @@
             if (isPlaying) {
                 audioPlayer.pause();
                 isPlaying = false;
-                 if (session) {
+                if (session) {
                     pauseMediaOnCast();
                 }
             } else {
                 audioPlayer.play();
                 isPlaying = true;
-                 if (session) {
+                if (session) {
                     playMediaOnCast();
                 }
             }
@@ -136,10 +137,12 @@
 
         function loadStation(stationURL) {
             currentStation = stationURL;
-            audioPlayer.src = stationURL;
-            audioPlayer.load();
-            audioPlayer.play();
-            isPlaying = true;
+            if (!session) {
+                audioPlayer.src = stationURL;
+                audioPlayer.load();
+                audioPlayer.play();
+                isPlaying = true;
+            }
             castStatus.textContent = "טוען תחנה...";
             if (session) {
                 loadMediaOnCast();
@@ -188,6 +191,7 @@
             session = newSession;
             disconnectButton.style.display = 'inline';
             audioPlayer.pause();
+            isPlaying = false;
             loadMediaOnCast();
         }
 
@@ -202,6 +206,7 @@
                     castStatus.textContent = 'אפליקציה הושקה.';
                     disconnectButton.style.display = 'inline';
                     audioPlayer.pause();
+                    isPlaying = false;
                     loadMediaOnCast();
                 },
                 function (err) {
@@ -238,6 +243,7 @@
                 session.getMediaSession().play(null,
                     function () {
                         castStatus.textContent = 'השידור בכרומקאסט הופעל';
+                        isPlaying = true;
                     },
                     function (err) {
                         castStatus.textContent = 'הפעלת השידור בכרומקאסט נכשלה: ' + err.message;
@@ -250,6 +256,7 @@
                 session.getMediaSession().pause(null,
                     function () {
                         castStatus.textContent = 'השידור בכרומקאסט הושהה';
+                        isPlaying = false;
                     },
                     function (err) {
                         castStatus.textContent = 'השהיית השידור בכרומקאסט נכשלה: ' + err.message;
@@ -278,6 +285,7 @@
                 session = null;
                 castStatus.textContent = "השידור נותק.";
                 disconnectButton.style.display = 'none';
+                audioPlayer.src = "";
             }, function (err) {
                 castStatus.textContent = "שגיאה בניסיון ניתוק: " + err.message;
             });
