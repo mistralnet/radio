@@ -44,6 +44,10 @@
             background-color: #0056b3;
         }
 
+        button.active {
+            background-color: #5cb85c;
+        }
+
         #volume-controls {
             margin-top: 10px;
         }
@@ -75,8 +79,8 @@
         <button id="kanButton">כאן ב</button>
         <button id="glzButton">גל"צ</button>
         <button id="disconnectButton" style="display:none;">נתק Chromecast</button>
-        <p>גרסה: 8.0</p>
-        <p>נוצר בתאריך: 6/6/2024 שעה: 19:30</p>
+        <p>גרסה: 9.0</p>
+        <p>נוצר בתאריך: 6/6/2024 שעה: 20:00</p>
     </div>
 
     <script>
@@ -94,13 +98,16 @@
         const KAN_STATION = "https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net";
         const GLZ_STATION = "https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz";
         let isPlaying = false;
+        let isCasting = false;
 
         playButton.addEventListener('click', () => {
             if (!session) {
                 audioPlayer.play();
                 isPlaying = true;
+                updateStatus("מנגן במכשיר שלך");
             } else {
                 playMediaOnCast();
+                updateStatus("מנגן בכרומקאסט");
             }
         });
 
@@ -111,12 +118,14 @@
                 if (session) {
                     pauseMediaOnCast();
                 }
+                updateStatus(session ? "הושהה בכרומקאסט" : "הושהה במכשיר שלך");
             } else {
                 audioPlayer.play();
                 isPlaying = true;
                 if (session) {
                     playMediaOnCast();
                 }
+                updateStatus(session ? "מנגן בכרומקאסט" : "מנגן במכשיר שלך");
             }
         });
 
@@ -142,10 +151,10 @@
                 audioPlayer.load();
                 audioPlayer.play();
                 isPlaying = true;
-            }
-            castStatus.textContent = "טוען תחנה...";
-            if (session) {
+                updateStatus("טוען ומנגן במכשיר שלך");
+            } else {
                 loadMediaOnCast();
+                updateStatus("טוען ומנגן בכרומקאסט");
             }
         }
 
@@ -193,6 +202,7 @@
             audioPlayer.pause();
             isPlaying = false;
             loadMediaOnCast();
+            updateStatus("מנגן בכרומקאסט");
         }
 
         function receiverListener(receiver) {
@@ -208,6 +218,7 @@
                     audioPlayer.pause();
                     isPlaying = false;
                     loadMediaOnCast();
+                    updateStatus("מנגן בכרומקאסט");
                 },
                 function (err) {
                     castStatus.textContent = 'שגיאת השקה: ' + err.message;
@@ -232,6 +243,7 @@
             session.loadMedia(request,
                 function () {
                     castStatus.textContent = 'מדיה נטענה בהצלחה ב-Chromecast!';
+                    updateStatus("מנגן בכרומקאסט");
                 },
                 function (err) {
                     castStatus.textContent = 'שגיאת טעינה: ' + err.message;
@@ -244,6 +256,7 @@
                     function () {
                         castStatus.textContent = 'השידור בכרומקאסט הופעל';
                         isPlaying = true;
+                        updateStatus("מנגן בכרומקאסט");
                     },
                     function (err) {
                         castStatus.textContent = 'הפעלת השידור בכרומקאסט נכשלה: ' + err.message;
@@ -257,6 +270,7 @@
                     function () {
                         castStatus.textContent = 'השידור בכרומקאסט הושהה';
                         isPlaying = false;
+                        updateStatus("הושהה בכרומקאסט");
                     },
                     function (err) {
                         castStatus.textContent = 'השהיית השידור בכרומקאסט נכשלה: ' + err.message;
@@ -271,8 +285,11 @@
                 if (castContext && castContext.getCurrentSession()) {
                     castStatus.textContent = "נמצא שידור קודם. אנא נתק את השידור הקודם לפני חיבור מחדש.";
                     disconnectButton.style.display = 'inline';
+                    isCasting = true;
+
                 } else {
                     disconnectButton.style.display = 'none';
+                    isCasting = false;
                 }
             } catch (e) {
                 castStatus.textContent = "שגיאה בבדיקת סשן קיים: " + e.message;
@@ -283,14 +300,18 @@
             castStatus.textContent = "מנתק מה-Chromecast...";
             session.leave(function () {
                 session = null;
-                castStatus.textContent = "השידור נותק.";
+                castStatus.textContent = "השידור נותק. מנגן במכשיר שלך";
                 disconnectButton.style.display = 'none';
+                isCasting = false;
                 audioPlayer.src = "";
             }, function (err) {
                 castStatus.textContent = "שגיאה בניסיון ניתוק: " + err.message;
             });
         }
 
+        function updateStatus(message) {
+            castStatus.textContent = message;
+        }
         // Initialize Cast API after the page has loaded
         window.onload = function () {
             castStatus.textContent = "טוען Chromecast API...";
