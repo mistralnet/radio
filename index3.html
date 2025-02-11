@@ -155,7 +155,7 @@
     </div>
 
     <footer>
-        גרסה: 1.0.7 | נוצר בתאריך: 2024-05-06 15:15
+        גרסה: 1.0.8 | נוצר בתאריך: 2024-05-06 15:15
     </footer>
 
     <script>
@@ -201,7 +201,6 @@
                         if (event.sessionState === cast.framework.SessionState.SESSION_STARTED) {
                             isCasting = true;
                             stopLocalPlayback();
-                            setActiveStation(activeStation); // Keep active station highlighted
                             playOnChromecast();
                             updateStatus('מצב: מנגן ב-Chromecast');
                         } else if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
@@ -252,8 +251,8 @@
             }
             activeStation = station;
             if (activeStation) {
-              activeStation.button.classList.remove('inactive');
-              activeStation.button.classList.add('active');
+                activeStation.button.classList.remove('inactive');
+                activeStation.button.classList.add('active');
             }
         }
 
@@ -318,15 +317,25 @@
 
         volumeSlider.addEventListener('input', () => {
             currentVolume = parseFloat(volumeSlider.value);
-            setChromecastVolume(currentVolume); // תמיד נסה לעדכן את הווליום ב-Chromecast
 
-            audio.volume = currentVolume; // עדכן גם את הווליום המקומי
+            if (isCasting && currentMediaSession) {
+                const volumeRequest = new chrome.cast.media.VolumeRequest();
+                volumeRequest.volume = currentVolume;
+                currentMediaSession.setVolume(volumeRequest, () => {
+                    console.log('Chromecast volume updated to ' + currentVolume);
+                }, (error) => {
+                    console.error('Error setting volume:', error);
+                });
+            } else {
+                audio.volume = currentVolume;
+            }
         });
 
         function playOnChromecast(station) {
             if (!station) return;
 
             stopLocalPlayback();
+            setActiveStation(station); // Set active station *before* casting
 
             const mediaInfo = new chrome.cast.media.MediaInfo(
                 station.url,
