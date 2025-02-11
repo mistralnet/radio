@@ -63,9 +63,10 @@
         }
 
         google-cast-launcher {
-            display: inline-block;
-            height: 36px;
+            display: block; /* Make sure it's a block element */
             width: 36px;
+            height: 36px;
+            margin: 0 auto; /* Center the button */
         }
 
         #volume {
@@ -96,6 +97,7 @@
             font-size: 16px;
         }
 
+        /* Media Queries for Responsiveness */
         @media (max-width: 600px) {
             header {
                 font-size: 24px;
@@ -155,7 +157,7 @@
     </div>
 
     <footer>
-        גרסה: 1.0.7 | נוצר בתאריך: 2024-05-06 15:15
+        גרסה: 1.0.9 | נוצר בתאריך: 2024-05-06 15:15
     </footer>
 
     <script>
@@ -354,6 +356,16 @@
                         setChromecastVolume(currentVolume);
                         updateStatus(`מנגן ב-Chromecast - ${station.button.innerText}`);
                         isPlaying = true;
+
+                        // Automatically start playback after loading
+                        if (currentMediaSession && currentMediaSession.playerState !== 'PLAYING') {
+                            currentMediaSession.play(null, () => {
+                                console.log('Chromecast playback started automatically');
+                            }, (error) => {
+                                console.error('Error starting Chromecast playback:', error);
+                            });
+                        }
+
                     },
                     (error) => {
                         console.error('Error loading media:', error);
