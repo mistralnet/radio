@@ -126,7 +126,7 @@
   </div>
 
   <footer>
-    גרסה: 1.0.4 | נוצר בתאריך: 2024-06-06 22:00
+    גרסה: 1.0.5 | נוצר בתאריך: 2024-06-06 22:30
   </footer>
 
   <script>
@@ -155,6 +155,7 @@
 
     let isCasting = false;
     let castPlayer;
+    let castPlayerController;
     let currentMediaSession;
     let activeStation = null;
 
@@ -177,38 +178,40 @@
               isCasting = true;
               stopLocalPlayback(); // עצור שידור מקומי אם מתחבר ל-Chromecast
               statusText.innerText = 'מצב: מחובר ל-Chromecast';
+              updateButtonStates();
             } else if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
               isCasting = false;
               stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתנתק
               statusText.innerText = 'מצב: מוכן';
+              updateButtonStates();
             }
           }
         );
-
         castPlayerController.addEventListener(
                 cast.framework.RemotePlayerEventType.IS_PLAYING_CHANGED,
                 function (event) {
                     isPlaying = event.value;
-                    updateButtonStates();
+                     updateButtonStates();
                 });
       }
     };
+
     // Function to update button states
     function updateButtonStates() {
-          if (!isCasting && !isPlaying) {
-              // If not casting and not playing, set all radio buttons to the default color
-              for (const [key, station] of Object.entries(stations)) {
-                  station.button.classList.remove('active');
-                  station.button.classList.add('inactive');
-              }
-          }
+      if (!isCasting && !isPlaying) {
+        for (const [key, station] of Object.entries(stations)) {
+          station.button.classList.remove('active');
+          station.button.classList.add('inactive');
+        }
+      }
     }
+
     // Function to stop local playback
     function stopLocalPlayback() {
       audio.pause();
       audio.currentTime = 0;
       statusText.innerText = 'מצב: מוכן';
-      updateButtonStates()
+      updateButtonStates();
     }
 
     // Function to stop Chromecast playback
@@ -216,11 +219,11 @@
       if (currentMediaSession) {
         currentMediaSession.stop(null, () => {
           statusText.innerText = 'מצב: עצור ב-Chromecast';
+          updateButtonStates();
         }, (error) => {
           console.error('Error stopping Chromecast playback:', error);
         });
       }
-       updateButtonStates()
     }
 
     // Function to set active station
@@ -264,12 +267,7 @@
 
     pauseBtn.addEventListener('click', () => {
       if (isCasting && currentMediaSession) {
-        currentMediaSession.pause(null, () => {
-          statusText.innerText = 'מצב: מושהה ב-Chromecast';
-          isPlaying = false;
-        }, (error) => {
-          console.error('Error pausing media:', error);
-        });
+        pauseMediaOnCast();
       } else {
         audio.pause();
         isPlaying = false;
@@ -279,13 +277,7 @@
 
     stopBtn.addEventListener('click', () => {
       if (isCasting && currentMediaSession) {
-        currentMediaSession.stop(null, () => {
-          statusText.innerText = 'מצב: עצור ב-Chromecast';
-          isPlaying = false;
-           updateButtonStates();
-        }, (error) => {
-          console.error('Error stopping media:', error);
-        });
+        stopMediaOnCast();
       } else {
         stopLocalPlayback();
         isPlaying = false;
@@ -297,14 +289,17 @@
     volumeSlider.addEventListener('input', () => {
       const volume = volumeSlider.value;
       if (isCasting && currentMediaSession) {
-        currentMediaSession.setVolume(volume, () => { }, (error) => {
-          console.error('Error setting volume:', error);
-        });
+        setVolumeOnCast(volume);
       } else {
         audio.volume = volume;
       }
     });
-
+    function setVolumeOnCast(volume) {
+        if (castPlayer && castPlayerController) {
+            castPlayer.volumeLevel = volume;
+            castPlayerController.setVolumeLevel();
+        }
+    }
     // Function to play on Chromecast
     function playOnChromecast() {
       if (!activeStation) return;
@@ -338,6 +333,20 @@
         );
       }
     }
+        function pauseMediaOnCast() {
+            if (currentMediaSession) {
+                castPlayerController.pause();
+                statusText.innerText = 'מצב: מושהה ב-Chromecast';
+                isPlaying = false;
+            }
+        }
+        function stopMediaOnCast() {
+             if (currentMediaSession) {
+                castPlayerController.stop();
+                statusText.innerText = 'מצב: עוצר ב-Chromecast';
+                isPlaying = false;
+            }
+        }
   </script>
 </body>
 
