@@ -70,8 +70,8 @@
         <button id="pauseButton">עצור</button>
         <button id="castButton">העבר ל-Chromecast</button>
         <p id="cast-status"></p>
-        <p>גרסה: 1.0</p>
-        <p>נוצר בתאריך: 6/6/2024 שעה: 16:00</p>
+        <p>גרסה: 2.0</p>
+        <p>נוצר בתאריך: 6/6/2024 שעה: 16:30</p>
     </div>
 
     <script>
@@ -98,17 +98,29 @@
 
         function castMedia() {
             castStatus.textContent = "מחפש Chromecast...";
+
+            // Check if Cast is available
             if (typeof chrome.cast === 'undefined' || !chrome.cast || !chrome.cast.isAvailable) {
-                setTimeout(initializeCastApi, 1000);
+                castStatus.textContent = "Chromecast לא זמין, מנסה לאתחל שוב...";
+                setTimeout(() => {
+                    initializeCastApi(); // Try to initialize again after a delay
+                }, 1000);
                 return;
             }
+
             launchApp();
         }
-
         let session = null;
 
         function initializeCastApi() {
             castStatus.textContent = "מאתחל API...";
+
+            // Check if chrome.cast and chrome.cast.SessionRequest are defined
+            if (typeof chrome.cast === 'undefined' || typeof chrome.cast.SessionRequest === 'undefined') {
+                castStatus.textContent = "שגיאה: chrome.cast או chrome.cast.SessionRequest לא מוגדרים.";
+                return;
+            }
+
             const sessionRequest = new chrome.cast.SessionRequest(chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID);
             const apiConfig = new chrome.cast.ApiConfig(sessionRequest,
                 sessionListener,
@@ -169,13 +181,22 @@
                     castStatus.textContent = 'שגיאת טעינה: ' + err.message;
                 });
         }
-        // Initialize Cast if available
-        if (typeof chrome.cast !== 'undefined' && chrome.cast && chrome.cast.isAvailable) {
-            initializeCastApi();
-        } else {
-            castStatus.textContent = "Chromecast לא זמין, נסה שוב מאוחר יותר";
-        }
+
+        // Initialize Cast API after the page has loaded
+        window.onload = function () {
+            castStatus.textContent = "טוען Chromecast API...";
+            if (typeof chrome.cast !== 'undefined' && chrome.cast && chrome.cast.isAvailable) {
+                initializeCastApi();
+            } else {
+                castStatus.textContent = "Chromecast לא זמין, נסה שוב מאוחר יותר. ממתין לזמינות...";
+                setTimeout(function () {
+                    initializeCastApi();
+                }, 3000);
+            }
+        };
     </script>
+    <script type="text/javascript" src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+
 </body>
 
 </html>
