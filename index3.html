@@ -71,9 +71,11 @@
         <p id="cast-status"></p>
         <button id="kanButton">כאן ב</button>
         <button id="glzButton">גל"צ</button>
-        <p>גרסה: 4.0</p>
-        <p>נוצר בתאריך: 6/6/2024 שעה: 17:30</p>
+        <button id="disconnectButton" style="display:none;">נתק Chromecast</button>
+        <p>גרסה: 5.0</p>
+        <p>נוצר בתאריך: 6/6/2024 שעה: 18:00</p>
     </div>
+
     <script>
         const audioPlayer = document.getElementById('audioPlayer');
         const playButton = document.getElementById('playButton');
@@ -83,6 +85,7 @@
         const castStatus = document.getElementById('cast-status');
         const kanButton = document.getElementById('kanButton');
         const glzButton = document.getElementById('glzButton');
+        const disconnectButton = document.getElementById('disconnectButton');
 
         let currentStation = "";
         const KAN_STATION = "https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net";
@@ -109,6 +112,8 @@
         });
 
         castButton.addEventListener('click', castMedia);
+        disconnectButton.addEventListener('click', disconnectSession);
+
 
         function loadStation(stationURL) {
             currentStation = stationURL;
@@ -122,7 +127,6 @@
             }
 
         }
-
         function castMedia() {
             castStatus.textContent = "מחפש Chromecast...";
 
@@ -169,6 +173,7 @@
         function sessionListener(newSession) {
             castStatus.textContent = 'מחובר ל-Chromecast!';
             session = newSession;
+            disconnectButton.style.display = 'inline'; // Show disconnect button
             // Stop local playback when casting starts
             audioPlayer.pause();
             loadMediaOnCast();
@@ -183,6 +188,7 @@
                 function (newSession) {
                     session = newSession;
                     castStatus.textContent = 'אפליקציה הושקה.';
+                    disconnectButton.style.display = 'inline'; // Show disconnect button
                     // Stop local playback when casting starts
                     audioPlayer.pause();
                     loadMediaOnCast();
@@ -214,14 +220,28 @@
                     castStatus.textContent = 'שגיאת טעינה: ' + err.message;
                 });
         }
-
         function checkExistingSession() {
-            if (chrome.cast.framework.CastContext.getInstance().getCurrentSession()) {
+            const castContext = chrome.cast.framework.CastContext.getInstance();
+            if (castContext.getCurrentSession()) {
                 castStatus.textContent = "נמצא שידור קודם. אנא נתק את השידור הקודם לפני חיבור מחדש.";
-                // Optionally provide a button to disconnect the existing session
-                // e.g., <button onclick="disconnectSession()">Disconnect</button>
+                disconnectButton.style.display = 'inline'; // Show disconnect button
+            } else {
+                disconnectButton.style.display = 'none'; // Hide disconnect button
             }
         }
+
+
+        function disconnectSession() {
+            castStatus.textContent = "מנתק מה-Chromecast...";
+            session.leave(function () {
+                session = null;
+                castStatus.textContent = "השידור נותק.";
+                disconnectButton.style.display = 'none'; // Hide disconnect button
+            }, function (err) {
+                castStatus.textContent = "שגיאה בניסיון ניתוק: " + err.message;
+            });
+        }
+
         // Initialize Cast API after the page has loaded
         window.onload = function () {
             castStatus.textContent = "טוען Chromecast API...";
