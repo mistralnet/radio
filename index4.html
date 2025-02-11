@@ -126,7 +126,7 @@
   </div>
 
   <footer>
-    גרסה: 1.0.2 | נוצר בתאריך: 2023-10-10 16:00
+    גרסה: 1.0.3 | נוצר בתאריך: 2023-10-10 17:00
   </footer>
 
   <script>
@@ -175,15 +175,35 @@
           (event) => {
             if (event.sessionState === cast.framework.SessionState.SESSION_STARTED) {
               isCasting = true;
+              stopLocalPlayback(); // עצור שידור מקומי אם מתחבר ל-Chromecast
               statusText.innerText = 'מצב: מחובר ל-Chromecast';
             } else if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
               isCasting = false;
+              stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתנתק
               statusText.innerText = 'מצב: מוכן';
             }
           }
         );
       }
     };
+
+    // Function to stop local playback
+    function stopLocalPlayback() {
+      audio.pause();
+      audio.currentTime = 0;
+      statusText.innerText = 'מצב: מוכן';
+    }
+
+    // Function to stop Chromecast playback
+    function stopChromecastPlayback() {
+      if (currentMediaSession) {
+        currentMediaSession.stop(null, () => {
+          statusText.innerText = 'מצב: עצור ב-Chromecast';
+        }, (error) => {
+          console.error('Error stopping Chromecast playback:', error);
+        });
+      }
+    }
 
     // Function to set active station
     function setActiveStation(station) {
@@ -204,6 +224,7 @@
         if (isCasting) {
           playOnChromecast();
         } else {
+          stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתחיל שידור מקומי
           audio.play();
           statusText.innerText = `מצב: משדר - ${station.button.innerText}`;
         }
@@ -215,6 +236,7 @@
       if (isCasting) {
         playOnChromecast();
       } else {
+        stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתחיל שידור מקומי
         audio.play();
         statusText.innerText = `מצב: משדר - ${activeStation.button.innerText}`;
       }
@@ -241,8 +263,7 @@
           console.error('Error stopping media:', error);
         });
       } else {
-        audio.pause();
-        audio.currentTime = 0;
+        stopLocalPlayback();
         statusText.innerText = 'מצב: עצור';
       }
     });
@@ -261,6 +282,8 @@
     // Function to play on Chromecast
     function playOnChromecast() {
       if (!activeStation) return;
+
+      stopLocalPlayback(); // עצור שידור מקומי אם מתחיל שידור ב-Chromecast
 
       const mediaInfo = new chrome.cast.media.MediaInfo(
         activeStation.url,
