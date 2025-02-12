@@ -45,6 +45,7 @@
       color: #fff;
       border: none;
       border-radius: 5px;
+      transition: background-color 0.3s ease; /* מעבר חלק בצבע */
     }
 
     button.active-local {
@@ -61,6 +62,21 @@
 
     button:hover {
       opacity: 0.8;
+    }
+
+    /* צבע רקע סביב הכפתורים */
+    .station-container {
+      padding: 5px;
+      border-radius: 5px;
+      display: inline-block;
+    }
+
+    .station-inactive {
+      background-color: #ddd; /* צבע רקע לכפתור לא פעיל */
+    }
+
+    .station-active {
+      background-color: #bbb; /* צבע רקע לכפתור פעיל */
     }
 
     #volume {
@@ -126,8 +142,12 @@
   </header>
 
   <div id="stations">
-    <button id="glzBtn" class="inactive">GLZ</button>
-    <button id="galeiIsraelBtn" class="inactive">גלי ישראל</button>
+    <div class="station-container station-inactive">
+      <button id="glzBtn" class="inactive">GLZ</button>
+    </div>
+    <div class="station-container station-inactive">
+      <button id="galeiIsraelBtn" class="inactive">גלי ישראל</button>
+    </div>
   </div>
 
   <div id="controls">
@@ -147,18 +167,20 @@
   </div>
 
   <footer>
-    גרסה: 1.0.7 | נוצר בתאריך: 2023-10-10 21:00
+    גרסה: 1.0.8 | נוצר בתאריך: 2023-10-10 21:00
   </footer>
 
   <script>
     const stations = {
       glz: {
         url: 'https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz',
-        button: document.getElementById('glzBtn')
+        button: document.getElementById('glzBtn'),
+        container: document.getElementById('glzBtn').parentNode
       },
       galeiIsrael: {
         url: 'https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio',
-        button: document.getElementById('galeiIsraelBtn')
+        button: document.getElementById('galeiIsraelBtn'),
+        container: document.getElementById('galeiIsraelBtn').parentNode
       }
     };
 
@@ -200,7 +222,14 @@
             } else if (event.sessionState === cast.framework.SessionState.SESSION_ENDED) {
               isCasting = false;
               stopChromecastPlayback(); // עצור שידור ב-Chromecast אם מתנתק
-              updateStatus('מוכן');
+              // אם הייתה תחנה פעילה לפני השידור ב-Chromecast, הפעל אותה שוב
+              if (lastActiveStation) {
+                setActiveStation(lastActiveStation);
+                audio.play();
+                updateStatus(`מנגן - ${lastActiveStation.button.innerText}`);
+              } else {
+                updateStatus('מוכן');
+              }
             }
           }
         );
@@ -237,6 +266,8 @@
         station.button.classList.remove('active-local', 'active-cast');
         station.button.classList.add('inactive');
         station.button.style.backgroundColor = ''; // הסרת צבע רקע
+        station.container.classList.remove('station-active');
+        station.container.classList.add('station-inactive');
       }
     }
 
@@ -249,12 +280,16 @@
         activeStation.button.classList.remove('inactive');
         activeStation.button.classList.add('active-cast');
         activeStation.button.style.backgroundColor = 'purple'; // שינוי צבע רקע
+        activeStation.container.classList.remove('station-inactive');
+        activeStation.container.classList.add('station-active');
         updateStatus(`מנגן ב-Chromecast - ${activeStation.button.innerText}`);
         pauseBtn.style.display = 'none';
         stopBtn.style.display = 'none';
       } else {
         activeStation.button.classList.remove('inactive');
         activeStation.button.classList.add('active-local');
+        activeStation.container.classList.remove('station-inactive');
+        activeStation.container.classList.add('station-active');
         updateStatus(`מנגן - ${activeStation.button.innerText}`);
         pauseBtn.style.display = 'inline-block';
         stopBtn.style.display = 'inline-block';
@@ -350,6 +385,9 @@
     });
 
     volumeSlider.addEventListener('input', () => {
+      // עוצמת השמע נשלטת ישירות על ידי Chromecast כאשר משדרים
+      // שינוי הווליום כאן ישפיע רק על הווליום של האפליקציה השולטת
+      // (הדפדפן), ולא על עוצמת השמע של ה-Chromecast.
       const volume = volumeSlider.value;
       if (isCasting && currentMediaSession) {
         currentMediaSession.setVolume(volume, () => {
@@ -367,6 +405,7 @@
       if (!activeStation) return;
 
       stopLocalPlayback(); // עצור שידור מקומי אם מתחיל שידור ב-Chromecast
+      lastActiveStation = activeStation;
 
       const mediaInfo = new chrome.cast.media.MediaInfo(
         activeStation.url,
@@ -393,44 +432,43 @@
       }
     }
   </script>
-<!-- Code injected by live-server -->
-<script>
-	// <![CDATA[  <-- For SVG support
-	if ('WebSocket' in window) {
-		(function () {
-			function refreshCSS() {
-				var sheets = [].slice.call(document.getElementsByTagName("link"));
-				var head = document.getElementsByTagName("head")[0];
-				for (var i = 0; i < sheets.length; ++i) {
-					var elem = sheets[i];
-					var parent = elem.parentElement || head;
-					parent.removeChild(elem);
-					var rel = elem.rel;
-					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
-						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
-						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
-					}
-					parent.appendChild(elem);
-				}
-			}
-			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
-			var address = protocol + window.location.host + window.location.pathname + '/ws';
-			var socket = new WebSocket(address);
-			socket.onmessage = function (msg) {
-				if (msg.data == 'reload') window.location.reload();
-				else if (msg.data == 'refreshcss') refreshCSS();
-			};
-			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
-				console.log('Live reload enabled.');
-				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
-			}
-		})();
-	}
-	else {
-		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
-	}
-	// ]]>
-</script>
+  <!-- Code injected by live-server -->
+  <script>
+    // <![CDATA[  <-- For SVG support
+    if ('WebSocket' in window) {
+      (function () {
+        function refreshCSS() {
+          var sheets = [].slice.call(document.getElementsByTagName("link"));
+          var head = document.getElementsByTagName("head")[0];
+          for (var i = 0; i < sheets.length; ++i) {
+            var elem = sheets[i];
+            var parent = elem.parentElement || head;
+            parent.removeChild(elem);
+            var rel = elem.rel;
+            if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+              var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+              elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+            }
+            parent.appendChild(elem);
+          }
+        }
+        var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+        var address = protocol + window.location.host + window.location.pathname + '/ws';
+        var socket = new WebSocket(address);
+        socket.onmessage = function (msg) {
+          if (msg.data == 'reload') window.location.reload();
+          else if (msg.data == 'refreshcss') refreshCSS();
+        };
+        if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+          console.log('Live reload enabled.');
+          sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+        }
+      })();
+    } else {
+      console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+    }
+    // ]]>
+  </script>
 </body>
 
 </html>
