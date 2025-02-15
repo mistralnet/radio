@@ -1,74 +1,207 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-    <!-- תגית גוגל (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-J5WT91REYB');
-    </script>
-    <!-- תגית Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
-    <!-- סוף Google Tag Manager -->
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>אפליקציית תחנות רדיו</title>
-    <link rel="icon" href="icon.png" type="image/png">
-    <link rel="apple-touch-icon" href="icon.png">
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>אפליקציית רדיו</title>
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #errorLog {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            width: 80%;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.8em;
+        }
+
+        #volumeControl {
+            margin-top: 10px;
+        }
+
+        #chromecastStatus {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        #castContainer {
+          margin-top: 20px;
+        }
+    </style>
 </head>
 <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
-        height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <h1>אפליקציית רדיו</h1>
+    <p>גרסה: 1.2 - נוצר: 2024-05-21 15:30</p>
 
-    <div class="container">
-        <audio id="audio-player">
-            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
-            הדפדפן שלך לא תומך בהשמעת אודיו.
-        </audio>
-        <!-- הוספת אודיו שקט -->
-        <audio id="silent-audio" loop>
-            <source src="silent.mp3" type="audio/mpeg">
-        </audio>
-        
-        <h4>רדיו נגיש עבור אבא</h4>
-        <div>לחץ ובחר תחנה להאזנה</div>
-        
-        <div class="station-buttons">
-      
-                      <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
-                <img src="kan_logo.png" alt="כאן ב'">
-            </button>
-            <button class="station-button" id="station-glz" data-url="https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz">
-                <img src="glz_logo.png" alt="גלי צהל">
-            </button>
-            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
-                <img src="glyisrael_logo.png" alt="גלי ישראל">
-            </button>
-        </div>
-        <div class="clock" id="clock"></div>
-        <div id="battery-info" class="battery-info"></div> <!-- מיקום חדש למידע הסוללה -->
+    <audio id="audioPlayer" controls></audio>
+    <p>תחנה: גלי צה"ל</p>
+
+    <div>
+        <button id="playButton">הפעל</button>
+        <button id="stopButton">עצור</button>
     </div>
 
-     <div class="contaibox">
-       <!-- הערת קוד פנימית: שינוי גרסה ל-5.4 ב-17/05/2024 - הסרת התלות בבלוטוס, מסך תמיד דולק -->
-        גרסה
-    9
+    <div id="volumeControl">
+        עוצמת שמע:
+        <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1">
     </div>
-     <div class="contailink">
-<p><a href="https://mistralnet.github.io/radio/index3.html">3-test</a>
-<a href="https://mistralnet.github.io/radio/index4.html">4-test</a>
-</p>
+
+    <div id="castContainer">
+      <button id="castButton">חבר ל-Chromecast</button>
+      <div id="chromecastStatus"></div>
     </div>
-    <script src="script.js"></script>
-   
-    
+
+    <div id="errorLog">
+        <h3>דוח שגיאות</h3>
+        <ul id="errorList"></ul>
+    </div>
+
+    <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playButton = document.getElementById('playButton');
+        const stopButton = document.getElementById('stopButton');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const errorList = document.getElementById('errorList');
+        const chromecastStatus = document.getElementById('chromecastStatus');
+        const castButton = document.getElementById('castButton');
+
+        const stationURL = 'https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz';
+        let castSession = null;
+
+        function logError(message) {
+            const li = document.createElement('li');
+            li.textContent = message;
+            errorList.appendChild(li);
+            console.error(message);
+        }
+
+        playButton.addEventListener('click', () => {
+            try {
+                audioPlayer.src = stationURL;
+                audioPlayer.play();
+                if (castSession) {
+                    castMedia(stationURL); // Cast if connected
+                }
+            } catch (error) {
+                logError(`שגיאה בהפעלה: ${error.message}`);
+            }
+        });
+
+        stopButton.addEventListener('click', () => {
+            try {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+                if (castSession) {
+                    castSession.getMediaSession().stop(); // Stop on Chromecast
+                }
+            } catch (error) {
+                logError(`שגיאה בעצירה: ${error.message}`);
+            }
+        });
+
+        volumeSlider.addEventListener('input', () => {
+            try {
+                audioPlayer.volume = volumeSlider.value;
+                if (castSession && castSession.getMediaSession()) {
+                    castSession.getMediaSession().setVolume(parseFloat(volumeSlider.value)); // Set volume on Chromecast
+                }
+            } catch (error) {
+                logError(`שגיאה בשליטה בעוצמה: ${error.message}`);
+            }
+        });
+
+        function initializeCastApi() {
+            cast.framework.CastContext.getInstance().setOptions({
+                receiverApplicationId: '0F5DD3C1', // DaddyRadio Cast SDK Developer Console
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED,
+                receiverCastVersions: ['3.0', '2.0']
+            });
+
+          cast.framework.CastContext.getInstance().addEventListener(
+              cast.framework.CastContextEventType.SESSION_STATE_CHANGED,
+              function(event) {
+                switch (event.sessionState) {
+                  case cast.framework.SessionState.SESSION_STARTED:
+                    chromecastStatus.textContent = 'מחובר ל-Chromecast';
+                    castSession = cast.framework.CastContext.getInstance().getCurrentSession();
+                    castMedia(stationURL);
+                    break;
+                  case cast.framework.SessionState.SESSION_ENDED:
+                    chromecastStatus.textContent = 'Chromecast מנותק';
+                    castSession = null;
+                    break;
+                  default:
+                    chromecastStatus.textContent = 'Chromecast לא מחובר';
+                    castSession = null;
+                    break;
+                }
+              });
+        }
+
+        castButton.addEventListener('click', function() {
+          cast.framework.CastContext.getInstance().requestSession()
+          .then(function(session) {
+              console.log('Session started successfully.');
+          })
+          .catch(function(error) {
+              console.log('Error starting session: ' + error.message);
+              logError('שגיאה בהתחלת сесії: ' + error.message);
+          });
+        });
+
+        function castMedia(url) {
+            if (!castSession) {
+                logError('אין сесія ב-Chromecast');
+                return;
+            }
+
+            const mediaInfo = new chrome.cast.media.MediaInfo(url, 'audio/mpeg');
+            mediaInfo.metadata = new chrome.cast.media.MusicTrackMediaMetadata();
+            mediaInfo.metadata.artist = 'רדיו אינטרנט';
+            mediaInfo.metadata.title = 'גלי צה"ל';
+
+            const request = new chrome.cast.media.LoadRequest(mediaInfo);
+            castSession.loadMedia(request).then(
+                function() { chromecastStatus.textContent = 'מנגן ב-Chromecast'; },
+                function(errorCode) { logError('שגיאה בהעלאת המדיה ל-Chromecast: ' + errorCode); }
+            );
+        }
+
+        window.onload = function() {
+            cast.framework.CastContext.getInstance().setOptions({
+                receiverApplicationId: '0F5DD3C1', // DaddyRadio Cast SDK Developer Console
+                autoJoinPolicy: chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+            });
+            initializeCastApi();
+        };
+    </script>
 </body>
 </html>
