@@ -168,7 +168,7 @@
             <button class="channel-button" id="channel-now14" data-type="iframe" data-url="https://www.now14.co.il/live/?autoplay=1&mute=1&autoPlay=true&muted=true">עכשיו 14</button>
             <button class="channel-button" id="channel-i24news" data-type="hls" data-url="https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8">i24NEWS עברית</button>
             <button class="channel-button" id="channel-news12" data-type="iframe" data-url="https://www.mako.co.il/mako-vod-live-tv/VOD-6540b8dcb64fd31006.htm?autoplay=1&muted=true&autoPlay=true">חדשות 12</button>
-            <button class="channel-button" id="channel-news13" data-type="iframe" data-url="https://13tv.co.il/live?autoplay=1&mute=1&autoPlay=true&muted=true">חדשות 13</button>
+            <button class="channel-button" id="channel-news13" data-type="hls" data-url="https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8">חדשות 13</button>
         </div>
 
         <div class="video-container" id="video-container">
@@ -361,27 +361,64 @@
             const container = player.container;
 
             if (player.player) {
-                player.player.destroy();
+                if (type === 'hls' && player.player.destroy) {
+                    player.player.destroy();
+                }
                 player.player = null;
             }
             container.innerHTML = '';
             player.type = type;
 
-            if (type === 'hls' && Hls.isSupported()) {
-                container.appendChild(videoElement);
-                player.player = new Hls();
-                player.player.loadSource(url);
-                player.player.attachMedia(videoElement);
-                videoElement.play().catch(err => console.log('Autoplay prevented:', err));
+            if (type === 'hls') {
+                if (Hls.isSupported()) {
+                    container.appendChild(videoElement);
+                    const hls = new Hls();
+                    hls.loadSource(url);
+                    hls.attachMedia(videoElement);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                        videoElement.play().catch(err => console.log('Autoplay prevented:', err));
+                    });
+                    hls.on(Hls.Events.ERROR, function(event, data) {
+                        console.error("HLS error occurred:", data);
+                        if(data.fatal) {
+                            switch(data.type) {
+                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                    console.error("Fatal network error, trying to recover...");
+                                    hls.startLoad();
+                                    break;
+                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                    console.error("Fatal media error, trying to recover...");
+                                    hls.recoverMediaError();
+                                    break;
+                                default:
+                                    console.error("Unrecoverable error, destroying HLS instance...");
+                                    hls.destroy();
+                                    break;
+                            }
+                        }
+                    });
+                    player.player = hls;
+                } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                    videoElement.src = url;
+                    container.appendChild(videoElement);
+                    videoElement.addEventListener('canplay', function() {
+                        videoElement.play().catch(err => console.log('Autoplay prevented:', err));
+                    });
+                    player.player = { destroy: function() { videoElement.src = ''; } };
+                } else {
+                    alert("Your browser does not support HLS streaming.");
+                }
             } else if (type === 'iframe') {
                 const iframe = document.createElement('iframe');
                 iframe.src = url;
                 iframe.allow = 'autoplay; fullscreen';
                 container.appendChild(iframe);
+                player.player = { destroy: function() { iframe.src = ''; } };
             } else {
                 videoElement.src = url;
                 container.appendChild(videoElement);
                 videoElement.play().catch(err => console.log('Autoplay prevented:', err));
+                player.player = { destroy: function() { videoElement.src = ''; } };
             }
         }
 
