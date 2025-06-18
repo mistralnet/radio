@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-    <!-- תגית גוגל (gtag.js) -->
+    <!-- Google Tag Manager -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -9,61 +9,31 @@
         gtag('js', new Date());
         gtag('config', 'G-J5WT91REYB');
     </script>
-    <!-- תגית Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
     j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
-    <!-- סוף Google Tag Manager -->
+    
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-    <title>אפליקציית תחנות רדיו</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>אפליקציית ערוצי טלוויזיה</title>
     <link rel="icon" href="icon.png" type="image/png">
     <link rel="apple-touch-icon" href="icon.png">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
-        /* משתנים CSS לשימוש חוזר */
         :root {
             --main-font: Arial, sans-serif;
-            --main-bg-color: #000000;
-            --main-text-color: #FFFFFF;
-            --secondary-text-color: #CCCCCC;
-            --highlight-color: #FFFF00;
-            --button-bg: #333333;
-            --button-text: #FFFFFF;
-            --active-color: #FFFF00;
-            --font-size-base: 1.2rem;
-            --font-size-large: 1.5rem;
-            --font-size-xlarge: 2rem;
-        }
-
-        /* מצב ניגודיות גבוהה */
-        .high-contrast {
-            --main-bg-color: #000000;
-            --main-text-color: #FFFF00;
-            --secondary-text-color: #FFA500;
-            --highlight-color: #FFFFFF;
-            --button-bg: #222222;
-            --button-text: #FFFF00;
-            --active-color: #FFFFFF;
-        }
-
-        /* מצב בהיר */
-        .light-mode {
-            --main-bg-color: #FFFFFF;
-            --main-text-color: #000000;
-            --secondary-text-color: #555555;
-            --highlight-color: #0066CC;
-            --button-bg: #EEEEEE;
-            --button-text: #000000;
-            --active-color: #0066CC;
+            --main-bg-color: #000;
+            --main-text-color: #fff;
+            --secondary-text-color: #989494;
+            --highlight-color: #ffff00;
         }
 
         body {
             font-family: var(--main-font);
-            font-weight: bold;
             text-align: center;
             direction: rtl;
             margin: 0;
@@ -73,263 +43,146 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            font-size: var(--font-size-base);
-            touch-action: manipulation;
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: auto;
             padding: 20px;
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            width: 100%;
-        }
-
-        .header {
-            margin-bottom: 20px;
-            width: 100%;
         }
 
         .battery-info {
-            font-size: var(--font-size-base);
+            font-size: 1rem;
             margin-top: 10px;
             color: var(--secondary-text-color);
         }
 
         .clock {
-            font-size: var(--font-size-xlarge);
+            font-size: 3rem;
             font-weight: bold;
             background-color: var(--highlight-color);
-            color: var(--main-bg-color);
-            padding: 15px 25px;
-            border-radius: 15px;
+            color: black;
+            padding: 10px;
+            border-radius: 10px;
             display: inline-block;
-            margin: 20px 0;
+            margin-top: 20px;
             cursor: pointer;
             user-select: none;
-            min-width: 150px;
         }
 
-        .station-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-            width: 100%;
-        }
-
-        .station-button {
-            min-width: 150px;
-            min-height: 150px;
-            flex: 1 1 calc(50% - 30px);
-            max-width: 250px;
-            max-height: 250px;
-            cursor: pointer;
-            border-radius: 15px;
-            overflow: hidden;
-            border: 5px solid transparent;
-            box-sizing: border-box;
-            padding: 0;
-            transition: all 0.3s ease;
-            background-color: var(--button-bg);
+        .channel-buttons {
             display: flex;
             justify-content: center;
-            align-items: center;
-        }
-
-        .station-button img {
-            width: 80%;
-            height: 80%;
-            object-fit: contain;
-            display: block;
-        }
-
-        .station-button.active {
-            border-color: var(--active-color);
-            background-color: var(--active-color);
-            transform: scale(1.05);
-        }
-
-        .controls-container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin: 20px 0;
-            width: 100%;
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             gap: 10px;
-            margin: 10px 0;
+            margin: 20px 0;
+            flex-wrap: wrap;
         }
 
-        .control-button {
-            min-width: 80px;
-            min-height: 80px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: var(--font-size-large);
+        .channel-button {
+            padding: 10px 20px;
+            background-color: transparent;
+            color: var(--main-text-color);
+            border: 2px solid var(--main-text-color);
+            border-radius: 8px;
             cursor: pointer;
-            border: 3px solid var(--highlight-color);
             transition: all 0.3s ease;
-            background-color: var(--button-bg);
-            color: var(--button-text);
-        }
-
-        .control-button:hover, .control-button:focus {
-            transform: scale(1.1);
-        }
-
-        .volume-controls {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin: 10px 0;
-        }
-
-        .volume-display {
-            font-size: var(--font-size-large);
+            font-size: 1rem;
             font-weight: bold;
-            min-width: 60px;
-            text-align: center;
-            color: var(--highlight-color);
         }
 
-        .footer {
+        .channel-button.active {
+            background-color: var(--highlight-color);
+            color: black;
+            border-color: var(--highlight-color);
+        }
+
+        .video-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .video-player {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: black;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .video-player iframe, .video-player video {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        @media (max-width: 480px) {
+            .channel-button {
+                padding: 8px 16px;
+                font-size: 0.9rem;
+            }
+
+            .clock {
+                font-size: 2rem;
+            }
+
+            .video-player {
+                max-width: 100%;
+            }
+        }
+
+        .contaibox {
             padding: 20px;
             color: var(--secondary-text-color);
             text-align: center;
             margin-top: auto;
-            font-size: var(--font-size-base);
         }
 
-        .accessibility-buttons {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin: 15px 0;
+        .contailink {
+            text-align: center;
+            margin-bottom: 10px;
         }
 
-        .accessibility-button {
-            padding: 10px 15px;
-            border-radius: 10px;
-            background-color: var(--button-bg);
-            color: var(--button-text);
-            border: 2px solid var(--highlight-color);
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .accessibility-button:hover {
-            background-color: var(--highlight-color);
-            color: var(--main-bg-color);
-        }
-
-        @media (max-width: 768px) {
-            :root {
-                --font-size-base: 1.1rem;
-                --font-size-large: 1.3rem;
-                --font-size-xlarge: 1.8rem;
-            }
-            
-            .station-button {
-                min-width: 120px;
-                min-height: 120px;
-                max-width: 200px;
-                max-height: 200px;
-            }
-            
-            .control-button {
-                min-width: 70px;
-                min-height: 70px;
-                font-size: var(--font-size-large);
-            }
-        }
-
-        @media (max-width: 480px) {
-            :root {
-                --font-size-base: 1rem;
-                --font-size-large: 1.2rem;
-                --font-size-xlarge: 1.5rem;
-            }
-            
-            .station-button {
-                min-width: 100px;
-                min-height: 100px;
-                max-width: 180px;
-                max-height: 180px;
-            }
-            
-            .control-button {
-                min-width: 60px;
-                min-height: 60px;
-                font-size: var(--font-size-base);
-            }
+        .container h4 {
+            padding: 0;
+            margin: 0;
         }
     </style>
 </head>
-<body class="high-contrast">
-    <!-- Google Tag Manager (noscript) -->
+<body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD"
         height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     <div class="container">
-        <audio id="audio-player">
-            <source src="http://kanliveicy.media.kan.org.il/kanbet_mp3" type="audio/mpeg">
-            הדפדפן שלך לא תומך בהשמעת אודיו.
-        </audio>
-        <!-- הוספת אודיו שקט -->
-        <audio id="silent-audio" loop>
-            <source src="silent.mp3" type="audio/mpeg">
-        </audio>
+        <h4>טלוויזיה נגישה עבור אבא</h4>
+        <div>לחץ על כפתור ערוץ להצגה או הסתרה</div>
 
-        <div class="header">
-            <h1 style="font-size: var(--font-size-large); margin-bottom: 10px;">רדיו נגיש</h1>
-            <div style="font-size: var(--font-size-base);">לחץ ובחר תחנה להאזנה</div>
+        <div class="channel-buttons">
+            <button class="channel-button" id="channel-kan11" data-type="hls" data-url="https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8">כאן 11</button>
+            <button class="channel-button" id="channel-now14" data-type="iframe" data-url="https://www.now14.co.il/live/?autoplay=1&mute=1&autoPlay=true&muted=true">עכשיו 14</button>
+            <button class="channel-button" id="channel-i24news" data-type="hls" data-url="https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8">i24NEWS עברית</button>
+            <button class="channel-button" id="channel-news12" data-type="iframe" data-url="https://www.mako.co.il/mako-vod-live-tv/VOD-6540b8dcb64fd31006.htm?autoplay=1&muted=true&autoPlay=true">חדשות 12</button>
+            <button class="channel-button" id="channel-news13" data-type="iframe" data-url="https://13tv.co.il/live?autoplay=1&mute=1&autoPlay=true&muted=true">חדשות 13</button>
         </div>
 
-        <div class="accessibility-buttons">
-            <button class="accessibility-button" id="color-mode-btn">מעבר מצב צבע</button>
-            <button class="accessibility-button" id="increase-font-btn">הגדל טקסט</button>
-            <button class="accessibility-button" id="decrease-font-btn">הקטן טקסט</button>
-        </div>
-
-        <div class="station-buttons">
-            <button class="station-button" id="station-kan" data-url="https://28503.live.streamtheworld.com/KAN_BET.mp3?dist=radio2net">
-                <img src="kan_logo.png" alt="כאן ב'">
-            </button>
-            <button class="station-button" id="station-glz" data-url="https://glzwizzlv.bynetcdn.com/glz_mp3?awCollectionId=misc&awEpisodeId=glz">
-                <img src="glz_logo.png" alt="גלי צהל">
-            </button>
-            <button class="station-button" id="glyisrael" data-url="https://cdn.cybercdn.live/Galei_Israel/Live/icecast.audio">
-                <img src="glyisrael_logo.png" alt="גלי ישראל">
-            </button>
-        </div>
-
-        <div class="controls-container">
-            <div class="control-group">
-                <div class="volume-controls">
-                    <button id="volume-down" class="control-button" aria-label="הנמך עוצמת קול">
-                        <i class="fas fa-volume-down"></i>
-                    </button>
-                    <div class="volume-display" id="volume-display">100%</div>
-                    <button id="volume-up" class="control-button" aria-label="הגבר עוצמת קול">
-                        <i class="fas fa-volume-up"></i>
-                    </button>
-                </div>
+        <div class="video-container" id="video-container">
+            <div class="video-player" id="player1" style="display: none;">
+                <video id="video1" muted playsinline></video>
+            </div>
+            <div class="video-player" id="player2" style="display: none;">
+                <video id="video2" muted playsinline></video>
+            </div>
+            <div class="video-player" id="player3" style="display: none;">
+                <video id="video3" muted playsinline></video>
+            </div>
+            <div class="video-player" id="player4" style="display: none;">
+                <video id="video4" muted playsinline></video>
             </div>
         </div>
 
@@ -337,27 +190,33 @@
         <div id="battery-info" class="battery-info"></div>
     </div>
 
-    <div class="footer">
-        גרסה 6.4 - נגישות מתקדמת
+    <div class="contailink">
+        <p>
+            <a href="https://mistralnet.github.io/radio/radio.html" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-base font-medium bg-white text-gray-900 border border-gray-300 hover:bg-blue-100 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-400 disabled:pointer-events-none disabled-opacity-50 h-12 px-6 py-3 shadow-sm hover:shadow-md transition-all duration-200" aria-label="פתח תחנות רדיו להאזנה">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6" aria-hidden="true"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path><circle cx="12" cy="12" r="2"></circle><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path></svg>תחנות רדיו להאזנה
+            </a>
+        </p>
+    </div>
+    <div class="contaibox">
+        גרסה 1.1
     </div>
 
     <script>
-        // משתנים גלובליים
         let isAnnouncing = false;
-        let radioVolume = 1.0;
         let wakeLock = null;
         let wakeLockInterval = null;
-        let silentAudioStarted = false;
-        const audioPlayer = document.getElementById('audio-player');
-        const stationButtons = document.querySelectorAll('.station-button');
-        let currentStationButton = null;
-        const silentAudio = document.getElementById('silent-audio');
+        let activeChannels = [];
+        const channelButtons = document.querySelectorAll('.channel-button');
+        const videoContainer = document.getElementById('video-container');
         const batteryInfo = document.getElementById('battery-info');
         let lastBatteryLevel = 100;
-        let currentColorMode = 'high-contrast'; // 'high-contrast', 'light-mode', 'dark-mode'
-        let currentFontSize = 1.0; // 1.0 is default
+        const players = [
+            { video: document.getElementById('video1'), player: null, type: null, container: document.getElementById('player1') },
+            { video: document.getElementById('video2'), player: null, type: null, container: document.getElementById('player2') },
+            { video: document.getElementById('video3'), player: null, type: null, container: document.getElementById('player3') },
+            { video: document.getElementById('video4'), player: null, type: null, container: document.getElementById('player4') }
+        ];
 
-        // פונקציה שמקבלת מידע על סוללה
         async function updateBatteryStatus() {
             try {
                 if ('getBattery' in navigator) {
@@ -372,7 +231,7 @@
                     } else if (level <= 30 && lastBatteryLevel > 30) {
                         speakBatteryAlert(level);
                         lastBatteryLevel = level;
-                    }  else if (level <= 20 && lastBatteryLevel > 20) {
+                    } else if (level <= 20 && lastBatteryLevel > 20) {
                         speakBatteryAlert(level);
                         lastBatteryLevel = level;
                     } else if (level <= 10 && lastBatteryLevel > 10) {
@@ -381,16 +240,12 @@
                     } else if (level <= 5 && lastBatteryLevel > 5) {
                         speakBatteryAlert(level);
                         lastBatteryLevel = level;
-                    } else if (level > 40 ) {
+                    } else if (level > 40) {
                         lastBatteryLevel = level;
                     }
 
-                    battery.addEventListener('chargingchange', () => {
-                        updateBatteryStatus()
-                    });
-                    battery.addEventListener('levelchange', () => {
-                        updateBatteryStatus()
-                    });
+                    battery.addEventListener('chargingchange', updateBatteryStatus);
+                    battery.addEventListener('levelchange', updateBatteryStatus);
                 } else {
                     batteryInfo.textContent = 'מצב סוללה לא נתמך.';
                 }
@@ -399,16 +254,9 @@
             }
         }
 
-        // פונקציה שמבצעת קריאת התראה קולית של הסוללה ומבקשת הטענה
         async function speakBatteryAlert(level) {
             if (isAnnouncing) return;
             isAnnouncing = true;
-            const wasPlaying = !audioPlayer.paused;
-            const currentVolume = audioPlayer.volume;
-
-            if (wasPlaying) {
-                await fadeAudio(audioPlayer, currentVolume, 0, 500);
-            }
 
             const utterance = new SpeechSynthesisUtterance(`שים לב, מצב הסוללה ${level} אחוז, יש להטעין את המכשיר`);
             utterance.lang = 'he-IL';
@@ -418,21 +266,16 @@
                 window.speechSynthesis.speak(utterance);
             });
 
-            if (wasPlaying) {
-                await fadeAudio(audioPlayer, 0, radioVolume, 500);
-            }
-
             isAnnouncing = false;
         }
 
-        // פונקציה שמבקשת להפעיל "Wake Lock" כדי לשמור את המסך פעיל
         async function requestWakeLock() {
             try {
                 if ('wakeLock' in navigator && !wakeLock) {
                     wakeLock = await navigator.wakeLock.request('screen');
                     wakeLock.addEventListener('release', () => {
                         if (wakeLock) {
-                            requestWakeLock()
+                            requestWakeLock();
                         }
                     });
                 }
@@ -441,57 +284,16 @@
             }
         }
 
-        // פונקציה שמשחררת את ה "Wake Lock" ונותנת למסך לכבות
-        async function releaseWakeLock(){
-            if(wakeLock) {
-                await wakeLock.release()
-                wakeLock = null;
-            }
-        }
-
-        // פונקציה שמעדכנת את השעה כל שנייה ומציגה אותה על המסך
         function updateClock() {
             const now = new Date();
             let hours = now.getHours();
             let minutes = now.getMinutes().toString().padStart(2, '0');
             document.getElementById('clock').textContent = `${hours}:${minutes}`;
         }
-        setInterval(updateClock, 1000);
-        updateClock();
 
-        // פונקציה שמבצעת מעבר בין תחנות רדיו
-        function switchStation(button) {
-            const url = button.getAttribute('data-url');
-            if (currentStationButton === button) {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
-                button.classList.remove('active');
-                currentStationButton = null;
-                return;
-            }
-            audioPlayer.src = url;
-            audioPlayer.volume = radioVolume;
-            audioPlayer.play();
-            if (currentStationButton) {
-                currentStationButton.classList.remove('active');
-            }
-            button.classList.add('active');
-            currentStationButton = button;
-        }
-
-        // פונקציה שמבצעת קריאת השעה בקול
         async function speakTime() {
             if (isAnnouncing) return;
-
             isAnnouncing = true;
-
-            const wasPlaying = !audioPlayer.paused;
-
-            const currentVolume = audioPlayer.volume;
-
-            if (wasPlaying) {
-                await fadeAudio(audioPlayer, currentVolume, 0, 500);
-            }
 
             const timeString = document.getElementById('clock').textContent;
             const utterance = new SpeechSynthesisUtterance(`השעה היא ${timeString}`);
@@ -502,52 +304,9 @@
                 window.speechSynthesis.speak(utterance);
             });
 
-            if (wasPlaying) {
-                audioPlayer.volume = 0;
-                await fadeAudio(audioPlayer, 0, radioVolume, 500);
-            }
-
             isAnnouncing = false;
         }
 
-        // פונקציה שמבצעת הדהייה של עוצמת הקול
-        async function fadeAudio(audioElement, start, end, duration) {
-            const steps = 20;
-            const stepDuration = duration / steps;
-            const volumeStep = (end - start) / steps;
-            for (let i = 0; i <= steps; i++) {
-                audioElement.volume = start + (volumeStep * i);
-                await new Promise(resolve => setTimeout(resolve, stepDuration));
-            }
-        }
-        
-        // פונקציה לעדכון עוצמת הקול
-        function updateVolume(newVolume) {
-            radioVolume = newVolume;
-            audioPlayer.volume = radioVolume;
-            document.getElementById('volume-display').textContent = `${Math.round(radioVolume * 100)}%`;
-            
-            // אנימציה להבלטת השינוי
-            const display = document.getElementById('volume-display');
-            display.style.transform = 'scale(1.2)';
-            setTimeout(() => {
-                display.style.transform = 'scale(1)';
-            }, 300);
-        }
-        
-        // פונקציה להנמכת עוצמת הקול
-        function decreaseVolume() {
-            const newVolume = Math.max(0, radioVolume - 0.1);
-            updateVolume(newVolume);
-        }
-        
-        // פונקציה להגברת עוצמת הקול
-        function increaseVolume() {
-            const newVolume = Math.min(1, radioVolume + 0.1);
-            updateVolume(newVolume);
-        }
-
-        // פונקציה שמבצעת את הכרזת השעה באופן אוטומטי כל שעה
         function scheduleNextAnnouncement() {
             const now = new Date();
             const nextTime = new Date(now);
@@ -580,7 +339,7 @@
             if (!wakeLockInterval) {
                 wakeLockInterval = setInterval(async () => {
                     if (wakeLock) {
-                        await requestWakeLock()
+                        await requestWakeLock();
                     }
                 }, 15 * 1000);
             }
@@ -593,99 +352,99 @@
             }
         }
 
-        // פונקציה לאתחול מחדש
         function restartApp() {
             window.location.reload(true);
         }
-        
-        // פונקציה למעבר בין מצבי צבע
-        function toggleColorMode() {
-            const body = document.body;
-            
-            if (currentColorMode === 'high-contrast') {
-                body.classList.remove('high-contrast');
-                body.classList.add('light-mode');
-                currentColorMode = 'light-mode';
-            } else if (currentColorMode === 'light-mode') {
-                body.classList.remove('light-mode');
-                currentColorMode = 'dark-mode';
+
+        function setupPlayer(player, url, type) {
+            const videoElement = player.video;
+            const container = player.container;
+
+            if (player.player) {
+                player.player.destroy();
+                player.player = null;
+            }
+            container.innerHTML = '';
+            player.type = type;
+
+            if (type === 'hls' && Hls.isSupported()) {
+                container.appendChild(videoElement);
+                player.player = new Hls();
+                player.player.loadSource(url);
+                player.player.attachMedia(videoElement);
+                videoElement.play().catch(err => console.log('Autoplay prevented:', err));
+            } else if (type === 'iframe') {
+                const iframe = document.createElement('iframe');
+                iframe.src = url;
+                iframe.allow = 'autoplay; fullscreen';
+                container.appendChild(iframe);
             } else {
-                body.classList.add('high-contrast');
-                currentColorMode = 'high-contrast';
-            }
-        }
-        
-        // פונקציה להגדלת גודל הפונט
-        function increaseFontSize() {
-            if (currentFontSize < 1.5) {
-                currentFontSize += 0.1;
-                document.documentElement.style.fontSize = `${currentFontSize}rem`;
-            }
-        }
-        
-        // פונקציה להקטנת גודל הפונט
-        function decreaseFontSize() {
-            if (currentFontSize > 0.8) {
-                currentFontSize -= 0.1;
-                document.documentElement.style.fontSize = `${currentFontSize}rem`;
+                videoElement.src = url;
+                container.appendChild(videoElement);
+                videoElement.play().catch(err => console.log('Autoplay prevented:', err));
             }
         }
 
-        // פעולות עם טעינת הדף
+        function updateLayout() {
+            const activeCount = activeChannels.length;
+            players.forEach(player => {
+                player.container.style.display = 'none';
+                if (player.player) {
+                    player.player.destroy();
+                    player.player = null;
+                }
+                player.container.innerHTML = '';
+                player.container.appendChild(player.video);
+            });
+
+            videoContainer.style.gridTemplateColumns = activeCount === 1 ? '1fr' : 
+                                                    activeCount === 2 ? 'repeat(2, 1fr)' : 
+                                                    activeCount >= 3 ? 'repeat(2, 1fr)' : 'none';
+
+            activeChannels.forEach((button, index) => {
+                if (index < 4) {
+                    const player = players[index];
+                    player.container.style.display = 'block';
+                    setupPlayer(player, button.getAttribute('data-url'), button.getAttribute('data-type'));
+                }
+            });
+        }
+
+        function toggleChannel(button) {
+            const index = activeChannels.indexOf(button);
+            if (index === -1) {
+                if (activeChannels.length < 4) {
+                    activeChannels.push(button);
+                    button.classList.add('active');
+                }
+            } else {
+                activeChannels.splice(index, 1);
+                button.classList.remove('active');
+            }
+            updateLayout();
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             updateBatteryStatus();
             await requestWakeLock();
             startKeepAwake();
-
-            if (!silentAudioStarted) {
-                silentAudio.play().then(() => {
-                    silentAudio.volume = 0;
-                    silentAudioStarted = true;
-                    console.log("Silence track started.");
-                }).catch(error => {
-                    console.error("Error playing silent track:", error);
-                });
-            }
-
             scheduleNextAnnouncement();
+            updateClock();
+            setInterval(updateClock, 1000);
+
             document.getElementById('clock').addEventListener('click', speakTime);
-            stationButtons.forEach(button => {
-                button.addEventListener('click', () => switchStation(button));
+            channelButtons.forEach(button => {
+                button.addEventListener('click', () => toggleChannel(button));
             });
-            
-            // אירועים לכפתורי ווליום
-            document.getElementById('volume-down').addEventListener('click', decreaseVolume);
-            document.getElementById('volume-up').addEventListener('click', increaseVolume);
-            
-            // אירועים לכפתורי נגישות
-            document.getElementById('color-mode-btn').addEventListener('click', toggleColorMode);
-            document.getElementById('increase-font-btn').addEventListener('click', increaseFontSize);
-            document.getElementById('decrease-font-btn').addEventListener('click', decreaseFontSize);
-            
-            // אפשרות לשינוי ווליום גם עם מקשי המקלדת
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'ArrowDown') {
-                    decreaseVolume();
-                } else if (e.key === 'ArrowUp') {
-                    increaseVolume();
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && !wakeLock) {
+                    restartApp();
                 }
             });
 
-            switchStation(document.getElementById('station-kan'));
-            
-            // אם האפליקציה נכנסה למצב שינה, נאתחל אותה מחדש.
-            document.addEventListener('visibilitychange', () => {
-                if (document.visibilityState === 'visible' ) {
-                    if (!wakeLock) {
-                        restartApp();
-                    }
-                }
-            });
-            
-            // תמיכה במחוות זום
-            document.addEventListener('gesturestart', function (e) {
-                e.preventDefault();
-            });
+            // Initialize with Kan 11
+            toggleChannel(document.getElementById('channel-kan11'));
         });
     </script>
 </body>
