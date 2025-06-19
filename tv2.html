@@ -83,12 +83,13 @@
             z-index: 5;
         }
         @media (min-width: 768px) {
+            .grid-1 { grid-template-columns: 1fr; }
             .grid-2 { grid-template-columns: repeat(2, 1fr); }
             .grid-3 { grid-template-columns: repeat(2, 1fr); }
             .grid-4 { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 767px) {
-            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+            .grid-1, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
         }
         .fullscreen .media-controls {
             position: fixed;
@@ -130,7 +131,14 @@
 
         const videoGrid = document.getElementById('video-grid');
         const buttons = document.querySelectorAll('.channel-button');
-        let activeChannels = [];
+        let activeChannels = JSON.parse(localStorage.getItem('activeChannels') || '[]');
+
+        /**
+         * Saves active channels to localStorage
+         */
+        function saveActiveChannels() {
+            localStorage.setItem('activeChannels', JSON.stringify(activeChannels));
+        }
 
         /**
          * Creates a video player for the specified channel.
@@ -154,11 +162,17 @@
                     const hls = new Hls();
                     hls.loadSource(channel.url);
                     hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        video.play().catch(() => showAutoplayOverlay(container, video));
+                    });
                     hls.on(Hls.Events.ERROR, () => {
                         showAutoplayOverlay(container, video);
                     });
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = channel.url;
+                    video.addEventListener('loadedmetadata', () => {
+                        video.play().catch(() => showAutoplayOverlay(container, video));
+                    });
                 }
 
                 video.addEventListener('click', () => {
@@ -177,6 +191,7 @@
                 iframe.className = 'w-full h-full';
                 iframe.src = channel.url;
                 iframe.allow = 'autoplay; fullscreen';
+                iframe.setAttribute('allowfullscreen', '');
                 container.appendChild(iframe);
                 initIframeControls(container, iframe);
             }
@@ -196,8 +211,8 @@
             // Play/Pause Button
             const playPauseBtn = document.createElement('button');
             playPauseBtn.className = 'media-btn';
-            playPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
-            playPauseBtn.setAttribute('aria-label', 'הפעל');
+            playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
+            playPauseBtn.setAttribute('aria-label', 'השהה');
             playPauseBtn.addEventListener('click', () => {
                 if (video.paused) {
                     video.play().catch(() => showAutoplayOverlay(container, video));
@@ -292,6 +307,7 @@
             closeBtn.addEventListener('click', () => {
                 container.remove();
                 activeChannels = activeChannels.filter(ch => ch !== container.dataset.channel);
+                saveActiveChannels();
                 document.querySelector(`button[data-channel="${container.dataset.channel}"]`).classList.remove('active');
                 updateGridLayout();
             });
@@ -399,6 +415,7 @@
             closeBtn.addEventListener('click', () => {
                 container.remove();
                 activeChannels = activeChannels.filter(ch => ch !== container.dataset.channel);
+                saveActiveChannels();
                 document.querySelector(`button[data-channel="${container.dataset.channel}"]`).classList.remove('active');
                 updateGridLayout();
             });
@@ -429,11 +446,13 @@
          */
         function updateGridLayout() {
             const activeCount = activeChannels.length;
-            videoGrid.className = `grid-container grid-${activeCount}`;
+            videoGrid.className = `grid-container grid-${activeCount || 1}`;
             videoGrid.innerHTML = '';
             activeChannels.forEach(channelKey => {
                 const player = createVideoPlayer(channelKey);
                 videoGrid.appendChild(player);
+                const button = document.querySelector(`button[data-channel="${channelKey}"]`);
+                if (button) button.classList.add('active');
             });
         }
 
@@ -448,9 +467,19 @@
                     activeChannels = [channelKey, ...activeChannels];
                     button.classList.add('active');
                 }
+                saveActiveChannels();
                 updateGridLayout();
             });
+            // Set initial active state for saved channels
+            if (activeChannels.includes(button.dataset.channel)) {
+                button.classList.add('active');
+            }
         });
+
+        // Load saved channels on page load
+        if (activeChannels.length) {
+            updateGridLayout();
+        }
     </script>
     <div class="contailink">
         <p>
@@ -458,8 +487,9 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6" aria-hidden="true"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path><circle cx="12" cy="12" r="2"></circle><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path></svg>תחנות רדיו להאזנה
             </a>
         </p>
-    </div><div class="contaibox">
-        גרסה 2 - מתוקנת
+    </div>
+    <div class="contaibox">
+        גרסה 3 - מתוקנת
     </div>
 </body>
 </html>
