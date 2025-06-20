@@ -20,55 +20,53 @@
             background-color: #1F2937;
             color: white;
             margin: 0;
-            font-family: "Inter", sans-serif; /* Using Inter font as per instructions */
+            font-family: "Inter", sans-serif;
         }
         .video-container {
             position: relative;
             aspect-ratio: 16 / 9;
             width: 100%;
-            border-radius: 8px; /* Rounded corners for video container */
-            overflow: hidden; /* Ensure content respects rounded corners */
-            cursor: pointer; /* Indicate clickable for audio toggle */
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
         }
         .grid-container {
             display: grid;
-            gap: 16px; /* Increased gap for better spacing */
+            gap: 16px;
             margin: 0 auto;
             max-width: 100%;
-            padding: 0 16px; /* Add some horizontal padding */
+            padding: 0 16px;
         }
         .channel-button {
-            padding: 12px 24px; /* Larger padding for better touch target */
+            padding: 12px 24px;
             background-color: #4B5563;
             color: white;
-            border-radius: 8px; /* More rounded corners */
-            transition: background-color 0.3s, transform 0.2s; /* Added transform for hover effect */
+            border-radius: 8px;
+            transition: background-color 0.3s, transform 0.2s;
             flex: 1 1 120px;
             text-align: center;
-            font-weight: 600; /* Bolder text for buttons */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+            font-weight: 600;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
         .channel-button.active {
             background-color: #1F6FEB;
-            transform: translateY(-2px); /* Slight lift for active state */
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2); /* More prominent shadow for active */
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
         }
         .channel-button:hover {
             background-color: #6B7280;
-            transform: translateY(-2px); /* Slight lift on hover */
+            transform: translateY(-2px);
         }
-        /* Ensure active state overrides hover, even when mouse is over */
         .channel-button.active:hover,
         .channel-button.active:focus {
-            background-color: #1F6FEB; /* Keep the active color */
+            background-color: #1F6FEB;
             transform: translateY(-2px);
         }
         .channel-button:active {
-            transform: translateY(0); /* Press down effect */
+            transform: translateY(0);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        /* Responsive grid adjustments */
         @media (min-width: 768px) {
             .grid-1 { grid-template-columns: 1fr; }
             .grid-2 { grid-template-columns: repeat(2, 1fr); }
@@ -83,29 +81,27 @@
             }
         }
 
-        /* Footer styling */
         .footer-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 24px 16px;
-            margin-top: 40px; /* More space above the footer */
-            background-color: #2D3748; /* Slightly darker background for footer */
-            border-top: 1px solid #4A5568; /* Subtle top border */
-            border-radius: 8px; /* Rounded corners for the footer container */
+            margin-top: 40px;
+            background-color: #2D3748;
+            border-top: 1px solid #4A5568;
+            border-radius: 8px;
             box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
         }
         .footer-link-group {
             display: flex;
-            flex-direction: column; /* Stack link and text vertically */
+            flex-direction: column;
             align-items: center;
-            gap: 10px; /* Space between text and button */
-            margin-bottom: 20px; /* Space before version info */
+            gap: 10px;
+            margin-bottom: 20px;
         }
         .footer-link-button {
-            /* Inherits styles from channel-button but can be overridden */
-            background-color: #6366F1; /* A distinct color for the radio link */
+            background-color: #6366F1;
             color: white;
             padding: 10px 20px;
             border-radius: 8px;
@@ -123,16 +119,15 @@
             transform: translateY(-1px);
         }
         .footer-text {
-            color: #CBD5E0; /* Lighter gray for text */
+            color: #CBD5E0;
             font-size: 0.9rem;
             text-align: center;
-            margin-bottom: 10px; /* Space between link group and version */
+            margin-bottom: 10px;
         }
         .version-info {
-            color: #9CA3AF; /* Even lighter gray for version */
+            color: #9CA3AF;
             font-size: 0.85rem;
         }
-        /* Style for the no channel message */
         .no-channel-message {
             text-align: center;
             color: #CBD5E0;
@@ -143,9 +138,7 @@
     </style>
 </head>
 <body class="p-4">
-    <!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
 
     <h1 class="text-2xl font-bold mb-4 text-center">צפייה בערוצים</h1>
 
@@ -160,20 +153,16 @@
     </div>
 
     <div id="video-grid" class="grid-container"></div>
-    <!-- Message to display when no channel is selected -->
     <div id="no-channel-message" class="no-channel-message" style="display: none;">
         יש לבחור ערוץ מהכפתורים מעלה
     </div>
 
     <script>
-        // Define channel data. news12 now points to the previous makoVideo URL.
         const channels = {
             kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-            // Updated now14 to the new provided URL
             now14: { type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==' },
             i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
             news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
-            // news12 now uses the makoVideo source
             news12: { type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD' }
         };
 
@@ -181,45 +170,69 @@
         const buttons = document.querySelectorAll('.channel-button');
         let active = JSON.parse(localStorage.getItem('activeChannels') || '[]');
         const noChannelMessage = document.getElementById('no-channel-message');
-
-        // Variable to track the key of the video currently playing audio
         let activeAudioKey = null;
+        let mediaElements = {}; // Store references to media elements
 
-        // Function to save active channels to local storage
         function saveActive() {
             localStorage.setItem('activeChannels', JSON.stringify(active));
         }
 
-        // Function to update the video grid based on active channels
+        function buildIframeUrl(baseUrl, key, shouldHaveAudio) {
+            // For iframe channels, ensure autoplay=1 and set muted based on audio state
+            const separator = baseUrl.includes('?') ? '&' : '?';
+            return `${baseUrl}${separator}autoplay=1&muted=${shouldHaveAudio ? 0 : 1}`;
+        }
+
+        function updateMediaAudio(key, shouldHaveAudio) {
+            const element = mediaElements[key];
+            if (!element) return;
+
+            const ch = channels[key];
+            if (ch.type === 'hls') {
+                element.muted = !shouldHaveAudio;
+            } else if (ch.type === 'iframe') {
+                // For iframes, we need to reload with new parameters
+                const newUrl = buildIframeUrl(ch.url, key, shouldHaveAudio);
+                if (element.src !== newUrl) {
+                    element.src = newUrl;
+                }
+            }
+        }
+
+        function updateAllAudio() {
+            // Update audio state for all active channels
+            active.forEach(key => {
+                const shouldHaveAudio = (key === activeAudioKey);
+                updateMediaAudio(key, shouldHaveAudio);
+            });
+        }
+
         function updateGrid() {
-            // Determine grid class based on number of active videos for responsive layout
             grid.className = `grid-container grid-${active.length || 1}`;
-            grid.innerHTML = ''; // Clear existing videos
+            grid.innerHTML = '';
+            mediaElements = {}; // Clear media elements references
 
             if (active.length === 0) {
-                // Show message if no channels are selected
                 noChannelMessage.style.display = 'block';
-                activeAudioKey = null; // No audio should be active if no videos are displayed
+                activeAudioKey = null;
             } else {
-                // Hide message if channels are selected
                 noChannelMessage.style.display = 'none';
 
                 active.forEach(key => {
                     const ch = channels[key];
-                    // Create a wrapper div for each video to maintain aspect ratio and apply styling
                     const wrapper = document.createElement('div');
                     wrapper.className = 'video-container';
-                    wrapper.dataset.channel = key; // Add data-channel for click handling
+                    wrapper.dataset.channel = key;
 
-                    // Create the video or iframe element
                     let mediaElement;
+                    const shouldHaveAudio = (key === activeAudioKey);
 
                     if (ch.type === 'hls') {
                         mediaElement = document.createElement('video');
                         mediaElement.className = 'w-full h-full rounded-md';
                         mediaElement.autoplay = true;
                         mediaElement.controls = true;
-                        mediaElement.muted = (key !== activeAudioKey); // Mute if not the active audio channel
+                        mediaElement.muted = !shouldHaveAudio;
                         wrapper.appendChild(mediaElement);
 
                         if (Hls.isSupported()) {
@@ -229,27 +242,25 @@
                         } else {
                             mediaElement.src = ch.url;
                         }
-                    } else { // type === 'iframe'
+                    } else {
                         mediaElement = document.createElement('iframe');
                         mediaElement.className = 'w-full h-full rounded-md';
-                        // Ensure muted and autoplay parameters are included for iframes based on activeAudioKey
-                        mediaElement.src = ch.url + (ch.url.includes('?') ? '&' : '?') + `autoplay=1&muted=${(key !== activeAudioKey) ? 1 : 0}`;
+                        mediaElement.src = buildIframeUrl(ch.url, key, shouldHaveAudio);
                         mediaElement.allow = 'autoplay; fullscreen';
                         mediaElement.frameBorder = '0';
                         wrapper.appendChild(mediaElement);
                     }
 
-                    // Add click listener to the wrapper to toggle audio
+                    // Store reference to media element
+                    mediaElements[key] = mediaElement;
+
                     wrapper.addEventListener('click', () => {
                         if (activeAudioKey === key) {
-                            // If this video is currently playing audio, mute it
                             activeAudioKey = null;
                         } else {
-                            // Otherwise, make this video the new active audio source
                             activeAudioKey = key;
                         }
-                        // Re-render the grid to apply the new audio state
-                        updateGrid();
+                        updateAllAudio(); // Update audio for all channels
                     });
 
                     grid.appendChild(wrapper);
@@ -257,7 +268,6 @@
             }
         }
 
-        // Initialize buttons and set up event listeners for channel selection
         buttons.forEach(btn => {
             const key = btn.dataset.channel;
             if (active.includes(key)) {
@@ -268,20 +278,22 @@
                 if (active.includes(key)) {
                     active = active.filter(x => x !== key);
                     btn.classList.remove('active');
+                    // If this was the active audio channel, clear it
+                    if (activeAudioKey === key) {
+                        activeAudioKey = null;
+                    }
                 } else {
-                    active = [key, ...active.filter(x => x !== key)]; // Add to front for recent selection
+                    active = [key, ...active.filter(x => x !== key)];
                     btn.classList.add('active');
                 }
                 saveActive();
-                updateGrid(); // Update the grid and re-apply audio state
+                updateGrid();
             };
         });
 
-        // Initial grid update when the page loads
         updateGrid();
     </script>
 
-    <!-- Footer section -->
     <div class="footer-container">
         <div class="footer-link-group">
             <p class="footer-text">גם תחנות רדיו להאזנה:</p>
@@ -291,7 +303,7 @@
             </a>
         </div>
         <div class="version-info">
-            גרסה 3 - מתוקנת
+            גרסה 4 - תיקון אודיו ואוטו-פליי
         </div>
     </div>
 </body>
