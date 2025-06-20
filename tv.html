@@ -40,7 +40,7 @@
   </style>
 </head>
 <body class="p-4">
-  <h1 class="text-2xl font-bold mb-4 text-center">צפייה בער2וצים</h1>
+  <h1 class="text-2xl font-bold mb-4 text-center">צפייה בערוצים</h1>
   <div class="text-center mb-2 text-sm text-gray-300">בחר ערוצים:</div>
   <div class="flex justify-center gap-3 flex-wrap mb-4 max-w-screen-md mx-auto">
     <button class="channel-button" data-channel="kan11">כאן 11</button>
@@ -104,3 +104,21 @@
 
     buttons.forEach(btn => {
       const key = btn.dataset.channel;
+      if (active.includes(key)) btn.classList.add('active');
+      btn.onclick = () => {
+        if (active.includes(key)) {
+          active = active.filter(x => x !== key);
+          btn.classList.remove('active');
+        } else {
+          active = [key, ...active.filter(x => x !== key)];
+          btn.classList.add('active');
+        }
+        saveActive();
+        updateGrid();
+      };
+    });
+
+    if (active.length) updateGrid();
+  </script>
+</body>
+</html>
