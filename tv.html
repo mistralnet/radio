@@ -1,147 +1,283 @@
 <!DOCTYPE html>
 <html lang="he">
-<head><script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
-<script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-J5WT91REYB');
-</script>
+<head>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J5WT91REYB');
+    </script>
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>צפייה בערוצים</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            direction: rtl;
+            background-color: #1F2937;
+            color: white;
+            margin: 0;
+            font-family: "Inter", sans-serif; /* Using Inter font as per instructions */
+        }
+        .video-container {
+            position: relative;
+            aspect-ratio: 16 / 9;
+            width: 100%;
+            border-radius: 8px; /* Rounded corners for video container */
+            overflow: hidden; /* Ensure content respects rounded corners */
+        }
+        .grid-container {
+            display: grid;
+            gap: 16px; /* Increased gap for better spacing */
+            margin: 0 auto;
+            max-width: 100%;
+            padding: 0 16px; /* Add some horizontal padding */
+        }
+        .channel-button {
+            padding: 12px 24px; /* Larger padding for better touch target */
+            background-color: #4B5563;
+            color: white;
+            border-radius: 8px; /* More rounded corners */
+            transition: background-color 0.3s, transform 0.2s; /* Added transform for hover effect */
+            flex: 1 1 120px;
+            text-align: center;
+            font-weight: 600; /* Bolder text for buttons */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        }
+        .channel-button.active {
+            background-color: #1F6FEB;
+            transform: translateY(-2px); /* Slight lift for active state */
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2); /* More prominent shadow for active */
+        }
+        .channel-button:hover {
+            background-color: #6B7280;
+            transform: translateY(-2px); /* Slight lift on hover */
+        }
+        /* Ensure active state overrides hover, even when mouse is over */
+        .channel-button.active:hover,
+        .channel-button.active:focus {
+            background-color: #1F6FEB; /* Keep the active color */
+            transform: translateY(-2px);
+        }
+        .channel-button:active {
+            transform: translateY(0); /* Press down effect */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-})(window,document,'script','dataLayer','GTM-P5QLH7TD');</script>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>צפייה בערוצים</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { direction: rtl; background-color: #1F2937; color: white; margin: 0; }
-    .video-container { position: relative; aspect-ratio: 16 / 9; width: 100%; }
-    .grid-container { display: grid; gap: 8px; margin: 0 auto; max-width: 100%; }
-    .channel-button {
-      padding: 8px 16px;
-      background-color: #4B5563;
-      color: white;
-      border-radius: 4px;
-      transition: background-color 0.3s;
-      flex: 1 1 120px;
-      text-align: center;
-    }
-    .channel-button.active { background-color: #1F6FEB; }
-    .channel-button:hover { background-color: #6B7280; }
-    @media (min-width: 768px) {
-      .grid-1 { grid-template-columns: 1fr; }
-      .grid-2 { grid-template-columns: repeat(2, 1fr); }
-      .grid-3 { grid-template-columns: repeat(3, 1fr); }
-      .grid-4 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, auto); }
-      .grid-5 {
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(2, auto);
-      }
-    }
-    @media (max-width: 767px) {
-      .grid-1, .grid-2, .grid-3, .grid-4, .grid-5 {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
-      }
-    }
-  </style>
+        /* Responsive grid adjustments */
+        @media (min-width: 768px) {
+            .grid-1 { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: repeat(2, 1fr); }
+            .grid-3 { grid-template-columns: repeat(3, 1fr); }
+            .grid-4 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, auto); }
+            .grid-5 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, auto); }
+        }
+        @media (max-width: 767px) {
+            .grid-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+        }
+
+        /* Footer styling */
+        .footer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            margin-top: 40px; /* More space above the footer */
+            background-color: #2D3748; /* Slightly darker background for footer */
+            border-top: 1px solid #4A5568; /* Subtle top border */
+            border-radius: 8px; /* Rounded corners for the footer container */
+            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .footer-link-group {
+            display: flex;
+            flex-direction: column; /* Stack link and text vertically */
+            align-items: center;
+            gap: 10px; /* Space between text and button */
+            margin-bottom: 20px; /* Space before version info */
+        }
+        .footer-link-button {
+            /* Inherits styles from channel-button but can be overridden */
+            background-color: #6366F1; /* A distinct color for the radio link */
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .footer-link-button:hover {
+            background-color: #4F46E5;
+            transform: translateY(-1px);
+        }
+        .footer-text {
+            color: #CBD5E0; /* Lighter gray for text */
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 10px; /* Space between link group and version */
+        }
+        .version-info {
+            color: #9CA3AF; /* Even lighter gray for version */
+            font-size: 0.85rem;
+        }
+        /* Style for the no channel message */
+        .no-channel-message {
+            text-align: center;
+            color: #CBD5E0;
+            margin-top: 20px;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+    </style>
 </head>
 <body class="p-4">
-  <h1 class="text-2xl font-bold mb-4 text-center">צפייה בערוצים</h1>
-  <div class="text-center mb-2 text-sm text-gray-300">בחר ערוצים:</div>
-  <div class="flex justify-center gap-3 flex-wrap mb-4 max-w-screen-md mx-auto">
-    <button class="channel-button" data-channel="kan11">כאן 11</button>
-    <button class="channel-button" data-channel="now14">עכשיו 14</button>
-    <button class="channel-button" data-channel="i24news">i24NEWS</button>
-    <button class="channel-button" data-channel="news12">חדשות 12</button>
-    <button class="channel-button" data-channel="news13">חדשות 13</button>
-  </div>
-  <div id="video-grid" class="grid-container"></div>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
 
-  <script>
-    const channels = {
-      kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-      now14: { type: 'iframe', url: 'https://www.now14.co.il/live/?autoplay=1&mute=1' },
-      i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
-      news12: { type: 'iframe', url: 'https://www.mako.co.il/mako-vod-live-tv/VOD-6540b8dcb64fd31006.htm?autoplay=1&muted=1' },
-      news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' }
-    };
+    <h1 class="text-2xl font-bold mb-4 text-center">צפייה בערוצים</h1>
 
-    const grid = document.getElementById('video-grid');
-    const buttons = document.querySelectorAll('.channel-button');
-    let active = JSON.parse(localStorage.getItem('activeChannels') || '[]');
+    <div class="text-center mb-4 text-sm text-gray-300">בחר ערוצים:</div>
 
-    function saveActive() {
-      localStorage.setItem('activeChannels', JSON.stringify(active));
-    }
+    <div class="flex justify-center gap-3 flex-wrap mb-8 max-w-screen-lg mx-auto">
+        <button class="channel-button" data-channel="kan11">כאן 11</button>
+        <button class="channel-button" data-channel="now14">עכשיו 14</button>
+        <button class="channel-button" data-channel="i24news">i24NEWS</button>
+        <button class="channel-button" data-channel="news13">חדשות 13</button>
+        <button class="channel-button" data-channel="news12">חדשות 12</button>
+    </div>
 
-    function updateGrid() {
-      grid.className = `grid-container grid-${active.length || 1}`;
-      grid.innerHTML = '';
-      active.forEach(key => {
-        const ch = channels[key];
-        const wrapper = document.createElement('div');
-        wrapper.className = 'video-container';
+    <div id="video-grid" class="grid-container"></div>
+    <!-- Message to display when no channel is selected -->
+    <div id="no-channel-message" class="no-channel-message" style="display: none;">
+        יש לבחור ערוץ מהכפתורים מעלה
+    </div>
 
-        if (ch.type === 'hls') {
-          const v = document.createElement('video');
-          v.className = 'w-full h-full';
-          v.autoplay = true;
-          v.muted = true;
-          v.controls = true;
-          wrapper.appendChild(v);
-          if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(ch.url);
-            hls.attachMedia(v);
-          } else {
-            v.src = ch.url;
-          }
-        } else {
-          const f = document.createElement('iframe');
-          f.className = 'w-full h-full';
-          f.src = ch.url + (ch.url.includes('?') ? '&' : '?') + 'muted=1';
-          f.allow = 'autoplay; fullscreen';
-          wrapper.appendChild(f);
+    <script>
+        // Define channel data. news12 now points to the previous makoVideo URL.
+        const channels = {
+            kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
+            now14: { type: 'iframe', url: 'https://www.now14.co.il/live/?autoplay=1&mute=1' },
+            i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
+            news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
+            // news12 now uses the makoVideo source
+            news12: { type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD' }
+        };
+
+        const grid = document.getElementById('video-grid');
+        const buttons = document.querySelectorAll('.channel-button');
+        let active = JSON.parse(localStorage.getItem('activeChannels') || '[]');
+        const noChannelMessage = document.getElementById('no-channel-message');
+
+        // Function to save active channels to local storage
+        function saveActive() {
+            localStorage.setItem('activeChannels', JSON.stringify(active));
         }
 
-        grid.appendChild(wrapper);
-      });
-    }
+        // Function to update the video grid based on active channels
+        function updateGrid() {
+            // Determine grid class based on number of active videos for responsive layout
+            grid.className = `grid-container grid-${active.length || 1}`;
+            grid.innerHTML = ''; // Clear existing videos
 
-    buttons.forEach(btn => {
-      const key = btn.dataset.channel;
-      if (active.includes(key)) btn.classList.add('active');
-      btn.onclick = () => {
-        if (active.includes(key)) {
-          active = active.filter(x => x !== key);
-          btn.classList.remove('active');
-        } else {
-          active = [key, ...active.filter(x => x !== key)];
-          btn.classList.add('active');
+            if (active.length === 0) {
+                // Show message if no channels are selected
+                noChannelMessage.style.display = 'block';
+            } else {
+                // Hide message if channels are selected
+                noChannelMessage.style.display = 'none';
+
+                active.forEach(key => {
+                    const ch = channels[key];
+                    // Create a wrapper div for each video to maintain aspect ratio and apply styling
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'video-container';
+
+                    if (ch.type === 'hls') {
+                        // Handle HLS streams
+                        const v = document.createElement('video');
+                        v.className = 'w-full h-full rounded-md'; // Apply Tailwind classes for full size and rounded corners
+                        v.autoplay = true;
+                        v.muted = true; // Start muted
+                        v.controls = true; // Show controls
+                        wrapper.appendChild(v);
+
+                        if (Hls.isSupported()) {
+                            const hls = new Hls();
+                            hls.loadSource(ch.url);
+                            hls.attachMedia(v);
+                        } else {
+                            // Fallback for browsers that don't support HLS.js (e.g., Safari native HLS)
+                            v.src = ch.url;
+                        }
+                    } else {
+                        // Handle iframe embeds
+                        const f = document.createElement('iframe');
+                        f.className = 'w-full h-full rounded-md'; // Apply Tailwind classes for full size and rounded corners
+                        // Ensure muted and autoplay parameters are included for iframes
+                        f.src = ch.url + (ch.url.includes('?') ? '&' : '?') + 'muted=1&autoplay=1';
+                        f.allow = 'autoplay; fullscreen'; // Allow autoplay and fullscreen
+                        f.frameBorder = '0'; // Remove default iframe border
+                        wrapper.appendChild(f);
+                    }
+
+                    grid.appendChild(wrapper);
+                });
+            }
         }
-        saveActive();
+
+        // Initialize buttons and set up event listeners
+        buttons.forEach(btn => {
+            const key = btn.dataset.channel;
+            // Add 'active' class if channel is already active
+            if (active.includes(key)) {
+                btn.classList.add('active');
+            }
+
+            // Add click event listener to toggle active state
+            btn.onclick = () => {
+                if (active.includes(key)) {
+                    // If already active, remove it
+                    active = active.filter(x => x !== key);
+                    btn.classList.remove('active');
+                } else {
+                    // If not active, add it to the beginning of the array (most recent first)
+                    active = [key, ...active.filter(x => x !== key)];
+                    btn.classList.add('active');
+                }
+                saveActive(); // Save changes to local storage
+                updateGrid(); // Update the displayed grid
+            };
+        });
+
+        // Initial grid update if there are active channels from previous session
+        // or to display the message if no channels are initially active
         updateGrid();
-      };
-    });
+    </script>
 
-    if (active.length) updateGrid();
-  </script>
-  <div class="contailink">
-    <p>
-       11 <a href="https://mistralnet.github.io/radio" rel="noopener noreferrer" class="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-base font-medium bg-white text-gray-900 border border-gray-300 hover:bg-blue-100 hover:text-blue-800 focus:outline-none focus:ring-4 focus:ring-blue-400 disabled:pointer-events-none disabled:opacity-50 h-12 px-6 py-3 shadow-sm hover:shadow-md transition-all duration-200" aria-label="פתח תחנות רדיו להאזנה">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6" aria-hidden="true"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path><circle cx="12" cy="12" r="2"></circle><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path></svg>
-            תחנות רדיו להאזנה
-        </a>
-    </p>
-</div>
-<div class="contaibox">
-    גרסה 3 - מתוקנת
-</div>
+    <!-- Footer section -->
+    <div class="footer-container">
+        <div class="footer-link-group">
+            <p class="footer-text">גם תחנות רדיו להאזנה:</p>
+            <a href="https://mistralnet.github.io/radio" rel="noopener noreferrer" class="footer-link-button" aria-label="פתח תחנות רדיו להאזנה">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-6 w-6" aria-hidden="true"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path><circle cx="12" cy="12" r="2"></circle><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path><path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path></svg>
+                תחנות רדיו
+            </a>
+        </div>
+        <div class="version-info">
+            גרסה 3 - מתוקנת
+        </div>
+    </div>
 </body>
 </html>
