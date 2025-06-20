@@ -1,458 +1,104 @@
 <!DOCTYPE html>
 <html lang="he">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>צפייה בערוצי שידור</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { direction: rtl; background-color: #1F2937; color: white; }
-        .video-container { position: relative; width: 100%; aspect-ratio: 16 / 9; }
-        .media-controls { 
-            position: absolute; 
-            bottom: 0; 
-            left: 0; 
-            right: 0; 
-            background: rgba(0,0,0,0.7); 
-            padding: 8px; 
-            border-radius: 8px; 
-            display: flex; 
-            align-items: center; 
-            gap: 8px; 
-            opacity: 0; 
-            transition: opacity 0.3s; 
-            z-index: 10;
-        }
-        .video-container:hover .media-controls, .video-container:focus-within .media-controls { opacity: 1; }
-        .media-btn { 
-            background: none; 
-            border: none; 
-            color: white; 
-            cursor: pointer; 
-            font-size: 1.1rem; 
-            padding: 4px;
-        }
-        .progress-container {
-            flex-grow: 1;
-            height: 4px;
-            background: #444;
-            border-radius: 4px;
-            cursor: pointer;
-            position: relative;
-        }
-        .progress-bar {
-            height: 100%;
-            background: #1F6FEB;
-            border-radius: 4px;
-            width: 0;
-        }
-        .volume-slider {
-            width: 60px;
-            accent-color: #1F6FEB;
-        }
-        .grid-container {
-            display: grid;
-            gap: 8px;
-            height: calc(100vh - 160px);
-            margin: 0 auto;
-            max-width: 100%;
-        }
-        .channel-button {
-            padding: 8px 16px;
-            background-color: #4B5563;
-            color: white;
-            border-radius: 4px;
-            transition: background-color 0.3s;
-        }
-        .channel-button.active {
-            background-color: #1F6FEB;
-        }
-        .channel-button:hover {
-            background-color: #6B7280;
-        }
-        .autoplay-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 5;
-        }
-        .footer {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 16px;
-            padding: 16px;
-            background-color: #111827;
-            text-align: center;
-            flex-wrap: wrap;
-        }
-        .footer a {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            background-color: #FFFFFF;
-            color: #111827;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: background-color 0.3s;
-        }
-        .footer a:hover {
-            background-color: #E5E7EB;
-        }
-        @media (min-width: 768px) {
-            .grid-1 { grid-template-columns: 1fr; }
-            .grid-2 { grid-template-columns: repeat(2, 1fr); }
-            .grid-3 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
-            .grid-4 { grid-template-columns: repeat(2, 1fr); }
-            .grid-5 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); }
-            .grid-5 .video-container:first-child { grid-column: span 2; }
-        }
-        @media (max-width: 767px) {
-            .grid-1, .grid-2, .grid-3, .grid-4, .grid-5 { 
-                grid-template-columns: 1fr; 
-                height: auto; 
-                overflow-y: auto;
-            }
-        }
-        .fullscreen .media-controls {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>צפייה בערוצים</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { direction: rtl; background: #1F2937; color: white; margin: 0; }
+    .video-container { position: relative; aspect-ratio: 16/9; width: 100%; }
+    .media-controls { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); padding: 8px; border-radius: 8px; display: flex; align-items: center; gap: 8px; opacity: 0; transition: opacity 0.3s; z-index: 10; }
+    .video-container:hover .media-controls, .video-container:focus-within .media-controls { opacity: 1; }
+    .media-btn { background: none; border: none; color: white; cursor: pointer; font-size: 1.1rem; padding: 4px; }
+    .grid-container { display: grid; gap: 8px; max-width: 100vw; overflow: hidden; margin: 0 auto; }
+    .channel-button { padding: 8px 16px; background: #4B5563; border-radius: 4px; color: white; transition: background-color 0.3s; }
+    .channel-button.active { background: #1F6FEB; }
+    .channel-button:hover { background: #6B7280; }
+    @media (min-width: 768px) {
+      .grid-1 { grid-template-columns: 1fr; }
+      .grid-2 { grid-template-columns: repeat(2, 1fr); }
+      .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+      .grid-5 { grid-template-columns: repeat(3, 1fr); grid-auto-rows: auto; }
+      .grid-5 .video-container:first-child { grid-column: span 2; }
+    }
+    @media (max-width: 767px) {
+      .grid-1, .grid-2, .grid-3, .grid-4, .grid-5 {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-<body>
-    <div class="p-4">
-        <h1 class="text-2xl font-bold mb-4 text-center">צפייה בערוצי שידור</h1>
-        <p class="text-center mb-2 text-sm text-gray-300">בחר ערוצים פעילים להצגה:</p>
-        <div class="flex justify-center gap-4 mb-4 flex-wrap">
-            <button class="channel-button" data-channel="kan11">כאן 11</button>
-            <button class="channel-button" data-channel="now14">עכשיו 14</button>
-            <button class="channel-button" data-channel="i24news">i24NEWS</button>
-            <button class="channel-button" data-channel="news12">חדשות 12</button>
-            <button class="channel-button" data-channel="news13">חדשות 13</button>
-        </div>
-        <div id="video-grid" class="grid-container"></div>
-    </div>
+<body class="p-4">
+  <h1 class="text-2xl font-bold mb-4 text-center">צפייה בערוצים</h1>
+  <div class="text-center mb-2 text-sm text-gray-300">בחר ערוצים:</div>
+  <div class="flex justify-center gap-2 flex-wrap mb-4">
+    <button class="channel-button" data-channel="kan11">כאן 11</button>
+    <button class="channel-button" data-channel="now14">עכשיו 14</button>
+    <button class="channel-button" data-channel="i24news">i24NEWS</button>
+    <button class="channel-button" data-channel="news12">חדשות 12</button>
+    <button class="channel-button" data-channel="news13">חדשות 13</button>
+  </div>
+  <div id="video-grid" class="grid-container"></div>
 
-    <footer class="footer">
-        <a href="https://mistralnet.github.io/radio/radio.html" rel="noopener noreferrer" aria-label="פתח תחנות רדיו להאזנה">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"></path>
-                <path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"></path>
-                <circle cx="12" cy="12" r="2"></circle>
-                <path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"></path>
-                <path d="M19.1 4.9C23 8.8 23 15.2 19.1 19.1"></path>
-            </svg>
-            תחנות רדיו להאזנה
-        </a>
-        <span class="text-sm text-gray-300">גרסה 3 - מתוקנת</span>
-    </footer>
+  <script>
+    const channels = {
+      kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
+      now14: { type: 'iframe', url: 'https://www.now14.co.il/live/?autoplay=1&mute=1' },
+      i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
+      news12: { type: 'iframe', url: 'https://www.mako.co.il/mako-vod-live-tv/VOD-6540b8dcb64fd31006.htm?autoplay=1&muted=true' },
+      news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' }
+    };
 
-    <script>
-        const channels = {
-            kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8', name: 'כאן 11' },
-            now14: { type: 'iframe', url: 'https://www.now14.co.il/live/?autoplay=1&mute=1&autoPlay=true&muted=true', name: 'עכשיו 14' },
-            i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8', name: 'i24NEWS' },
-            news12: { type: 'iframe', url: 'https://www.mako.co.il/mako-vod-live-tv/VOD-6540b8dcb64fd31006.htm?autoplay=1&muted=true&autoPlay=true', name: 'חדשות 12' },
-            news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8', name: 'חדשות 13' }
-        };
+    const grid = document.getElementById('video-grid');
+    const buttons = document.querySelectorAll('.channel-button');
+    let active = [];
 
-        const videoGrid = document.getElementById('video-grid');
-        const buttons = document.querySelectorAll('.channel-button');
-        let activeChannels = JSON.parse(localStorage.getItem('activeChannels') || '[]');
+    function updateGrid() {
+      grid.className = `grid-container grid-${active.length || 1}`;
+      grid.innerHTML = '';
+      active.forEach(key => {
+        const ch = channels[key];
+        const wrapper = document.createElement('div');
+        wrapper.className = 'video-container';
 
-        function saveActiveChannels() {
-            localStorage.setItem('activeChannels', JSON.stringify(activeChannels));
+        if (ch.type === 'hls') {
+          const v = document.createElement('video');
+          v.className = 'w-full h-full';
+          v.autoplay = true; v.muted = true; v.controls = true;
+          wrapper.appendChild(v);
+          if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(ch.url);
+            hls.attachMedia(v);
+          } else {
+            v.src = ch.url;
+          }
+        } else {
+          const f = document.createElement('iframe');
+          f.className = 'w-full h-full';
+          f.src = ch.url;
+          f.allow = 'autoplay; fullscreen';
+          wrapper.appendChild(f);
         }
 
-        function createVideoPlayer(channelKey) {
-            const channel = channels[channelKey];
-            const container = document.createElement('div');
-            container.className = 'video-container';
-            container.dataset.channel = channelKey;
+        grid.appendChild(wrapper);
+      });
+    }
 
-            if (channel.type === 'hls') {
-                const video = document.createElement('video');
-                video.className = 'w-full h-full';
-                video.muted = true;
-                container.appendChild(video);
-
-                if (Hls.isSupported()) {
-                    const hls = new Hls();
-                    hls.loadSource(channel.url);
-                    hls.attachMedia(video);
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(() => showAutoplayOverlay(container, video)));
-                    hls.on(Hls.Events.ERROR, () => showAutoplayOverlay(container, video));
-                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                    video.src = channel.url;
-                    video.addEventListener('loadedmetadata', () => video.play().catch(() => showAutoplayOverlay(container, video)));
-                }
-
-                video.addEventListener('click', () => video.paused ? video.play() : video.pause());
-                video.addEventListener('play', () => container.querySelector('.autoplay-overlay')?.remove());
-                initMediaControls(container, video);
-            } else {
-                const iframe = document.createElement('iframe');
-                iframe.className = 'w-full h-full';
-                iframe.src = channel.url;
-                iframe.allow = 'autoplay; fullscreen';
-                iframe.setAttribute('allowfullscreen', '');
-                container.appendChild(iframe);
-                initIframeControls(container, iframe);
-            }
-
-            return container;
+    buttons.forEach(btn => {
+      btn.onclick = () => {
+        const key = btn.dataset.channel;
+        btn.classList.toggle('active');
+        if (active.includes(key)) {
+          active = active.filter(x => x !== key);
+        } else {
+          active.push(key);
         }
-
-        function initMediaControls(container, video) {
-            const controls = document.createElement('div');
-            controls.className = 'media-controls';
-
-            const playPauseBtn = document.createElement('button');
-            playPauseBtn.className = 'media-btn';
-            playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
-            playPauseBtn.setAttribute('aria-label', 'השהה');
-            playPauseBtn.addEventListener('click', () => {
-                if (video.paused) {
-                    video.play().catch(() => showAutoplayOverlay(container, video));
-                    playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
-                    playPauseBtn.setAttribute('aria-label', 'השהה');
-                } else {
-                    video.pause();
-                    playPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
-                    playPauseBtn.setAttribute('aria-label', 'הפעל');
-                }
-            });
-
-            const stopBtn = document.createElement('button');
-            stopBtn.className = 'media-btn';
-            stopBtn.innerHTML = '<i class="fa fa-stop"></i>';
-            stopBtn.setAttribute('aria-label', 'עצור');
-            stopBtn.addEventListener('click', () => {
-                video.pause();
-                video.currentTime = 0;
-                playPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
-                playPauseBtn.setAttribute('aria-label', 'הפעל');
-            });
-
-            const volumeSlider = document.createElement('input');
-            volumeSlider.type = 'range';
-            volumeSlider.className = 'volume-slider';
-            volumeSlider.min = '0';
-            volumeSlider.max = '1';
-            volumeSlider.step = '0.1';
-            volumeSlider.value = video.volume;
-            volumeSlider.setAttribute('aria-label', 'שליטה בעוצמת הקול');
-
-            const muteBtn = document.createElement('button');
-            muteBtn.className = 'media-btn';
-            muteBtn.innerHTML = '<i class="fa fa-volume-up"></i>';
-            muteBtn.setAttribute('aria-label', 'השתק');
-            muteBtn.addEventListener('click', () => {
-                video.muted = !video.muted;
-                muteBtn.innerHTML = video.muted ? '<i class="fa fa-volume-mute"></i>' : '<i class="fa fa-volume-up"></i>';
-                muteBtn.setAttribute('aria-label', video.muted ? 'בטל השתקה' : 'השתק');
-                volumeSlider.value = video.muted ? 0 : video.volume;
-            });
-
-            volumeSlider.addEventListener('input', () => {
-                video.volume = volumeSlider.value;
-                video.muted = volumeSlider.value == 0;
-                muteBtn.innerHTML = video.muted ? '<i class="fa fa-volume-mute"></i>' : '<i class="fa fa-volume-up"></i>';
-                muteBtn.setAttribute('aria-label', video.muted ? 'בטל השתקה' : 'השתק');
-            });
-
-            const progressContainer = document.createElement('div');
-            progressContainer.className = 'progress-container';
-            const progressBar = document.createElement('div');
-            progressBar.className = 'progress-bar';
-            progressContainer.appendChild(progressBar);
-            progressContainer.addEventListener('click', (e) => {
-                const rect = progressContainer.getBoundingClientRect();
-                const pos = (e.clientX - rect.left) / rect.width;
-                video.currentTime = pos * video.duration;
-            });
-
-            video.addEventListener('timeupdate', () => {
-                const progress = (video.currentTime / video.duration) * 100;
-                progressBar.style.width = `${progress}%`;
-            });
-
-            const fullscreenBtn = document.createElement('button');
-            fullscreenBtn.className = 'media-btn';
-            fullscreenBtn.innerHTML = '<i class="fa fa-expand"></i>';
-            fullscreenBtn.setAttribute('aria-label', 'מסך מלא');
-            fullscreenBtn.addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    container.requestFullscreen().then(() => container.classList.add('fullscreen'));
-                } else {
-                    document.exitFullscreen().then(() => container.classList.remove('fullscreen'));
-                }
-            });
-
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'media-btn';
-            closeBtn.innerHTML = '<i class="fa fa-times"></i>';
-            closeBtn.setAttribute('aria-label', 'סגור');
-            closeBtn.addEventListener('click', () => {
-                container.remove();
-                activeChannels = activeChannels.filter(ch => ch !== container.dataset.channel);
-                saveActiveChannels();
-                document.querySelector(`button[data-channel="${container.dataset.channel}"]`).classList.remove('active');
-                updateGridLayout();
-            });
-
-            container.tabIndex = 0;
-            container.addEventListener('keydown', (e) => {
-                if (e.code === 'Space') {
-                    e.preventDefault();
-                    playPauseBtn.click();
-                } else if (e.code === 'ArrowLeft') {
-                    video.currentTime = Math.max(0, video.currentTime - 5);
-                } else if (e.code === 'ArrowRight') {
-                    video.currentTime = Math.min(video.duration, video.currentTime + 5);
-                } else if (e.code === 'ArrowUp') {
-                    video.volume = Math.min(1, video.volume + 0.1);
-                    volumeSlider.value = video.volume;
-                } else if (e.code === 'ArrowDown') {
-                    video.volume = Math.max(0, video.volume - 0.1);
-                    volumeSlider.value = video.volume;
-                }
-            });
-
-            let hideTimeout;
-            function resetHideTimeout() {
-                controls.style.opacity = '1';
-                clearTimeout(hideTimeout);
-                hideTimeout = setTimeout(() => {
-                    if (document.fullscreenElement) controls.style.opacity = '0';
-                }, 3000);
-            }
-            container.addEventListener('mousemove', resetHideTimeout);
-            container.addEventListener('touchstart', resetHideTimeout);
-
-            controls.append(playPauseBtn, stopBtn, volumeSlider, muteBtn, progressContainer, fullscreenBtn, closeBtn);
-            container.appendChild(controls);
-
-            video.addEventListener('play', () => {
-                playPauseBtn.innerHTML = '<i class="fa fa-pause"></i>';
-                playPauseBtn.setAttribute('aria-label', 'השהה');
-            });
-            video.addEventListener('pause', () => {
-                playPauseBtn.innerHTML = '<i class="fa fa-play"></i>';
-                playPauseBtn.setAttribute('aria-label', 'הפעל');
-            });
-            video.addEventListener('volumechange', () => {
-                muteBtn.innerHTML = video.muted ? '<i class="fa fa-volume-mute"></i>' : '<i class="fa fa-volume-up"></i>';
-                muteBtn.setAttribute('aria-label', video.muted ? 'בטל השתקה' : 'השתק');
-                volumeSlider.value = video.muted ? 0 : video.volume;
-            });
-        }
-
-        function showAutoplayOverlay(container, video) {
-            const overlay = document.createElement('div');
-            overlay.className = 'autoplay-overlay';
-            const playBtn = document.createElement('button');
-            playBtn.className = 'media-btn';
-            playBtn.innerHTML = '<i class="fa fa-play" style="font-size: 2rem;"></i>';
-            playBtn.setAttribute('aria-label', 'הפעל וידאו');
-            playBtn.addEventListener('click', () => {
-                video.play().then(() => overlay.remove());
-            });
-            overlay.appendChild(playBtn);
-            container.appendChild(overlay);
-        }
-
-        function initIframeControls(container, iframe) {
-            const controls = document.createElement('div');
-            controls.className = 'media-controls';
-
-            const fullscreenBtn = document.createElement('button');
-            fullscreenBtn.className = 'media-btn';
-            fullscreenBtn.innerHTML = '<i class="fa fa-expand"></i>';
-            fullscreenBtn.setAttribute('aria-label', 'מסך מלא');
-            fullscreenBtn.addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    container.requestFullscreen().then(() => container.classList.add('fullscreen'));
-                } else {
-                    document.exitFullscreen().then(() => container.classList.remove('fullscreen'));
-                }
-            });
-
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'media-btn';
-            closeBtn.innerHTML = '<i class="fa fa-times"></i>';
-            closeBtn.setAttribute('aria-label', 'סגור');
-            closeBtn.addEventListener('click', () => {
-                container.remove();
-                activeChannels = activeChannels.filter(ch => ch !== container.dataset.channel);
-                saveActiveChannels();
-                document.querySelector(`button[data-channel="${container.dataset.channel}"]`).classList.remove('active');
-                updateGridLayout();
-            });
-
-            const note = document.createElement('span');
-            note.textContent = 'שליטה מוגבלת עקב מגבלות Cross-Origin';
-            note.className = 'text-xs text-gray-300';
-
-            controls.append(fullscreenBtn, closeBtn, note);
-            container.appendChild(controls);
-
-            let hideTimeout;
-            function resetHideTimeout() {
-                controls.style.opacity = '1';
-                clearTimeout(hideTimeout);
-                hideTimeout = setTimeout(() => {
-                    if (document.fullscreenElement) controls.style.opacity = '0';
-                }, 3000);
-            }
-            container.addEventListener('mousemove', resetHideTimeout);
-            container.addEventListener('touchstart', resetHideTimeout);
-        }
-
-        function updateGridLayout() {
-            const activeCount = activeChannels.length;
-            videoGrid.className = `grid-container grid-${activeCount || 1}`;
-            videoGrid.innerHTML = '';
-            activeChannels.forEach(channelKey => {
-                const player = createVideoPlayer(channelKey);
-                videoGrid.appendChild(player);
-                document.querySelector(`button[data-channel="${channelKey}"]`)?.classList.add('active');
-            });
-        }
-
-        buttons.forEach(button => {
-            button.addEventListener('click', () => {
-                const channelKey = button.dataset.channel;
-                if (activeChannels.includes(channelKey)) {
-                    activeChannels = activeChannels.filter(ch => ch !== channelKey);
-                    button.classList.remove('active');
-                } else {
-                    activeChannels = [channelKey, ...activeChannels];
-                    button.classList.add('active');
-                }
-                saveActiveChannels();
-                updateGridLayout();
-            });
-            if (activeChannels.includes(button.dataset.channel)) {
-                button.classList.add('active');
-            }
-        });
-
-        if (activeChannels.length) {
-            updateGridLayout();
-        }
-    </script>
+        updateGrid();
+      };
+    });
+  </script>
 </body>
 </html>
