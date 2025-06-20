@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>צפייה בערוצים</title>
+
+  <!-- Tailwind + HLS.js -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+  <style>
+    body {
+      background-color: #1f2937;
+      color: white;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .video-container {
+      position: relative;
+      aspect-ratio: 16/9;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+
+    .fade {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .fade-in {
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    .channel-button.active {
+      background-color: #1f6feb !important;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .no-channel-message {
+      text-align: center;
+      color: #cbd5e0;
+      margin-top: 1rem;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body class="p-4">
+  <h1 class="text-2xl font-bold text-center mb-4">צפייה בערוצים</h1>
+  <div class="text-center text-sm text-gray-300 mb-4">בחר ערוצים:</div>
+
+  <div class="flex flex-wrap justify-center gap-3 mb-8">
+    <button class="channel-button bg-gray-600 px-6 py-2 rounded-lg font-semibold" data-channel="kan11">כאן 11</button>
+    <button class="channel-button bg-gray-600 px-6 py-2 rounded-lg font-semibold" data-channel="now14">עכשיו 14</button>
+    <button class="channel-button bg-gray-600 px-6 py-2 rounded-lg font-semibold" data-channel="i24news">i24NEWS</button>
+    <button class="channel-button bg-gray-600 px-6 py-2 rounded-lg font-semibold" data-channel="news13">חדשות 13</button>
+    <button class="channel-button bg-gray-600 px-6 py-2 rounded-lg font-semibold" data-channel="news12">חדשות 12</button>
+  </div>
+
+  <div id="video-grid" class="grid gap-4 max-w-7xl mx-auto"></div>
+  <div id="no-channel-message" class="no-channel-message hidden">יש לבחור ערוץ מהכפתורים מעלה</div>
+
+  <script>
+    const channels = {
+      kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
+      now14: { type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==' },
+      i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
+      news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
+      news12: { type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD' }
+    };
+
+    const grid = document.getElementById('video-grid');
+    const buttons = document.querySelectorAll('.channel-button');
+    const noMessage = document.getElementById('no-channel-message');
+
+    let active = JSON.parse(localStorage.getItem('activeChannels') || '[]');
+    let activeAudioKey = null;
+
+    function saveState() {
+      localStorage.setItem('activeChannels', JSON.stringify(active));
+    }
+
+    function setGridClass() {
+      const count = active.length;
+      let cls = 'grid ';
+      if (count === 1) cls += 'grid-cols-1';
+      else if (count === 2) cls += 'md:grid-cols-2';
+      else if (count === 3) cls += 'md:grid-cols-3';
+      else if (count === 4) cls += 'md:grid-cols-2 md:grid-rows-2';
+      else cls += 'md:grid-cols-3 md:grid-rows-2';
+      grid.className = cls + ' gap-4 max-w-7xl mx-auto';
+    }
+
+    function renderGrid() {
+      setGridClass();
+      grid.innerHTML = '';
+      if (active.length === 0) {
+        noMessage.classList.remove('hidden');
+        return;
+      }
+      noMessage.classList.add('hidden');
+
+      active.forEach(key => {
+        const ch = channels[key];
+        const wrapper = document.createElement('div');
+        wrapper.className = 'video-container fade';
+
+        if (ch.type === 'hls') {
+          const video = document.createElement('video');
+          video.className = 'w-full h-full rounded';
+          video.autoplay = true;
+          video.controls = true;
+          video.muted = key !== activeAudioKey;
+          wrapper.appendChild(video);
+
+          if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(ch.url);
+            hls.attachMedia(video);
+          } else {
+            video.src = ch.url;
+          }
+        } else {
+          const isMuted = key !== activeAudioKey;
+          const src = ch.url + (ch.url.includes('?') ? '&' : '?') + `autoplay=1&muted=${isMuted ? 1 : 0}&mute=${isMuted ? 1 : 0}`;
+          const iframe = document.createElement('iframe');
+          iframe.src = src;
+          iframe.allow = 'autoplay; fullscreen';
+          iframe.className = 'w-full h-full rounded';
+          iframe.frameBorder = 0;
+          wrapper.appendChild(iframe);
+        }
+
+        wrapper.addEventListener('click', () => {
+          activeAudioKey = (activeAudioKey === key) ? null : key;
+          renderGrid();
+        });
+
+        grid.appendChild(wrapper);
+
+        requestAnimationFrame(() => wrapper.classList.replace('fade', 'fade-in'));
+      });
+    }
+
+    // Event Listeners
+    buttons.forEach(btn => {
+      const key = btn.dataset.channel;
+      if (active.includes(key)) btn.classList.add('active');
+
+      btn.addEventListener('click', () => {
+        if (active.includes(key)) {
+          active = active.filter(x => x !== key);
+          btn.classList.remove('active');
+        } else {
+          active = [key, ...active.filter(x => x !== key)];
+          btn.classList.add('active');
+        }
+        saveState();
+        renderGrid();
+      });
+    });
+
+    // Initial render
+    renderGrid();
+  </script>
+</body>
+</html>
