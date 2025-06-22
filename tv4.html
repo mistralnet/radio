@@ -16,28 +16,33 @@
   <style>
     body { background: #1F2937; color: white; font-family: sans-serif; margin: 0; }
     .video-container { position: relative; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; }
-    .sound-toggle, .fullscreen-toggle {
+    .controls-container {
       position: absolute;
-      background: rgba(0,0,0,0.6); 
-      padding: 8px 12px;
-      border-radius: 6px; 
-      cursor: pointer;
-      font-size: 0.85rem; 
-      display: none;
       left: 12px;
-      transform: translateX(0);
-    }
-    .sound-toggle { 
       top: 50%;
       transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
     }
-    .fullscreen-toggle { 
-      bottom: 12px;
+    .sound-toggle, .fullscreen-toggle {
+      background: rgba(0,0,0,0.6);
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: none;
+      min-width: 80px;
+      text-align: center;
+      transition: all 0.2s ease;
     }
-    .video-container:hover .sound-toggle,
-    .video-container:hover .fullscreen-toggle { display: inline-block; }
+    .video-container:hover .controls-container button {
+      display: inline-block;
+    }
     .sound-toggle.on { background: #10B981; }
     .sound-toggle.off { background: #EF4444; }
+    .fullscreen-toggle { background: #4B5563; }
     .fullscreen-toggle.active { background: #4F46E5; }
     .channel-button { padding: 10px 20px; border-radius: 8px; background: #4B5563; transition: 0.2s; font-weight: bold; }
     .channel-button:hover { background: #6B7280; }
@@ -113,25 +118,26 @@ const grid = document.getElementById('video-grid');
 const message = document.getElementById('no-channel-message');
 
 function buildUrl(base, muted, muteParam = 'muted') {
+  // טיפול מיוחד לערוץ 14 - הוספת פרמטר השתקה ל-URL
+  if (base.includes('univtec.com')) {
+    const url = new URL(base);
+    url.searchParams.set(muteParam, muted ? '1' : '0');
+    url.searchParams.set('autoplay', '1');
+    return url.toString();
+  }
   const sep = base.includes('?') ? '&' : '?';
   return `${base}${sep}autoplay=1&${muteParam}=${muted ? 1 : 0}`;
 }
 
 function toggleFullscreen(key) {
   if (fullscreenKey === key) {
-    // יציאה ממצב מסך מלא
     fullscreenKey = null;
     document.body.classList.remove('fullscreen-mode');
     document.exitFullscreen?.();
   } else {
-    // כניסה למצב מסך מלא
     fullscreenKey = key;
-    activeAudioKey = key; // הפעלת סאונד רק בערוץ הנוכחי
-    
-    // הוספת מחלקה לגוף כדי לשלוט בתצוגה
+    activeAudioKey = key;
     document.body.classList.add('fullscreen-mode');
-    
-    // ניסיון להפעלת מסך מלא בדפדפן
     document.documentElement.requestFullscreen?.().catch(err => {
       console.log('Fullscreen error:', err);
     });
@@ -154,7 +160,9 @@ function render() {
     if (ch.type === 'hls') {
       el = document.createElement('video');
       el.className = 'w-full h-full';
-      el.autoplay = true; el.controls = true; el.muted = !hasAudio;
+      el.autoplay = true; 
+      el.controls = true; 
+      el.muted = !hasAudio;
       if (Hls.isSupported()) {
         const hls = new Hls();
         hls.loadSource(ch.url);
@@ -163,7 +171,6 @@ function render() {
         el.src = ch.url;
       }
     } else {
-      // עבור iframe - נבנה URL עם פרמטר השתקה מתאים
       const muteParam = ch.muteParam || 'muted';
       el = document.createElement('iframe');
       el.src = buildUrl(ch.url, !hasAudio, muteParam);
@@ -171,6 +178,10 @@ function render() {
       el.allow = 'autoplay; fullscreen';
       el.id = `iframe-${key}`;
     }
+
+    // יצירת כפתורים בתוך קונטיינר משותף
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'controls-container';
 
     const soundBtn = document.createElement('button');
     soundBtn.className = `sound-toggle ${hasAudio ? 'on' : 'off'}`;
@@ -189,15 +200,15 @@ function render() {
       toggleFullscreen(key);
     };
 
-    box.append(el, soundBtn, fullscreenBtn);
+    controlsContainer.append(soundBtn, fullscreenBtn);
+    box.append(el, controlsContainer);
     grid.appendChild(box);
   });
 }
 
-// מאזין לשינויי מצב מסך מלא
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement && fullscreenKey) {
-    toggleFullscreen(null); // יציאה ממצב מסך מלא אם המשתמש יצא ידנית
+    toggleFullscreen(null);
   }
 });
 
@@ -207,9 +218,7 @@ document.querySelectorAll('.channel-button').forEach(btn => {
     if (active.includes(key)) {
       active = active.filter(k => k !== key);
       if (activeAudioKey === key) activeAudioKey = null;
-      if (fullscreenKey === key) {
-        toggleFullscreen(null); // יציאה ממצב מסך מלא אם סוגרים את הערוץ
-      }
+      if (fullscreenKey === key) toggleFullscreen(null);
       btn.classList.remove('active');
     } else {
       active.unshift(key);
@@ -232,7 +241,7 @@ render();
     <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
     <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
   </div>
-  <div class="version-info">גרסה 6 TV4 - עם תיקון לכפתור סאונד בערוץ 14 ומיקום משופר לכפתורים</div>
+  <div class="version-info">גרסה 6.1 TV4 - עם עיצוב כפתורים סימטרי ותיקון סאונד מלא לערוץ 14</div>
 </footer>
 </body>
 </html>
