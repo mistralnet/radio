@@ -17,13 +17,23 @@
     body { background: #1F2937; color: white; font-family: sans-serif; margin: 0; }
     .video-container { position: relative; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; }
     .sound-toggle, .fullscreen-toggle {
-      position: absolute; left: 10px;
-      background: rgba(0,0,0,0.6); padding: 6px 10px;
-      border-radius: 6px; cursor: pointer;
-      font-size: 0.85rem; display: none;
+      position: absolute;
+      background: rgba(0,0,0,0.6); 
+      padding: 8px 12px;
+      border-radius: 6px; 
+      cursor: pointer;
+      font-size: 0.85rem; 
+      display: none;
+      left: 12px;
+      transform: translateX(0);
     }
-    .sound-toggle { top: 50%; transform: translateY(-50%); }
-    .fullscreen-toggle { bottom: 10px; }
+    .sound-toggle { 
+      top: 50%;
+      transform: translateY(-50%);
+    }
+    .fullscreen-toggle { 
+      bottom: 12px;
+    }
     .video-container:hover .sound-toggle,
     .video-container:hover .fullscreen-toggle { display: inline-block; }
     .sound-toggle.on { background: #10B981; }
@@ -82,10 +92,18 @@
 <script>
 const channels = {
   kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-  now14: { type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==' },
+  now14: { 
+    type: 'iframe', 
+    url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==',
+    muteParam: 'muted'
+  },
   i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
   news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
-  news12: { type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD' }
+  news12: { 
+    type: 'iframe', 
+    url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD',
+    muteParam: 'muted'
+  }
 };
 
 let active = [];
@@ -94,9 +112,9 @@ let fullscreenKey = null;
 const grid = document.getElementById('video-grid');
 const message = document.getElementById('no-channel-message');
 
-function buildUrl(base, muted) {
+function buildUrl(base, muted, muteParam = 'muted') {
   const sep = base.includes('?') ? '&' : '?';
-  return `${base}${sep}autoplay=1&muted=${muted ? 1 : 0}`;
+  return `${base}${sep}autoplay=1&${muteParam}=${muted ? 1 : 0}`;
 }
 
 function toggleFullscreen(key) {
@@ -145,8 +163,10 @@ function render() {
         el.src = ch.url;
       }
     } else {
+      // עבור iframe - נבנה URL עם פרמטר השתקה מתאים
+      const muteParam = ch.muteParam || 'muted';
       el = document.createElement('iframe');
-      el.src = buildUrl(ch.url, !hasAudio);
+      el.src = buildUrl(ch.url, !hasAudio, muteParam);
       el.className = 'w-full h-full';
       el.allow = 'autoplay; fullscreen';
       el.id = `iframe-${key}`;
@@ -158,18 +178,6 @@ function render() {
     soundBtn.onclick = e => {
       e.stopPropagation();
       activeAudioKey = hasAudio ? null : key;
-      
-      // אם זה ערוץ 14, נשלח הודעה ל-iframe כדי לעדכן את הסאונד
-      if (key === 'now14') {
-        const iframe = document.getElementById(`iframe-${key}`);
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage({
-            type: 'setMuted',
-            muted: !hasAudio
-          }, '*');
-        }
-      }
-      
       render();
     };
 
@@ -185,11 +193,6 @@ function render() {
     grid.appendChild(box);
   });
 }
-
-// מאזין להודעות מה-iframe של ערוץ 14
-window.addEventListener('message', function(event) {
-  console.log('Message from iframe:', event.data);
-});
 
 // מאזין לשינויי מצב מסך מלא
 document.addEventListener('fullscreenchange', () => {
@@ -229,7 +232,7 @@ render();
     <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
     <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
   </div>
-  <div class="version-info">גרסה 5.9 TV4 - עם ניהול סאונד אוטומטי במסך מלא</div>
+  <div class="version-info">גרסה 6 TV4 - עם תיקון לכפתור סאונד בערוץ 14 ומיקום משופר לכפתורים</div>
 </footer>
 </body>
 </html>
