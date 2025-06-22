@@ -23,6 +23,23 @@
     .channel-button { padding: 10px 20px; border-radius: 8px; background: #4B5563; transition: 0.2s; font-weight: bold; }
     .channel-button:hover { background: #6B7280; }
     .channel-button.active { background: #1F6FEB; transform: translateY(-2px); }
+    @media (min-width: 768px) {
+      #video-grid.five-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-rows: auto;
+      }
+      #video-grid.five-grid .video-container:nth-child(n+4) {
+        grid-column: span 3;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+      }
+      #video-grid.five-grid .video-container:nth-child(4),
+      #video-grid.five-grid .video-container:nth-child(5) {
+        width: calc(50% - 0.5rem);
+      }
+    }
   </style>
 </head>
 <body class="p-4">
@@ -61,7 +78,9 @@ function buildUrl(base, muted) {
 
 function render() {
   grid.innerHTML = '';
+  grid.className = active.length === 5 ? 'five-grid gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
   message.classList.toggle('hidden', active.length > 0);
+
   active.forEach(key => {
     const ch = channels[key];
     const box = document.createElement('div');
@@ -118,5 +137,18 @@ document.querySelectorAll('.channel-button').forEach(btn => {
 
 render();
 </script>
+
+<footer class="mt-10 text-center text-sm text-gray-400">
+  <div class="mb-2">גם תחנות רדיו להאזנה:</div>
+  <a href="https://mistralnet.github.io/radio" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded mb-4">🎧 תחנות רדיו</a>
+  <div class="flex justify-center gap-4 flex-wrap mb-4">
+    <a href="https://mistralnet.github.io/radio/" class="text-blue-400 hover:text-blue-300">Radio</a>
+    <a href="https://mistralnet.github.io/radio/tv.html" class="text-blue-400 hover:text-blue-300">TV</a>
+    <a href="https://mistralnet.github.io/radio/tv2.html" class="text-blue-400 hover:text-blue-300">TV2</a>
+    <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
+    <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
+  </div>
+  <div class="version-info">גרסה 5.3 - עם שיפור פריסת 5 ערוצים</div>
+</footer>
 </body>
 </html>
