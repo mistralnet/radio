@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+   
+ 
+    <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -18,27 +20,28 @@
     .video-container { position: relative; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; }
     .controls-container {
       position: absolute;
-      left: 12px;
       top: 50%;
+      left: 12px;
       transform: translateY(-50%);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       align-items: flex-start;
+      z-index: 10;
     }
     .sound-toggle, .fullscreen-toggle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       background: rgba(0,0,0,0.6);
-      padding: 8px 12px;
-      border-radius: 6px;
+      padding: 8px 16px;
+      border-radius: 10px;
       cursor: pointer;
-      font-size: 0.85rem;
-      display: none;
-      min-width: 80px;
+      font-size: 0.9rem;
+      min-width: 90px;
       text-align: center;
-      transition: all 0.2s ease;
-    }
-    .video-container:hover .controls-container button {
-      display: inline-block;
+      transition: 0.2s ease;
+      color: white;
     }
     .sound-toggle.on { background: #10B981; }
     .sound-toggle.off { background: #EF4444; }
@@ -118,15 +121,10 @@ const grid = document.getElementById('video-grid');
 const message = document.getElementById('no-channel-message');
 
 function buildUrl(base, muted, muteParam = 'muted') {
-  // טיפול מיוחד לערוץ 14 - הוספת פרמטר השתקה ל-URL
-  if (base.includes('univtec.com')) {
-    const url = new URL(base);
-    url.searchParams.set(muteParam, muted ? '1' : '0');
-    url.searchParams.set('autoplay', '1');
-    return url.toString();
-  }
-  const sep = base.includes('?') ? '&' : '?';
-  return `${base}${sep}autoplay=1&${muteParam}=${muted ? 1 : 0}`;
+  const url = new URL(base);
+  url.searchParams.set(muteParam, muted ? '1' : '0');
+  url.searchParams.set('autoplay', '1');
+  return url.toString();
 }
 
 function toggleFullscreen(key) {
@@ -154,7 +152,7 @@ function render() {
     const ch = channels[key];
     const box = document.createElement('div');
     box.className = `video-container ${fullscreenKey === key ? 'active-fullscreen' : ''}`;
-    
+
     let el;
     const hasAudio = key === activeAudioKey;
     if (ch.type === 'hls') {
@@ -176,10 +174,8 @@ function render() {
       el.src = buildUrl(ch.url, !hasAudio, muteParam);
       el.className = 'w-full h-full';
       el.allow = 'autoplay; fullscreen';
-      el.id = `iframe-${key}`;
     }
 
-    // יצירת כפתורים בתוך קונטיינר משותף
     const controlsContainer = document.createElement('div');
     controlsContainer.className = 'controls-container';
 
@@ -212,6 +208,60 @@ document.addEventListener('fullscreenchange', () => {
   }
 });
 
+document.addEventListener('keydown', (e) => {
+  if (!fullscreenKey) return;
+  const idx = active.indexOf(fullscreenKey);
+  if (e.key === 'ArrowRight' && idx < active.length - 1) {
+    fullscreenKey = active[idx + 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+  if (e.key === 'ArrowLeft' && idx > 0) {
+    fullscreenKey = active[idx - 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
+});
+document.addEventListener('touchend', e => {
+  if (!fullscreenKey || e.changedTouches.length !== 1) return;
+  const diffX = e.changedTouches[0].clientX - touchStartX;
+  const idx = active.indexOf(fullscreenKey);
+  if (diffX < -50 && idx < active.length - 1) {
+    fullscreenKey = active[idx + 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+  if (diffX > 50 && idx > 0) {
+    fullscreenKey = active[idx - 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+});
+
+let mouseDownX = null;
+document.addEventListener('mousedown', e => { if (fullscreenKey) mouseDownX = e.clientX; });
+document.addEventListener('mouseup', e => {
+  if (!fullscreenKey || mouseDownX === null) return;
+  const diffX = e.clientX - mouseDownX;
+  const idx = active.indexOf(fullscreenKey);
+  if (diffX < -100 && idx < active.length - 1) {
+    fullscreenKey = active[idx + 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+  if (diffX > 100 && idx > 0) {
+    fullscreenKey = active[idx - 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+  mouseDownX = null;
+});
+
 document.querySelectorAll('.channel-button').forEach(btn => {
   const key = btn.dataset.channel;
   btn.onclick = () => {
@@ -232,6 +282,8 @@ render();
 </script>
 
 <footer class="mt-10 text-center text-sm text-gray-400">
+        <button id="fullscreen-toggle" class="footer-link-button mt-2">צפייה במסך גדול</button>
+
   <div class="mb-2">גם תחנות רדיו להאזנה:</div>
   <a href="https://mistralnet.github.io/radio" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded mb-4">🎧 תחנות רדיו</a>
   <div class="flex justify-center gap-4 flex-wrap mb-4">
@@ -241,7 +293,7 @@ render();
     <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
     <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
   </div>
-  <div class="version-info">גרסה 6.1 TV4 - עם עיצוב כפתורים סימטרי ותיקון סאונד מלא לערוץ 14</div>
+  <div class="version-info">גרסה 6.3 - עם ניווט בין ערוצים במסך מלא ועיצוב כפתורים שמאלי</div>
 </footer>
 </body>
 </html>
