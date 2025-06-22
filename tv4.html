@@ -49,6 +49,19 @@
         width: calc(50% - 0.5rem);
       }
     }
+    .fullscreen-mode .video-container:not(.active-fullscreen) {
+      display: none !important;
+    }
+    .fullscreen-mode .video-container.active-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 9999;
+      background: #000;
+      border-radius: 0;
+    }
   </style>
 </head>
 <body class="p-4">
@@ -86,6 +99,28 @@ function buildUrl(base, muted) {
   return `${base}${sep}autoplay=1&muted=${muted ? 1 : 0}`;
 }
 
+function toggleFullscreen(key) {
+  if (fullscreenKey === key) {
+    // יציאה ממצב מסך מלא
+    fullscreenKey = null;
+    document.body.classList.remove('fullscreen-mode');
+    document.exitFullscreen?.();
+  } else {
+    // כניסה למצב מסך מלא
+    fullscreenKey = key;
+    activeAudioKey = key; // הפעלת סאונד רק בערוץ הנוכחי
+    
+    // הוספת מחלקה לגוף כדי לשלוט בתצוגה
+    document.body.classList.add('fullscreen-mode');
+    
+    // ניסיון להפעלת מסך מלא בדפדפן
+    document.documentElement.requestFullscreen?.().catch(err => {
+      console.log('Fullscreen error:', err);
+    });
+  }
+  render();
+}
+
 function render() {
   grid.innerHTML = '';
   grid.className = active.length === 5 ? 'five-grid gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
@@ -94,8 +129,8 @@ function render() {
   active.forEach(key => {
     const ch = channels[key];
     const box = document.createElement('div');
-    box.className = 'video-container';
-
+    box.className = `video-container ${fullscreenKey === key ? 'active-fullscreen' : ''}`;
+    
     let el;
     const hasAudio = key === activeAudioKey;
     if (ch.type === 'hls') {
@@ -114,6 +149,7 @@ function render() {
       el.src = buildUrl(ch.url, !hasAudio);
       el.className = 'w-full h-full';
       el.allow = 'autoplay; fullscreen';
+      el.id = `iframe-${key}`;
     }
 
     const soundBtn = document.createElement('button');
@@ -122,6 +158,18 @@ function render() {
     soundBtn.onclick = e => {
       e.stopPropagation();
       activeAudioKey = hasAudio ? null : key;
+      
+      // אם זה ערוץ 14, נשלח הודעה ל-iframe כדי לעדכן את הסאונד
+      if (key === 'now14') {
+        const iframe = document.getElementById(`iframe-${key}`);
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage({
+            type: 'setMuted',
+            muted: !hasAudio
+          }, '*');
+        }
+      }
+      
       render();
     };
 
@@ -130,14 +178,7 @@ function render() {
     fullscreenBtn.textContent = fullscreenKey === key ? '↩️ חזרה' : '⛶ מסך מלא';
     fullscreenBtn.onclick = e => {
       e.stopPropagation();
-      fullscreenKey = fullscreenKey === key ? null : key;
-      activeAudioKey = fullscreenKey;
-      if (fullscreenKey) {
-        document.documentElement.requestFullscreen?.();
-      } else {
-        document.exitFullscreen?.();
-      }
-      render();
+      toggleFullscreen(key);
     };
 
     box.append(el, soundBtn, fullscreenBtn);
@@ -145,13 +186,27 @@ function render() {
   });
 }
 
+// מאזין להודעות מה-iframe של ערוץ 14
+window.addEventListener('message', function(event) {
+  console.log('Message from iframe:', event.data);
+});
+
+// מאזין לשינויי מצב מסך מלא
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && fullscreenKey) {
+    toggleFullscreen(null); // יציאה ממצב מסך מלא אם המשתמש יצא ידנית
+  }
+});
+
 document.querySelectorAll('.channel-button').forEach(btn => {
   const key = btn.dataset.channel;
   btn.onclick = () => {
     if (active.includes(key)) {
       active = active.filter(k => k !== key);
       if (activeAudioKey === key) activeAudioKey = null;
-      if (fullscreenKey === key) fullscreenKey = null;
+      if (fullscreenKey === key) {
+        toggleFullscreen(null); // יציאה ממצב מסך מלא אם סוגרים את הערוץ
+      }
       btn.classList.remove('active');
     } else {
       active.unshift(key);
@@ -174,7 +229,7 @@ render();
     <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
     <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
   </div>
-  <div class="version-info">גרסה 5.6 TV4 - עם כפתור מסך מלא ותמיכה ב־iframe של ערוץ 14</div>
+  <div class="version-info">גרסה 5.9 TV4 - עם ניהול סאונד אוטומטי במסך מלא</div>
 </footer>
 </body>
 </html>
