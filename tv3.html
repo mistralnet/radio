@@ -178,9 +178,9 @@
         }
 
         function buildIframeUrl(baseUrl, key, shouldHaveAudio) {
-            // For iframe channels, ensure autoplay=1 and set muted based on audio state
+            // For iframe channels, ensure autoplay=1 and always start muted
             const separator = baseUrl.includes('?') ? '&' : '?';
-            return `${baseUrl}${separator}autoplay=1&muted=${shouldHaveAudio ? 0 : 1}`;
+            return `${baseUrl}${separator}autoplay=1&muted=1`;
         }
 
         function updateMediaAudio(key, shouldHaveAudio) {
@@ -303,15 +303,15 @@
             </a>
         </div>    <div class="menu-container">
         <div class="menu">
-            <a href="https://mistralnet.github.io/radio/" target="_blank">Radio</a>
-                        <a href="https://mistralnet.github.io/radio/tv.html" target="_blank">TV</a>
-            <a href="https://mistralnet.github.io/radio/tv2.html" target="_blank">TV2</a>
-            <a href="https://mistralnet.github.io/radio/tv3.html" target="_blank">TV3</a>
-            <a href="https://mistralnet.github.io/radio/tv4.html" target="_blank">TV4</a>
+            <a href="https://mistralnet.github.io/radio/">Radio</a>
+                        <a href="https://mistralnet.github.io/radio/tv.html">TV</a>
+            <a href="https://mistralnet.github.io/radio/tv2.html">TV2</a>
+            <a href="https://mistralnet.github.io/radio/tv3.html">TV3</a>
+            <a href="https://mistralnet.github.io/radio/tv4.html">TV4</a>
         </div>
     </div>
         <div class="version-info">
-            גרסה 4 - תיקון אודיו ואוטו-פליי
+גרסה 4.2  TV3    
         </div>
     </div>
 </body>
