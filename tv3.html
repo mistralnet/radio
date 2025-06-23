@@ -15,7 +15,12 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { background: #1F2937; color: white; font-family: sans-serif; margin: 0; }
-    .video-container { position: relative; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; }
+    .video-container {
+      position: relative;
+      aspect-ratio: 16/9;
+      border-radius: 8px;
+      overflow: hidden;
+    }
     .controls-container {
       position: absolute;
       top: 50%;
@@ -26,18 +31,22 @@
       gap: 10px;
       align-items: flex-start;
       z-index: 10;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.3s ease, visibility 0.3s ease;
+      opacity: 0; /* Hidden by default */
+      transition: opacity 0.3s ease-in-out; /* Smooth transition */
     }
+    /* Controls become visible on hover for desktop */
     .video-container:hover .controls-container {
       opacity: 1;
-      visibility: visible;
     }
-    .controls-container.show {
+    /* Controls become visible on touch for mobile */
+    .video-container.touch-active .controls-container {
       opacity: 1;
-      visibility: visible;
     }
+    /* In fullscreen mode, controls should always be visible on interaction and fade out when not active */
+    .fullscreen-mode .video-container.active-fullscreen .controls-container {
+        opacity: 1; /* Always visible when active-fullscreen */
+    }
+
     .sound-toggle, .fullscreen-toggle {
       display: flex;
       justify-content: center;
@@ -59,23 +68,15 @@
     .channel-button { padding: 10px 20px; border-radius: 8px; background: #4B5563; transition: 0.2s; font-weight: bold; }
     .channel-button:hover { background: #6B7280; }
     .channel-button.active { background: #1F6FEB; transform: translateY(-2px); }
-    @media (min-width: 768px) {
-      #video-grid.five-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        grid-template-rows: repeat(2, auto);
-        gap: 1rem;
-      }
-      #video-grid.five-grid .video-container:nth-child(1) { grid-column: 1; grid-row: 1; }
-      #video-grid.five-grid .video-container:nth-child(2) { grid-column: 2; grid-row: 1; }
-      #video-grid.five-grid .video-container:nth-child(3) { grid-column: 3; grid-row: 1; }
-      #video-grid.five-grid .video-container:nth-child(4) { grid-column: 1; grid-row: 2; }
-      #video-grid.five-grid .video-container:nth-child(5) { grid-column: 2; grid-row: 2; }
-      #video-grid.five-grid .video-container {
-        width: 100%;
-        height: auto;
-      }
+
+    /* General grid for all active channel counts, making videos equal size and symmetrical */
+    #video-grid {
+      display: grid;
+      /* Adjust minmax value based on desired minimum video size and responsiveness */
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
     }
+
     .fullscreen-mode .video-container:not(.active-fullscreen) {
       display: none !important;
     }
@@ -103,21 +104,21 @@
   <button class="channel-button" data-channel="news12">חדשות 12</button>
 </div>
 
-<div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+<div id="video-grid" class="gap-4"></div>
 <p id="no-channel-message" class="text-center text-gray-300 mt-6 hidden">יש לבחור ערוץ מהכפתורים מעלה</p>
 
 <script>
 const channels = {
   kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-  now14: { 
-    type: 'iframe', 
-    url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==',
+  now14: {
+    type: 'iframe',
+    url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmcom/MifQ==',
     muteParam: 'muted'
   },
   i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
   news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
-  news12: { 
-    type: 'iframe', 
+  news12: {
+    type: 'iframe',
     url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD',
     muteParam: 'muted'
   }
@@ -143,7 +144,7 @@ function toggleFullscreen(key) {
     document.exitFullscreen?.();
   } else {
     fullscreenKey = key;
-    activeAudioKey = key;
+    activeAudioKey = key; // Mute others when one is fullscreen
     document.body.classList.add('fullscreen-mode');
     document.documentElement.requestFullscreen?.().catch(err => {
       console.log('Fullscreen error:', err);
@@ -154,7 +155,7 @@ function toggleFullscreen(key) {
 
 function render() {
   grid.innerHTML = '';
-  grid.className = active.length === 5 ? 'five-grid gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+  // The 'five-grid' class and its specific CSS are removed to rely on the general flexible grid
   message.classList.toggle('hidden', active.length > 0);
 
   active.forEach(key => {
@@ -167,8 +168,8 @@ function render() {
     if (ch.type === 'hls') {
       el = document.createElement('video');
       el.className = 'w-full h-full';
-      el.autoplay = true; 
-      el.controls = true; 
+      el.autoplay = true;
+      el.controls = true;
       el.muted = !hasAudio;
       if (Hls.isSupported()) {
         const hls = new Hls();
@@ -183,14 +184,15 @@ function render() {
       el.src = buildUrl(ch.url, !hasAudio, muteParam);
       el.className = 'w-full h-full';
       el.allow = 'autoplay; fullscreen';
+      el.setAttribute('frameborder', '0'); // Added for iframes to prevent default border
     }
 
     const controlsContainer = document.createElement('div');
-    controlsContainer.className = 'controls-container show';
+    controlsContainer.className = 'controls-container';
 
     const soundBtn = document.createElement('button');
     soundBtn.className = `sound-toggle ${hasAudio ? 'on' : 'off'}`;
-    soundBtn.textContent = hasAudio ? '🔊 השתק' : '🔇';
+    soundBtn.textContent = hasAudio ? '🔊 השתק' : '🔇 שמע';
     soundBtn.onclick = e => {
       e.stopPropagation();
       activeAudioKey = hasAudio ? null : key;
@@ -209,34 +211,68 @@ function render() {
     box.append(el, controlsContainer);
     grid.appendChild(box);
 
-    // Auto-hide controls after 1 second
-    setTimeout(() => {
-      controlsContainer.classList.remove('show');
-    }, 1000);
+    // Logic for fading in/out controls
+    let controlsFadeTimeout; // Specific timeout for this video box
+
+    box.addEventListener('mouseenter', () => {
+      clearTimeout(controlsFadeTimeout); // Clear any pending fade-out
+      controlsContainer.style.opacity = '1'; // Show controls
+    });
+
+    box.addEventListener('mouseleave', () => {
+      // Set a timeout to hide controls after 1 second
+      controlsFadeTimeout = setTimeout(() => {
+        // Only hide if not in fullscreen mode for this specific video
+        if (fullscreenKey !== key) {
+          controlsContainer.style.opacity = '0';
+        }
+      }, 1000); // 1 second delay
+    });
+
+    // Touch events for mobile devices
+    box.addEventListener('touchstart', () => {
+      clearTimeout(controlsFadeTimeout); // Clear any pending fade-out
+      controlsContainer.style.opacity = '1'; // Show controls
+      box.classList.add('touch-active'); // Add class to indicate touch activity
+    });
+
+    box.addEventListener('touchend', () => {
+      // Set a timeout to hide controls after 1 second
+      controlsFadeTimeout = setTimeout(() => {
+        // Only hide if not in fullscreen mode for this specific video
+        if (fullscreenKey !== key) {
+          controlsContainer.style.opacity = '0';
+        }
+        box.classList.remove('touch-active'); // Remove touch active class
+      }, 1000); // 1 second delay
+    });
   });
 }
 
 document.addEventListener('fullscreenchange', () => {
+  // If fullscreen is exited by user (e.g., Esc key), reset fullscreenKey
   if (!document.fullscreenElement && fullscreenKey) {
     toggleFullscreen(null);
   }
 });
 
+// Keyboard navigation for fullscreen videos
 document.addEventListener('keydown', (e) => {
-  if (!fullscreenKey) return;
+  if (!fullscreenKey) return; // Only apply if a video is in fullscreen
   const idx = active.indexOf(fullscreenKey);
   if (e.key === 'ArrowRight' && idx < active.length - 1) {
     fullscreenKey = active[idx + 1];
-    activeAudioKey = fullscreenKey;
+    activeAudioKey = fullscreenKey; // Ensure audio follows fullscreen video
     render();
   }
   if (e.key === 'ArrowLeft' && idx > 0) {
     fullscreenKey = active[idx - 1];
-    activeAudioKey = fullscreenKey;
+    activeAudioKey = fullscreenKey; // Ensure audio follows fullscreen video
     render();
   }
 });
 
+// Touch swipe navigation for fullscreen videos
 let touchStartX = 0;
 document.addEventListener('touchstart', e => {
   if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
@@ -245,58 +281,64 @@ document.addEventListener('touchend', e => {
   if (!fullscreenKey || e.changedTouches.length !== 1) return;
   const diffX = e.changedTouches[0].clientX - touchStartX;
   const idx = active.indexOf(fullscreenKey);
-  if (diffX < -50 && idx < active.length - 1) {
+  if (diffX < -50 && idx < active.length - 1) { // Swipe left
     fullscreenKey = active[idx + 1];
     activeAudioKey = fullscreenKey;
     render();
   }
-  if (diffX > 50 && idx > 0) {
+  if (diffX > 50 && idx > 0) { // Swipe right
     fullscreenKey = active[idx - 1];
     activeAudioKey = fullscreenKey;
     render();
   }
 });
 
+// Mouse drag navigation for fullscreen videos
 let mouseDownX = null;
-document.addEventListener('mousedown', e => { if (fullscreenKey) mouseDownX = e.clientX; });
+document.addEventListener('mousedown', e => {
+  if (fullscreenKey) mouseDownX = e.clientX;
+});
 document.addEventListener('mouseup', e => {
   if (!fullscreenKey || mouseDownX === null) return;
   const diffX = e.clientX - mouseDownX;
   const idx = active.indexOf(fullscreenKey);
-  if (diffX < -100 && idx < active.length - 1) {
+  if (diffX < -100 && idx < active.length - 1) { // Drag left
     fullscreenKey = active[idx + 1];
     activeAudioKey = fullscreenKey;
     render();
   }
-  if (diffX > 100 && idx > 0) {
+  if (diffX > 100 && idx > 0) { // Drag right
     fullscreenKey = active[idx - 1];
     activeAudioKey = fullscreenKey;
     render();
   }
-  mouseDownX = null;
+  mouseDownX = null; // Reset for next drag
 });
 
+// Event listeners for channel buttons
 document.querySelectorAll('.channel-button').forEach(btn => {
   const key = btn.dataset.channel;
   btn.onclick = () => {
     if (active.includes(key)) {
       active = active.filter(k => k !== key);
-      if (activeAudioKey === key) activeAudioKey = null;
-      if (fullscreenKey === key) toggleFullscreen(null);
+      if (activeAudioKey === key) activeAudioKey = null; // Mute if removed
+      if (fullscreenKey === key) toggleFullscreen(null); // Exit fullscreen if removed
       btn.classList.remove('active');
     } else {
-      active.unshift(key);
+      active.unshift(key); // Add to beginning for newer channels to appear first
       btn.classList.add('active');
     }
-    render();
+    render(); // Re-render the grid
   };
 });
 
-render();
+render(); // Initial render on page load
 </script>
 
 <footer class="mt-10 text-center text-sm text-gray-400">
+  <!-- Original footer content preserved -->
   <button id="fullscreen-toggle" class="footer-link-button mt-2">צפייה במסך גדול</button>
+
   <div class="mb-2">גם תחנות רדיו להאזנה:</div>
   <a href="https://mistralnet.github.io/radio" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded mb-4">🎧 תחנות רדיו</a>
   <div class="flex justify-center gap-4 flex-wrap mb-4">
@@ -306,7 +348,7 @@ render();
     <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
     <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
   </div>
-  <div class="version-info">גרסה 6.4 - עם ניווט בין ערוצים במסך מלא ועיצוב כפתורים שמאלי</div>
+  <div class="version-info">גרסה 6.44 - עם ניווט בין ערוצים במסך מלא ועיצוב כפתורים שמאלי</div>
 </footer>
 </body>
 </html>
