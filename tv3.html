@@ -26,12 +26,17 @@
       gap: 10px;
       align-items: flex-start;
       z-index: 10;
-      opacity: 1;
-      transition: opacity 0.3s ease;
-    }
-    .video-container:not(:hover) .controls-container {
       opacity: 0;
-      transition-delay: 1s;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .video-container:hover .controls-container {
+      opacity: 1;
+      visibility: visible;
+    }
+    .controls-container.show {
+      opacity: 1;
+      visibility: visible;
     }
     .sound-toggle, .fullscreen-toggle {
       display: flex;
@@ -57,14 +62,18 @@
     @media (min-width: 768px) {
       #video-grid.five-grid {
         display: grid;
-        grid-template-columns: repeat(10, 1fr);
-        gap: 0.5rem;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, auto);
+        gap: 1rem;
       }
+      #video-grid.five-grid .video-container:nth-child(1) { grid-column: 1; grid-row: 1; }
+      #video-grid.five-grid .video-container:nth-child(2) { grid-column: 2; grid-row: 1; }
+      #video-grid.five-grid .video-container:nth-child(3) { grid-column: 3; grid-row: 1; }
+      #video-grid.five-grid .video-container:nth-child(4) { grid-column: 1; grid-row: 2; }
+      #video-grid.five-grid .video-container:nth-child(5) { grid-column: 2; grid-row: 2; }
       #video-grid.five-grid .video-container {
-        grid-column: span 2;
-      }
-      #video-grid.five-grid .video-container:nth-child(n+4) {
-        grid-column: span 5;
+        width: 100%;
+        height: auto;
       }
     }
     .fullscreen-mode .video-container:not(.active-fullscreen) {
@@ -177,11 +186,11 @@ function render() {
     }
 
     const controlsContainer = document.createElement('div');
-    controlsContainer.className = 'controls-container';
+    controlsContainer.className = 'controls-container show';
 
     const soundBtn = document.createElement('button');
     soundBtn.className = `sound-toggle ${hasAudio ? 'on' : 'off'}`;
-    soundBtn.textContent = hasAudio ? '🔊 השתק' : '🔇 שמע';
+    soundBtn.textContent = hasAudio ? '🔊 השתק' : '🔇';
     soundBtn.onclick = e => {
       e.stopPropagation();
       activeAudioKey = hasAudio ? null : key;
@@ -198,20 +207,12 @@ function render() {
 
     controlsContainer.append(soundBtn, fullscreenBtn);
     box.append(el, controlsContainer);
-    
-    box.addEventListener('mouseenter', () => {
-      const controls = box.querySelector('.controls-container');
-      controls.style.opacity = '1';
-      controls.style.transitionDelay = '0s';
-    });
-    
-    box.addEventListener('mouseleave', () => {
-      const controls = box.querySelector('.controls-container');
-      controls.style.transitionDelay = '1s';
-      controls.style.opacity = '0';
-    });
-    
     grid.appendChild(box);
+
+    // Auto-hide controls after 1 second
+    setTimeout(() => {
+      controlsContainer.classList.remove('show');
+    }, 1000);
   });
 }
 
@@ -305,7 +306,7 @@ render();
     <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
     <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
   </div>
-  <div class="version-info">גרסה 6.4 - עם הסתרה אוטומטית של כפתורים וגריד סימטרי ל-5 ערוצים</div>
+  <div class="version-info">גרסה 6.4 - עם ניווט בין ערוצים במסך מלא ועיצוב כפתורים שמאלי</div>
 </footer>
 </body>
 </html>
