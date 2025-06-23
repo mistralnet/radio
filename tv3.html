@@ -1,369 +1,312 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>צפייה בערוצים</title>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-J5WT91REYB');
-    </script>
-    <script>
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
-        var f=d.getElementsByTagName(s)[0], j=d.createElement(s), dl=l!='dataLayer'?'&l='+l:'';
-        j.async=true; j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;
-        f.parentNode.insertBefore(j,f);
-        })(window,document,'script','dataLayer','GTM-P5QLH7TD');
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body {
-            direction: rtl;
-            background-color: #1F2937;
-            color: white;
-            margin: 0;
-            font-family: "Inter", sans-serif;
-        }
-        .video-container {
-            position: relative;
-            aspect-ratio: 16 / 9;
-            width: 100%;
-            border-radius: 8px;
-            overflow: hidden;
-            cursor: pointer;
-        }
-        .sound-toggle {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            background-color: rgba(0,0,0,0.6);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 6px 10px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            display: none;
-            align-items: center;
-            gap: 4px;
-        }
-        .video-container:hover .sound-toggle {
-            display: inline-flex;
-        }
-        .sound-toggle.on {
-            background-color: #10B981;
-        }
-        .sound-toggle.off {
-            background-color: #EF4444;
-        }
-        .grid-container {
-            display: grid;
-            gap: 16px;
-            margin: 0 auto;
-            max-width: 100%;
-            padding: 0 16px;
-        }
-        .channel-button {
-            padding: 12px 24px;
-            background-color: #4B5563;
-            color: white;
-            border-radius: 8px;
-            transition: background-color 0.3s, transform 0.2s;
-            flex: 1 1 120px;
-            text-align: center;
-            font-weight: 600;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .channel-button.active {
-            background-color: #1F6FEB;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
-        }
-        .channel-button:hover {
-            background-color: #6B7280;
-            transform: translateY(-2px);
-        }
-        @media (min-width: 768px) {
-            .grid-1 { grid-template-columns: 1fr; }
-            .grid-2 { grid-template-columns: repeat(2, 1fr); }
-            .grid-3 { grid-template-columns: repeat(3, 1fr); }
-            .grid-4 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, auto); }
-            .grid-5 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, auto); }
-        }
-        @media (max-width: 767px) {
-            .grid-container {
-                grid-template-columns: 1fr;
-                grid-template-rows: auto;
-            }
-        }
-        .footer-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 24px 16px;
-            margin-top: 40px;
-            background-color: #2D3748;
-            border-top: 1px solid #4A5568;
-            border-radius: 8px;
-            box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .footer-link-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .footer-link-button {
-            background-color: #6366F1;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background-color 0.3s, transform 0.2s;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .footer-link-button:hover {
-            background-color: #4F46E5;
-            transform: translateY(-1px);
-        }
-        .footer-text {
-            color: #CBD5E0;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-bottom: 10px;
-        }
-        .version-info {
-            color: #9CA3AF;
-            font-size: 0.85rem;
-        }
-        .no-channel-message {
-            text-align: center;
-            color: #CBD5E0;
-            margin-top: 20px;
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>צפייה בערוצים</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-J5WT91REYB');
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #1F2937; color: white; font-family: sans-serif; margin: 0; }
+    .video-container { position: relative; aspect-ratio: 16/9; border-radius: 8px; overflow: hidden; }
+    .controls-container {
+      position: absolute;
+      top: 50%;
+      left: 12px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      align-items: flex-start;
+      z-index: 10;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .video-container:hover .controls-container {
+      opacity: 1;
+      visibility: visible;
+    }
+    .controls-container.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .sound-toggle, .fullscreen-toggle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0,0,0,0.6);
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      min-width: 90px;
+      text-align: center;
+      transition: 0.2s ease;
+      color: white;
+    }
+    .sound-toggle.on { background: #10B981; }
+    .sound-toggle.off { background: #EF4444; }
+    .fullscreen-toggle { background: #4B5563; }
+    .fullscreen-toggle.active { background: #4F46E5; }
+    .channel-button { padding: 10px 20px; border-radius: 8px; background: #4B5563; transition: 0.2s; font-weight: bold; }
+    .channel-button:hover { background: #6B7280; }
+    .channel-button.active { background: #1F6FEB; transform: translateY(-2px); }
+    @media (min-width: 768px) {
+      #video-grid.five-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, auto);
+        gap: 1rem;
+      }
+      #video-grid.five-grid .video-container:nth-child(1) { grid-column: 1; grid-row: 1; }
+      #video-grid.five-grid .video-container:nth-child(2) { grid-column: 2; grid-row: 1; }
+      #video-grid.five-grid .video-container:nth-child(3) { grid-column: 3; grid-row: 1; }
+      #video-grid.five-grid .video-container:nth-child(4) { grid-column: 1; grid-row: 2; }
+      #video-grid.five-grid .video-container:nth-child(5) { grid-column: 2; grid-row: 2; }
+      #video-grid.five-grid .video-container {
+        width: 100%;
+        height: auto;
+      }
+    }
+    .fullscreen-mode .video-container:not(.active-fullscreen) {
+      display: none !important;
+    }
+    .fullscreen-mode .video-container.active-fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 9999;
+      background: #000;
+      border-radius: 0;
+    }
+  </style>
 </head>
 <body class="p-4">
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD" height="0" width="0" style="display:none"></iframe></noscript>
 
-<h1 class="text-2xl font-bold mb-4 text-center">צפייה בערוצים</h1>
-<div class="text-center mb-4 text-sm text-gray-300">בחר ערוצים:</div>
-
-<div class="flex justify-center gap-3 flex-wrap mb-8 max-w-screen-lg mx-auto">
-    <button class="channel-button" data-channel="kan11">כאן 11</button>
-    <button class="channel-button" data-channel="now14">עכשיו 14</button>
-    <button class="channel-button" data-channel="i24news">i24NEWS</button>
-    <button class="channel-button" data-channel="news13">חדשות 13</button>
-    <button class="channel-button" data-channel="news12">חדשות 12</button>
+<h1 class="text-2xl font-bold text-center mb-4">צפייה בערוצים</h1>
+<div class="flex justify-center gap-3 flex-wrap mb-6">
+  <button class="channel-button" data-channel="kan11">כאן 11</button>
+  <button class="channel-button" data-channel="now14">עכשיו 14</button>
+  <button class="channel-button" data-channel="i24news">i24NEWS</button>
+  <button class="channel-button" data-channel="news13">חדשות 13</button>
+  <button class="channel-button" data-channel="news12">חדשות 12</button>
 </div>
 
-<div id="video-grid" class="grid-container"></div>
-<div id="no-channel-message" class="no-channel-message" style="display: none;">יש לבחור ערוץ מהכפתורים מעלה</div>
+<div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+<p id="no-channel-message" class="text-center text-gray-300 mt-6 hidden">יש לבחור ערוץ מהכפתורים מעלה</p>
 
 <script>
 const channels = {
-    kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-    now14: { type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==' },
-    i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
-    news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
-    news12: { type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD' }
+  kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
+  now14: { 
+    type: 'iframe', 
+    url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==',
+    muteParam: 'muted'
+  },
+  i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
+  news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
+  news12: { 
+    type: 'iframe', 
+    url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD',
+    muteParam: 'muted'
+  }
 };
 
-const grid = document.getElementById('video-grid');
-const buttons = document.querySelectorAll('.channel-button');
-let active = JSON.parse(localStorage.getItem('activeChannels') || '[]');
+let active = [];
 let activeAudioKey = null;
-let mediaElements = {};
-const noChannelMessage = document.getElementById('no-channel-message');
+let fullscreenKey = null;
+const grid = document.getElementById('video-grid');
+const message = document.getElementById('no-channel-message');
 
-function saveActive() {
-    localStorage.setItem('activeChannels', JSON.stringify(active));
+function buildUrl(base, muted, muteParam = 'muted') {
+  const url = new URL(base);
+  url.searchParams.set(muteParam, muted ? '1' : '0');
+  url.searchParams.set('autoplay', '1');
+  return url.toString();
 }
 
-function buildIframeUrl(baseUrl, key, shouldHaveAudio) {
-    const separator = baseUrl.includes('?') ? '&' : '?';
-    return `${baseUrl}${separator}autoplay=1&muted=${shouldHaveAudio ? '0' : '1'}`;
-}
-
-function updateMediaAudio(key, shouldHaveAudio) {
-    const element = mediaElements[key];
-    const ch = channels[key];
-
-    if (!element) return;
-
-    if (ch.type === 'hls') {
-        element.muted = !shouldHaveAudio;
-    } else if (ch.type === 'iframe') {
-        const newUrl = buildIframeUrl(ch.url, key, shouldHaveAudio);
-        if (element.src !== newUrl) {
-            element.src = newUrl;
-        }
-    }
-
-    const toggleBtn = document.querySelector(`.sound-toggle[data-key="${key}"]`);
-    if (toggleBtn) {
-        toggleBtn.textContent = shouldHaveAudio ? '🔊 השתק' : '🔇 שמע';
-        toggleBtn.className = `sound-toggle ${shouldHaveAudio ? 'on' : 'off'}`;
-    }
-}
-
-function updateAllAudio() {
-    active.forEach(key => {
-        const shouldHaveAudio = (key === activeAudioKey);
-        updateMediaAudio(key, shouldHaveAudio);
+function toggleFullscreen(key) {
+  if (fullscreenKey === key) {
+    fullscreenKey = null;
+    document.body.classList.remove('fullscreen-mode');
+    document.exitFullscreen?.();
+  } else {
+    fullscreenKey = key;
+    activeAudioKey = key;
+    document.body.classList.add('fullscreen-mode');
+    document.documentElement.requestFullscreen?.().catch(err => {
+      console.log('Fullscreen error:', err);
     });
+  }
+  render();
 }
 
-function createSoundToggleButton(key) {
-    const btn = document.createElement('button');
-    btn.className = 'sound-toggle off';
-    btn.dataset.key = key;
-    btn.textContent = '🔇 שמע';
-    btn.onclick = (e) => {
-        e.stopPropagation();
-        activeAudioKey = activeAudioKey === key ? null : key;
-        updateAllAudio();
-    };
-    return btn;
-}
+function render() {
+  grid.innerHTML = '';
+  grid.className = active.length === 5 ? 'five-grid gap-4' : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+  message.classList.toggle('hidden', active.length > 0);
 
-function updateGrid() {
-    grid.className = `grid-container grid-${active.length || 1}`;
-    grid.innerHTML = '';
-    mediaElements = {};
+  active.forEach(key => {
+    const ch = channels[key];
+    const box = document.createElement('div');
+    box.className = `video-container ${fullscreenKey === key ? 'active-fullscreen' : ''}`;
 
-    if (active.length === 0) {
-        noChannelMessage.style.display = 'block';
-        activeAudioKey = null;
+    let el;
+    const hasAudio = key === activeAudioKey;
+    if (ch.type === 'hls') {
+      el = document.createElement('video');
+      el.className = 'w-full h-full';
+      el.autoplay = true; 
+      el.controls = true; 
+      el.muted = !hasAudio;
+      if (Hls.isSupported()) {
+        const hls = new Hls();
+        hls.loadSource(ch.url);
+        hls.attachMedia(el);
+      } else {
+        el.src = ch.url;
+      }
     } else {
-        noChannelMessage.style.display = 'none';
-
-        active.forEach(key => {
-            const ch = channels[key];
-            const wrapper = document.createElement('div');
-            wrapper.className = 'video-container';
-            wrapper.dataset.channel = key;
-
-            let mediaElement;
-            const shouldHaveAudio = (key === activeAudioKey);
-
-            if (ch.type === 'hls') {
-                mediaElement = document.createElement('video');
-                mediaElement.className = 'w-full h-full rounded-md';
-                mediaElement.autoplay = true;
-                mediaElement.controls = true;
-                mediaElement.muted = !shouldHaveAudio;
-                wrapper.appendChild(mediaElement);
-
-                if (Hls.isSupported()) {
-                    const hls = new Hls();
-                    hls.loadSource(ch.url);
-                    hls.attachMedia(mediaElement);
-                } else {
-                    mediaElement.src = ch.url;
-                }
-            } else {
-                mediaElement = document.createElement('iframe');
-                mediaElement.className = 'w-full h-full rounded-md';
-                mediaElement.src = buildIframeUrl(ch.url, key, shouldHaveAudio);
-                mediaElement.allow = 'autoplay; fullscreen';
-                mediaElement.frameBorder = '0';
-                wrapper.appendChild(mediaElement);
-            }
-
-            mediaElements[key] = mediaElement;
-            wrapper.appendChild(createSoundToggleButton(key));
-
-            wrapper.addEventListener('click', () => {
-                activeAudioKey = activeAudioKey === key ? null : key;
-                updateAllAudio();
-            });
-
-            grid.appendChild(wrapper);
-        });
-    }
-}
-
-buttons.forEach(btn => {
-    const key = btn.dataset.channel;
-    if (active.includes(key)) {
-        btn.classList.add('active');
+      const muteParam = ch.muteParam || 'muted';
+      el = document.createElement('iframe');
+      el.src = buildUrl(ch.url, !hasAudio, muteParam);
+      el.className = 'w-full h-full';
+      el.allow = 'autoplay; fullscreen';
     }
 
-    btn.onclick = () => {
-        if (active.includes(key)) {
-            active = active.filter(x => x !== key);
-            btn.classList.remove('active');
-            if (activeAudioKey === key) activeAudioKey = null;
-        } else {
-            active = [key, ...active.filter(x => x !== key)];
-            btn.classList.add('active');
-        }
-        saveActive();
-        updateGrid();
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'controls-container show';
+
+    const soundBtn = document.createElement('button');
+    soundBtn.className = `sound-toggle ${hasAudio ? 'on' : 'off'}`;
+    soundBtn.textContent = hasAudio ? '🔊 השתק' : '🔇';
+    soundBtn.onclick = e => {
+      e.stopPropagation();
+      activeAudioKey = hasAudio ? null : key;
+      render();
     };
-});
 
-updateGrid();
-</script>
+    const fullscreenBtn = document.createElement('button');
+    fullscreenBtn.className = `fullscreen-toggle ${fullscreenKey === key ? 'active' : ''}`;
+    fullscreenBtn.textContent = fullscreenKey === key ? '↩️ חזרה' : '⛶ מסך מלא';
+    fullscreenBtn.onclick = e => {
+      e.stopPropagation();
+      toggleFullscreen(key);
+    };
 
-<div class="footer-container">
-    <div class="footer-link-group">
-        <p class="footer-text">גם תחנות רדיו להאזנה:</p>
-        <a href="https://mistralnet.github.io/radio" rel="noopener noreferrer" class="footer-link-button">🎧 תחנות רדיו</a>
-        <button id="fullscreen-toggle" class="footer-link-button mt-2">צפייה במסך גדול</button>
-    </div>
-          <div class="flex justify-center flex-wrap gap-4 mb-6 text-sm">
-            <a href="https://mistralnet.github.io/radio/" class="text-blue-400 hover:text-blue-300">Radio</a>
-            <a href="https://mistralnet.github.io/radio/tv.html"   class="text-blue-400 hover:text-blue-300">TV</a>
-            <a href="https://mistralnet.github.io/radio/tv2.html"  class="text-blue-400 hover:text-blue-300">TV2</a>
-            <a href="https://mistralnet.github.io/radio/tv3.html"  class="text-blue-400 hover:text-blue-300">TV3</a>
-            <a href="https://mistralnet.github.io/radio/tv4.html"   class="text-blue-400 hover:text-blue-300">TV4</a>
-        </div>
- 
-    <div class="version-info">גרסה 5 - TV</div>
-</div>
+    controlsContainer.append(soundBtn, fullscreenBtn);
+    box.append(el, controlsContainer);
+    grid.appendChild(box);
 
-<script>
-document.getElementById('fullscreen-toggle').addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().then(() => {
-            fullscreenToggle.textContent = 'חזור לתצוגה קודמת';
-        });
-    } else {
-        document.exitFullscreen().then(() => {
-            fullscreenToggle.textContent = 'צפייה במסך גדול';
-        });
-    }
-});
+    // Auto-hide controls after 1 second
+    setTimeout(() => {
+      controlsContainer.classList.remove('show');
+    }, 1000);
+  });
+}
 
 document.addEventListener('fullscreenchange', () => {
-    const fullscreenToggle = document.getElementById('fullscreen-toggle');
-    if (!document.fullscreenElement) {
-        fullscreenToggle.textContent = 'צפייה במסך גדול';
-    } else {
-        fullscreenToggle.textContent = 'חזור לתצוגה קודמת';
-    }
+  if (!document.fullscreenElement && fullscreenKey) {
+    toggleFullscreen(null);
+  }
 });
-</script>
-    
 
-        <div class="text-gray-400 text-sm">
-            גרסה 5.2 - TV משופר עם בקרת שמע מתוקנת
-        </div>
-    </div>
+document.addEventListener('keydown', (e) => {
+  if (!fullscreenKey) return;
+  const idx = active.indexOf(fullscreenKey);
+  if (e.key === 'ArrowRight' && idx < active.length - 1) {
+    fullscreenKey = active[idx + 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+  if (e.key === 'ArrowLeft' && idx > 0) {
+    fullscreenKey = active[idx - 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+});
+
+let touchStartX = 0;
+document.addEventListener('touchstart', e => {
+  if (e.touches.length === 1) touchStartX = e.touches[0].clientX;
+});
+document.addEventListener('touchend', e => {
+  if (!fullscreenKey || e.changedTouches.length !== 1) return;
+  const diffX = e.changedTouches[0].clientX - touchStartX;
+  const idx = active.indexOf(fullscreenKey);
+  if (diffX < -50 && idx < active.length - 1) {
+    fullscreenKey = active[idx + 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+  if (diffX > 50 && idx > 0) {
+    fullscreenKey = active[idx - 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+});
+
+let mouseDownX = null;
+document.addEventListener('mousedown', e => { if (fullscreenKey) mouseDownX = e.clientX; });
+document.addEventListener('mouseup', e => {
+  if (!fullscreenKey || mouseDownX === null) return;
+  const diffX = e.clientX - mouseDownX;
+  const idx = active.indexOf(fullscreenKey);
+  if (diffX < -100 && idx < active.length - 1) {
+    fullscreenKey = active[idx + 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+  if (diffX > 100 && idx > 0) {
+    fullscreenKey = active[idx - 1];
+    activeAudioKey = fullscreenKey;
+    render();
+  }
+  mouseDownX = null;
+});
+
+document.querySelectorAll('.channel-button').forEach(btn => {
+  const key = btn.dataset.channel;
+  btn.onclick = () => {
+    if (active.includes(key)) {
+      active = active.filter(k => k !== key);
+      if (activeAudioKey === key) activeAudioKey = null;
+      if (fullscreenKey === key) toggleFullscreen(null);
+      btn.classList.remove('active');
+    } else {
+      active.unshift(key);
+      btn.classList.add('active');
+    }
+    render();
+  };
+});
+
+render();
+</script>
+
+<footer class="mt-10 text-center text-sm text-gray-400">
+  <button id="fullscreen-toggle" class="footer-link-button mt-2">צפייה במסך גדול</button>
+  <div class="mb-2">גם תחנות רדיו להאזנה:</div>
+  <a href="https://mistralnet.github.io/radio" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded mb-4">🎧 תחנות רדיו</a>
+  <div class="flex justify-center gap-4 flex-wrap mb-4">
+    <a href="https://mistralnet.github.io/radio/" class="text-blue-400 hover:text-blue-300">Radio</a>
+    <a href="https://mistralnet.github.io/radio/tv.html" class="text-blue-400 hover:text-blue-300">TV</a>
+    <a href="https://mistralnet.github.io/radio/tv2.html" class="text-blue-400 hover:text-blue-300">TV2</a>
+    <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
+    <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
+  </div>
+  <div class="version-info">גרסה 6.4 - עם ניווט בין ערוצים במסך מלא ועיצוב כפתורים שמאלי</div>
+</footer>
 </body>
 </html>
