@@ -216,20 +216,18 @@
     const channelButtonsContainer = document.getElementById('channel-buttons');
 
     /**
-     * בונה כתובת URL ל-iframe עם פרמטרים של השתקה ואוטופליי.
+     * [תיקון] בונה כתובת URL ל-iframe עם פרמטרים בפורמט 1/0.
      */
     function buildUrl(base, muted, muteParam = 'muted') {
         try {
             const url = new URL(base);
-            // הוסף פרמטר השתקה. השתמש ב-'true'/'false' או '1'/'0' כי זה נפוץ יותר
+            // שימוש ב-1 ו-0 במקום true/false כי זה פורמט נפוץ יותר בנגנים
             if (muteParam) {
-                url.searchParams.set(muteParam, muted ? 'true' : 'false');
+                url.searchParams.set(muteParam, muted ? '1' : '0');
             }
-            // הוסף פרמטר אוטופליי כדי להגדיל את הסיכוי לניגון
-            url.searchParams.set('autoplay', 'true');
+            url.searchParams.set('autoplay', '1');
             return url.toString();
         } catch (e) {
-            // במקרה של URL לא תקין (יכול לקרות עם כתובות מסוימות)
             console.error("Invalid URL:", base);
             return base;
         }
@@ -320,7 +318,6 @@
             channelNameBar.className = 'channel-name-bar';
             channelNameBar.textContent = ch.name;
 
-            // כפתור השתקה/שמע (רק לערוצי HLS שאנחנו שולטים בהם)
             if (ch.type === 'hls') {
                 const soundBtn = document.createElement('button');
                 soundBtn.className = `sound-toggle ${hasAudio ? 'on' : 'off'}`;
@@ -333,7 +330,6 @@
                 controlsContainer.append(soundBtn);
             }
 
-            // כפתור מסך מלא
             const fullscreenBtn = document.createElement('button');
             fullscreenBtn.className = `fullscreen-toggle ${fullscreenKey === key ? 'active' : ''}`;
             fullscreenBtn.textContent = fullscreenKey === key ? '↩️ חזרה' : '⛶ מסך מלא';
@@ -343,14 +339,13 @@
             };
             controlsContainer.append(fullscreenBtn);
             
-            // --- [חדש] הוספת כפתורי ניווט למצב מסך מלא ---
             if (fullscreenKey === key) {
                 const idx = active.indexOf(fullscreenKey);
                 const navContainer = document.createElement('div');
                 navContainer.className = 'flex justify-center items-center gap-4 mt-2';
 
                 const prevBtn = document.createElement('button');
-                prevBtn.textContent = '➡️'; // חץ ימינה ויזואלית (ערוץ הבא)
+                prevBtn.textContent = '➡️';
                 prevBtn.className = 'fullscreen-nav-arrow';
                 prevBtn.disabled = idx >= active.length - 1;
                 prevBtn.onclick = e => {
@@ -364,7 +359,7 @@
                 };
 
                 const nextBtn = document.createElement('button');
-                nextBtn.textContent = '⬅️'; // חץ שמאלה ויזואלית (ערוץ קודם)
+                nextBtn.textContent = '⬅️';
                 nextBtn.className = 'fullscreen-nav-arrow';
                 nextBtn.disabled = idx <= 0;
                 nextBtn.onclick = e => {
@@ -377,7 +372,7 @@
                     }
                 };
                 
-                navContainer.append(nextBtn, prevBtn); // סדר ויזואלי: שמאל, ימין
+                navContainer.append(nextBtn, prevBtn);
                 controlsContainer.append(navContainer);
             }
 
@@ -388,9 +383,6 @@
         updateChannelButtons();
     }
     
-    /**
-     * יצירת כפתורי בחירת ערוץ באופן דינמי.
-     */
     function createChannelButtons() {
         Object.keys(channels).forEach(key => {
             const btn = document.createElement('button');
@@ -401,14 +393,12 @@
                 if (active.includes(key)) {
                     active = active.filter(k => k !== key);
                     if (activeAudioKey === key) {
-                         // אם הסרנו את ערוץ השמע, נסה לתת שמע לערוץ HLS אחר אם קיים
                         activeAudioKey = active.find(k => channels[k].type === 'hls') || active[0] || null;
                     }
                     if (fullscreenKey === key) toggleFullscreen(null);
                 } else {
                     active.unshift(key);
-                    // [תיקון] אם אין ערוץ עם שמע, הערוץ החדש יקבל אותו
-                    if (!activeAudioKey) {
+                    if (!activeAudioKey || channels[activeAudioKey]?.type !== 'hls') {
                         activeAudioKey = key;
                     }
                 }
@@ -418,7 +408,6 @@
         });
     }
 
-    // האזנה לאירועים גלובליים
     document.addEventListener('fullscreenchange', () => {
         if (!document.fullscreenElement && fullscreenKey) {
             toggleFullscreen(null);
@@ -442,7 +431,6 @@
         }
     });
 
-    // ניווט במגע (סווייפ) וגרירת עכבר
     let startX = 0;
     let isDragging = false;
     
@@ -485,8 +473,6 @@
         document.querySelectorAll('.touch-active').forEach(el => el.classList.remove('touch-active'));
     });
 
-
-    // אתחול הדף
     createChannelButtons();
     render();
 </script>
@@ -501,7 +487,7 @@
         <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
         <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
     </div>
-    <div class="version-info">גרסה 7.0 - ניווט משופר במסך מלא וטיפול משופר בניגון אוטומטי</div>
+    <div class="version-info">גרסה 7.1 - תיקון ניגון אוטומטי לנגני iframe</div>
 </footer>
 </body>
 </html>
