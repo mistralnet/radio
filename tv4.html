@@ -3,131 +3,237 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ערוץ 14 שידור חי - ללא סאונד</title>
+    <title>בדיקות הטמעת ערוץ 14 - השתקה אוטומטית</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            background: #1F2937; /* רקע כהה */
+            color: white; /* טקסט לבן */
+            font-family: 'Inter', sans-serif; /* פונט נקי */
             margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
         }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
+
         h1 {
-            color: #333;
-            text-align: center;
+            color: #E5E7EB;
             margin-bottom: 20px;
         }
-        .player-container {
-            position: relative;
+
+        .channel-selector-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .channel-button {
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: #4B5563;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            white-space: nowrap; /* למנוע שבירת שורות בכפתורים */
+        }
+
+        .channel-button:hover {
+            background: #6B7280;
+        }
+
+        .channel-button.active {
+            background: #1F6FEB;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 100, 255, 0.3);
+        }
+
+        .video-player-wrapper {
             width: 100%;
-            aspect-ratio: 16/9;
-            background: black;
-            margin-bottom: 20px;
+            max-width: 900px; /* הגדלת רוחב הנגן */
+            aspect-ratio: 16/9; /* יחס 16:9 לוידאו */
+            background-color: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
+
         iframe {
             width: 100%;
             height: 100%;
             border: none;
-            border-radius: 4px;
+            display: block; /* כדי למנוע רווחים מיותרים */
         }
-        .controls {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
+
+        .no-player-message {
+            color: #9CA3AF;
+            font-size: 1.1rem;
         }
-        button {
-            padding: 8px 16px;
-            background: #4B5563;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background 0.2s;
+
+        .test-info {
+            background-color: #374151;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            max-width: 900px;
+            width: 100%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        button:hover {
-            background: #6B7280;
+        .test-info h2 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #D1D5DB;
         }
-        .sound-btn.on {
-            background: #10B981;
+        .test-info ul {
+            list-style: disc;
+            margin-left: 20px;
+            color: #E5E7EB;
         }
-        .sound-btn.off {
-            background: #EF4444;
+        .test-info li {
+            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>ערוץ 14 שידור חי</h1>
-        
-        <div class="player-container">
-            <!-- הטמעה עם השתקה אוטומטית -->
-            <iframe id="channel14" 
-                    src="https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&mute=1&volume=0&autoplay=1" 
-                    allow="autoplay; muted" 
-                    allowfullscreen 
-                    muted
-                    playsinline></iframe>
-        </div>
-        
-        <div class="controls">
-            <button id="soundBtn" class="sound-btn off">🔇 הפעל סאונד</button>
-            <button id="fullscreenBtn">⛶ מסך מלא</button>
-        </div>
-        
-        <p style="text-align: center; color: #666;">
-            הערוץ מתחיל מושתק כברירת מחדל. לחצו על "הפעל סאונד" כדי לשמוע.
+    <h1 class="text-3xl font-bold">בדיקות השתקה אוטומטית לערוץ 14</h1>
+
+    <div id="channel-selector" class="channel-selector-container">
+        <!-- כפתורי הגרסאות יוצגו כאן דינמית -->
+    </div>
+
+    <div id="video-player-wrapper" class="video-player-wrapper">
+        <p id="initial-message" class="no-player-message">בחר גרסה של ערוץ 14 לבדיקה</p>
+    </div>
+
+    <div class="test-info">
+        <h2>הסבר על הגרסאות:</h2>
+        <ul>
+            <li>**Univtec (mute=1 ב-URL):** הטמעה באמצעות נגן Univtec עם פרמטר `mute=1` בכתובת.</li>
+            <li>**Univtec (muted=1 ב-URL):** הטמעה באמצעות נגן Univtec עם פרמטר `muted=1` בכתובת.</li>
+            <li>**Univtec (volume=0 ב-URL):** הטמעה באמצעות נגן Univtec עם פרמטר `volume=0` בכתובת.</li>
+            <li>**Univtec (כל הפרמטרים ב-URL):** שילוב של `mute=1`, `muted=1`, `volume=0` בכתובת.</li>
+            <li>**Univtec (רק autoplay ב-URL):** רק פרמטר `autoplay=1` בכתובת, מנסה להסתמך על תכונת `muted` ב-iframe עצמו.</li>
+            <li>**Univtec (autoplay ב-URL + muted attribute):** פרמטר `autoplay=1` בכתובת, בתוספת תכונת `muted` ישירות על ה-iframe.</li>
+            <li>**Ok.ru (עם ?nochat=1):** הטמעה באמצעות נגן מ-Ok.ru, מנסה להסתמך על תכונת `muted` ב-iframe.</li>
+            <li>**YouTube (מושתק ו-autoplay):** הטמעה רשמית של YouTube עם פרמטרים מפורשים להשתקה והפעלה אוטומטית (`mute=1`, `autoplay=1`).</li>
+        </ul>
+        <p class="mt-4">
+            **חשוב:** כל הנגנים בעמוד זה ינסו להתחיל מושתקים כברירת מחדל, הן דרך פרמטרים ב-URL (כאשר רלוונטי) והן על ידי הוספת התכונה `muted` לתגית ה-iframe.
+            אם וידאו עדיין מתחיל עם סאונד, פתח את קונסולת המפתחים בדפדפן (F12) וחפש הודעות שגיאה/אזהרה הקשורות ל"Autoplay".
         </p>
     </div>
 
     <script>
-        // שליטה בסאונד
-        const soundBtn = document.getElementById('soundBtn');
-        const player = document.getElementById('channel14');
-        let isMuted = true;
+        const channel14Variants = {
+            'univtec_mute1': {
+                name: 'ערוץ 14 (Univtec - mute=1)',
+                url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&mute=1&autoplay=1'
+            },
+            'univtec_muted1': {
+                name: 'ערוץ 14 (Univtec - muted=1)',
+                url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&muted=1&autoplay=1'
+            },
+            'univtec_volume0': {
+                name: 'ערוץ 14 (Univtec - volume=0)',
+                url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&volume=0&autoplay=1'
+            },
+            'univtec_all_params': {
+                name: 'ערוץ 14 (Univtec - כל הפרמטרים)',
+                url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&mute=1&muted=1&volume=0&autoplay=1'
+            },
+            'univtec_autoplay_only_url': {
+                name: 'ערוץ 14 (Univtec - רק autoplay ב-URL)',
+                url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&autoplay=1'
+            },
+            'univtec_autoplay_only_attr_muted': {
+                name: 'ערוץ 14 (Univtec - autoplay ב-URL + muted attribute)',
+                url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2linsighf-YXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&autoplay=1'
+            },
+            'okru_embed': {
+                name: 'ערוץ 14 (Ok.ru)',
+                url: '//ok.ru/videoembed/10460920618703?nochat=1'
+            },
+            'youtube_embed': {
+                name: 'ערוץ 14 (YouTube)',
+                url: 'https://www.youtube.com/embed/_qOB__gXgi0?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0'
+            }
+        };
 
-        soundBtn.addEventListener('click', () => {
-            isMuted = !isMuted;
+        const channelSelector = document.getElementById('channel-selector');
+        const videoPlayerWrapper = document.getElementById('video-player-wrapper');
+        const initialMessage = document.getElementById('initial-message');
+        let activeChannelId = null;
+
+        /**
+         * טוען ומציג את נגן הווידאו עבור הערוץ הנבחר.
+         * מנסה להבטיח שהנגן יתחיל מושתק.
+         * @param {string} channelId - המזהה של הערוץ לבדיקה.
+         */
+        function loadChannel(channelId) {
+            videoPlayerWrapper.innerHTML = ''; // מנקה את הנגן הנוכחי
+            initialMessage.style.display = 'none'; // הסתר הודעת פתיחה
+
+            const channel = channel14Variants[channelId];
+            if (!channel) {
+                console.error('Channel not found:', channelId);
+                return;
+            }
+
+            const iframe = document.createElement('iframe');
+            iframe.src = channel.url;
+            iframe.allow = 'autoplay; fullscreen';
+            iframe.allowFullscreen = true;
+            // הוספת התכונה 'muted' ישירות ל-iframe כדי לכפות השתקה בדפדפנים
+            iframe.setAttribute('muted', '');
+            // למרות שה-iframe יוצר מושתק, מנסה לנגן ב-onload כדי להפעיל Autoplay
+            iframe.onload = () => {
+                try {
+                    iframe.contentWindow.postMessage('{"event":"command","func":"playVideo","args":""}', '*');
+                } catch (e) {
+                    console.log("Could not send play message to iframe:", e);
+                }
+            };
             
-            if(isMuted) {
-                // מעבר למצב מושתק
-                soundBtn.textContent = '🔇 הפעל סאונד';
-                soundBtn.classList.remove('on');
-                soundBtn.classList.add('off');
-                
-                // עדכון ה-iframe עם פרמטרים חדשים
-                player.src = player.src.replace(/mute=0/, 'mute=1')
-                                     .replace(/volume=1/, 'volume=0');
-                player.setAttribute('muted', '');
-            } else {
-                // מעבר למצב עם סאונד
-                soundBtn.textContent = '🔊 השתק';
-                soundBtn.classList.remove('off');
-                soundBtn.classList.add('on');
-                
-                // עדכון ה-iframe עם פרמטרים חדשים
-                player.src = player.src.replace(/mute=1/, 'mute=0')
-                                     .replace(/volume=0/, 'volume=1');
-                player.removeAttribute('muted');
-            }
-        });
+            videoPlayerWrapper.appendChild(iframe);
 
-        // שליטה במסך מלא
-        document.getElementById('fullscreenBtn').addEventListener('click', () => {
-            if(player.requestFullscreen) {
-                player.requestFullscreen();
-            } else if(player.webkitRequestFullscreen) {
-                player.webkitRequestFullscreen();
-            } else if(player.msRequestFullscreen) {
-                player.msRequestFullscreen();
+            // עדכון כפתורים פעילים
+            document.querySelectorAll('.channel-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-channel-id="${channelId}"]`).classList.add('active');
+
+            activeChannelId = channelId;
+        }
+
+        /**
+         * יוצר את כפתורי הבחירה לערוצים.
+         */
+        function createChannelButtons() {
+            for (const id in channel14Variants) {
+                const channel = channel14Variants[id];
+                const button = document.createElement('button');
+                button.className = 'channel-button';
+                button.textContent = channel.name;
+                button.dataset.channelId = id;
+                button.onclick = () => loadChannel(id);
+                channelSelector.appendChild(button);
             }
+        }
+
+        // אתחול הדף
+        document.addEventListener('DOMContentLoaded', () => {
+            createChannelButtons();
+            // ניתן לטעון ערוץ כלשהו כברירת מחדל כאן, למשל:
+            // loadChannel('youtube_embed');
         });
     </script>
 </body>
