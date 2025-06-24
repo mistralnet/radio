@@ -198,7 +198,8 @@
     // הגדרת הערוצים הזמינים
     const channels = {
         kan11: { name: 'כאן 11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-        now14: { name: 'עכשיו 14', type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==', muteParam: 'muted' },
+        // [תיקון] שינוי שם פרמטר ההשתקה ל-'mute' עבור ערוץ 14
+        now14: { name: 'עכשיו 14', type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==', muteParam: 'mute' },
         i24news: { name: 'i24NEWS', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
         news13: { name: 'חדשות 13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
         news12: { name: 'חדשות 12', type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD', muteParam: 'muted' }
@@ -206,7 +207,7 @@
 
     // משתני מצב גלובליים
     let active = [];
-    let activeAudioKey = null;
+    let activeAudioKey = null; // [שינוי] מתחיל תמיד ללא סאונד
     let fullscreenKey = null;
     let lastDirection = null;
 
@@ -216,16 +217,16 @@
     const channelButtonsContainer = document.getElementById('channel-buttons');
 
     /**
-     * [תיקון] בונה כתובת URL ל-iframe עם פרמטרים בפורמט 1/0.
+     * בונה כתובת URL ל-iframe עם פרמטרים נכונים.
      */
     function buildUrl(base, muted, muteParam = 'muted') {
         try {
             const url = new URL(base);
-            // שימוש ב-1 ו-0 במקום true/false כי זה פורמט נפוץ יותר בנגנים
+            // שימוש ב-'true' ו-'false' כמחרוזות עבור תאימות רחבה
             if (muteParam) {
-                url.searchParams.set(muteParam, muted ? '1' : '0');
+                url.searchParams.set(muteParam, muted ? 'true' : 'false');
             }
-            url.searchParams.set('autoplay', '1');
+            url.searchParams.set('autoplay', 'true');
             return url.toString();
         } catch (e) {
             console.error("Invalid URL:", base);
@@ -278,6 +279,7 @@
     function render() {
         grid.innerHTML = '';
         message.classList.toggle('hidden', active.length > 0);
+        lastDirection = null; // איפוס אנימציה
 
         active.forEach(key => {
             const ch = channels[key];
@@ -295,7 +297,7 @@
                 el.className = 'w-full h-full';
                 el.autoplay = true;
                 el.controls = true;
-                el.muted = !hasAudio;
+                el.muted = !hasAudio; // ישמע רק אם זה הערוץ עם הסאונד הפעיל
                 if (Hls.isSupported()) {
                     const hls = new Hls();
                     hls.loadSource(ch.url);
@@ -344,20 +346,6 @@
                 const navContainer = document.createElement('div');
                 navContainer.className = 'flex justify-center items-center gap-4 mt-2';
 
-                const prevBtn = document.createElement('button');
-                prevBtn.textContent = '➡️';
-                prevBtn.className = 'fullscreen-nav-arrow';
-                prevBtn.disabled = idx >= active.length - 1;
-                prevBtn.onclick = e => {
-                    e.stopPropagation();
-                    if (idx < active.length - 1) {
-                        lastDirection = 'right';
-                        fullscreenKey = active[idx + 1];
-                        activeAudioKey = fullscreenKey;
-                        render();
-                    }
-                };
-
                 const nextBtn = document.createElement('button');
                 nextBtn.textContent = '⬅️';
                 nextBtn.className = 'fullscreen-nav-arrow';
@@ -372,6 +360,20 @@
                     }
                 };
                 
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = '➡️';
+                prevBtn.className = 'fullscreen-nav-arrow';
+                prevBtn.disabled = idx >= active.length - 1;
+                prevBtn.onclick = e => {
+                    e.stopPropagation();
+                    if (idx < active.length - 1) {
+                        lastDirection = 'right';
+                        fullscreenKey = active[idx + 1];
+                        activeAudioKey = fullscreenKey;
+                        render();
+                    }
+                };
+
                 navContainer.append(nextBtn, prevBtn);
                 controlsContainer.append(navContainer);
             }
@@ -392,15 +394,14 @@
             btn.onclick = () => {
                 if (active.includes(key)) {
                     active = active.filter(k => k !== key);
+                    // אם הסרנו את הערוץ עם הסאונד, אפס את הסאונד
                     if (activeAudioKey === key) {
-                        activeAudioKey = active.find(k => channels[k].type === 'hls') || active[0] || null;
+                        activeAudioKey = null;
                     }
                     if (fullscreenKey === key) toggleFullscreen(null);
                 } else {
                     active.unshift(key);
-                    if (!activeAudioKey || channels[activeAudioKey]?.type !== 'hls') {
-                        activeAudioKey = key;
-                    }
+                    // [שינוי] לא מפעילים סאונד אוטומטית. הכל מתחיל מושתק.
                 }
                 render();
             };
@@ -487,7 +488,7 @@
         <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
         <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
     </div>
-    <div class="version-info">גרסה 7.3 - תיקון ניגון אוטומטי לנגני iframe</div>
+    <div class="version-info">גרסה 8.0 - תיקון נגן ערוץ 14 והשתקה בטעינה</div>
 </footer>
 </body>
 </html>
