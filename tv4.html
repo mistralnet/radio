@@ -199,42 +199,49 @@
     const channels = {
         kan11: { name: 'כאן 11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
 
-        // ערוץ 14 - גרסאות שונות לבדיקות השתקה והפעלה אוטומטית
+        // ערוץ 14 - גרסאות שונות לבדיקות השתקה והפעלה אוטומטית (מקור Univtec.com)
         now14_mute1_param: {
-            name: 'ערוץ 14 (mute=1 ב-URL)',
+            name: 'ערוץ 14 (Univtec - mute=1 ב-URL)',
             type: 'iframe',
             url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&mute=1&autoplay=1',
             muteParam: 'mute'
         },
         now14_muted1_param: {
-            name: 'ערוץ 14 (muted=1 ב-URL)',
+            name: 'ערוץ 14 (Univtec - muted=1 ב-URL)',
             type: 'iframe',
             url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&muted=1&autoplay=1',
             muteParam: 'muted'
         },
         now14_volume0_param: {
-            name: 'ערוץ 14 (volume=0 ב-URL)',
+            name: 'ערוץ 14 (Univtec - volume=0 ב-URL)',
             type: 'iframe',
             url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&volume=0&autoplay=1',
             muteParam: 'volume'
         },
         now14_all_params: {
-            name: 'ערוץ 14 (כל פרמטרי השתקה ב-URL)',
+            name: 'ערוץ 14 (Univtec - כל פרמטרי השתקה ב-URL)',
             type: 'iframe',
             url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&mute=1&muted=1&volume=0&autoplay=1',
             muteParam: 'muted' // ניתן לבחור אחד מהם כפרמטר עיקרי
         },
         now14_no_audio_params: {
-            name: 'ערוץ 14 (ללא פרמטרי שמע ב-URL)',
+            name: 'ערוץ 14 (Univtec - ללא פרמטרי שמע ב-URL)',
             type: 'iframe',
-            url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==',
+            url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImchYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==',
             muteParam: null // אין פרמטר השתקה ב-URL
         },
         now14_autoplay_only: {
-            name: 'ערוץ 14 (autoplay ב-URL, muted attribute ב-iframe)',
+            name: 'ערוץ 14 (Univtec - autoplay ב-URL, muted attribute ב-iframe)',
             type: 'iframe',
             url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&autoplay=1',
             muteParam: null // ההשתקה תלויה בתכונה המוספת ל-iframe עצמו
+        },
+        // --- שיטת הטמעה חדשה לערוץ 14 ממקור ok.ru ---
+        now14_okru: {
+            name: 'ערוץ 14 (מקור Ok.ru - בדיקה)',
+            type: 'iframe',
+            url: '//ok.ru/videoembed/10460920618703?nochat=1', // ה-URL החדש שסיפקת
+            muteParam: null // הנגן של ok.ru לא מקבל פרמטרי mute/volume ב-URL ידועים, נסתמך על muted attribute
         },
 
         i24news: { name: 'i24NEWS', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
@@ -355,18 +362,14 @@
                 el.allow = 'autoplay; fullscreen';
                 el.allowFullscreen = true; // For security and compatibility
                 
-                // תכונת muted ישירה ב-iframe, רלוונטי במיוחד עבור now14_autoplay_only
-                if (key === 'now14_autoplay_only' && !hasAudio) {
+                // תכונת muted ישירה ב-iframe: ננסה להוסיף אותה אם הערוץ אמור להיות מושתק
+                if (!hasAudio) { // אם הערוץ לא אמור לנגן סאונד
                     el.setAttribute('muted', '');
-                } else if (!hasAudio && ch.muteParam) { // אם לא אמור להיות סאונד וקיים muteParam, ננסה להגדיר את התכונה
-                    el.setAttribute('muted', '');
-                } else if (hasAudio && ch.muteParam) { // אם אמור להיות סאונד, ודא שהתכונה הוסרה (במידה והייתה)
+                } else { // אם הערוץ אמור לנגן סאונד, ודא שהתכונה הוסרה (במידה והייתה)
                     el.removeAttribute('muted');
                 }
                 
-                // בגרסה זו, כל כתובות ה-URL של ערוצי iframe כבר מכילות את פרמטרי ההפעלה האוטומטית וההשתקה הרצויים
-                // לכן, ניתן להשתמש ב-URL המוגדר ישירות.
-                // הפונקציה buildUrl תשמש בעיקר עבור ערוצים עתידיים שלא יוגדרו מראש.
+                // הגדרת ה-URL עבור ה-iframe
                 el.src = ch.url;
             }
 
@@ -544,7 +547,7 @@
     </div> <p class="mb-4">
 כפתור השמע מופיע רק בערוצי הווידאו המאפשרים זאת, בשאר הערוצים אפשר לשלוט בעוצמת השמע באמצעות פקדי המדיה בחלק התחתון של נגן הווידאו.
     </p>
-    <div class="version-info">גרסה 5 - הרחבת אפשרויות בדיקה לערוץ 14 ועדכוני השתקה ב-iframe</div>
+    <div class="version-info">גרסה 6 - הטמעת ערוץ 14 ממקור ok.ru ועדכוני השתקה כלליים ל-iframe</div>
 
 </footer>
 </body>
