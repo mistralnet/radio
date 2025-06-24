@@ -198,8 +198,8 @@
     // הגדרת הערוצים הזמינים
     const channels = {
         kan11: { name: 'כאן 11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-        // ערוץ 14, כעת משתמש בגרסה שעבדה (לשעבר now14_v1)
-        now14: { name: 'עכשיו 14', type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&mute=false&autoplay=true', muteParam: 'mute' },
+        // ערוץ 14, כעת יטען מושתק כברירת מחדל.
+        now14: { name: 'עכשיו 14', type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&mute=true&autoplay=true', muteParam: 'mute' }, // שינוי ל-mute=true
         i24news: { name: 'i24NEWS', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
         news13: { name: 'חדשות 13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
         news12: { name: 'חדשות 12', type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD', muteParam: 'muted' }
@@ -369,29 +369,27 @@
                 const nextBtn = document.createElement('button');
                 nextBtn.textContent = '⬅️';
                 nextBtn.className = 'fullscreen-nav-arrow';
-                nextBtn.disabled = idx <= 0;
+                // הסרת תנאי disabled לאפשרות לולאה
                 nextBtn.onclick = e => {
                     e.stopPropagation();
-                    if (idx > 0) {
-                        lastDirection = 'left';
-                        fullscreenKey = active[idx - 1];
-                        activeAudioKey = fullscreenKey;
-                        render();
-                    }
+                    // לולאה לערוץ הבא
+                    lastDirection = 'left'; // כשמדפדפים קדימה, האנימציה תבוא משמאל
+                    fullscreenKey = active[(idx + 1) % active.length];
+                    activeAudioKey = fullscreenKey;
+                    render();
                 };
                 
                 const prevBtn = document.createElement('button');
                 prevBtn.textContent = '➡️';
                 prevBtn.className = 'fullscreen-nav-arrow';
-                prevBtn.disabled = idx >= active.length - 1;
+                // הסרת תנאי disabled לאפשרות לולאה
                 prevBtn.onclick = e => {
                     e.stopPropagation();
-                    if (idx < active.length - 1) {
-                        lastDirection = 'right';
-                        fullscreenKey = active[idx + 1];
-                        activeAudioKey = fullscreenKey;
-                        render();
-                    }
+                    // לולאה לערוץ הקודם
+                    lastDirection = 'right'; // כשמדפדפים אחורה, האנימציה תבוא מימין
+                    fullscreenKey = active[(idx - 1 + active.length) % active.length];
+                    activeAudioKey = fullscreenKey;
+                    render();
                 };
 
                 navContainer.append(nextBtn, prevBtn);
@@ -436,17 +434,17 @@
     });
 
     document.addEventListener('keydown', (e) => {
-        if (!fullscreenKey) return;
+        if (!fullscreenKey || active.length <= 1) return; // לא לזפזפ אם יש רק ערוץ אחד או פחות
         const idx = active.indexOf(fullscreenKey);
-        if (e.key === 'ArrowRight' && idx < active.length - 1) {
+        if (e.key === 'ArrowRight') {
             lastDirection = 'right';
-            fullscreenKey = active[idx + 1];
+            fullscreenKey = active[(idx + 1) % active.length];
             activeAudioKey = fullscreenKey;
             render();
         }
-        if (e.key === 'ArrowLeft' && idx > 0) {
+        if (e.key === 'ArrowLeft') {
             lastDirection = 'left';
-            fullscreenKey = active[idx - 1];
+            fullscreenKey = active[(idx - 1 + active.length) % active.length];
             activeAudioKey = fullscreenKey;
             render();
         }
@@ -463,21 +461,21 @@
     }
 
     function handleDragEnd(clientX) {
-        if (!isDragging || !fullscreenKey) return;
+        if (!isDragging || !fullscreenKey || active.length <= 1) return; // לא לזפזפ אם יש רק ערוץ אחד או פחות
         isDragging = false;
         
         const diffX = clientX - startX;
         const idx = active.indexOf(fullscreenKey);
 
-        if (diffX < -50 && idx < active.length - 1) { // Swipe Left
+        if (diffX < -50) { // Swipe Left (next channel)
             lastDirection = 'right';
-            fullscreenKey = active[idx + 1];
+            fullscreenKey = active[(idx + 1) % active.length];
             activeAudioKey = fullscreenKey;
             render();
         }
-        if (diffX > 50 && idx > 0) { // Swipe Right
+        if (diffX > 50) { // Swipe Right (previous channel)
             lastDirection = 'left';
-            fullscreenKey = active[idx - 1];
+            fullscreenKey = active[(idx - 1 + active.length) % active.length];
             activeAudioKey = fullscreenKey;
             render();
         }
@@ -499,6 +497,11 @@
 </script>
 
 <footer class="mt-10 text-center text-sm text-gray-400">
+    <p class="mb-4">
+        שימו לב: חלק מערוצי הווידאו מגיעים מנגנים המאפשרים שליטה מלאה על השמע מתוך הדף שלנו, ולכן תראו עבורם כפתור "שמע / השתק".
+        ערוצים אחרים מוטמעים מנגנים חיצוניים שאינם מאפשרים לנו לשלוט ישירות על השמע שלהם, ובמקרים אלו כפתור השמע לא יופיע.
+        זו אינה תקלה, אלא אילוצים טכניים של מקורות הווידאו השונים.
+    </p>
     <div class="mb-2">גם תחנות רדיו להאזנה:</div>
     <a href="https://mistralnet.github.io/radio" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded mb-4">🎧 תחנות רדיו</a>
     <div class="flex justify-center gap-4 flex-wrap mb-4">
@@ -508,7 +511,7 @@
         <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
         <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
     </div>
-    <div class="version-info">גרסה 1 - תיקון נגן ערוץ 14 והשתקה בטעינה</div>
+    <div class="version-info">גרסה 2.0 - תיקון נגן ערוץ 14 והשתקה בטעינה</div>
 </footer>
 </body>
 </html>
