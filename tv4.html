@@ -19,22 +19,20 @@
     <style>
         /* הגדרות בסיסיות לגוף הדף */
         body {
-            background: #1F2937; /* רקע כהה */
-            color: white; /* טקסט לבן */
-            font-family: 'Inter', sans-serif; /* פונט נקי */
+            background: #1F2937;
+            color: white;
+            font-family: 'Inter', sans-serif;
             margin: 0;
         }
 
-        /* קונטיינר לוידאו - יחס גובה-רוחב קבוע, פינות מעוגלות */
         .video-container {
             position: relative;
-            aspect-ratio: 16/9; /* יחס 16:9 לוידאו */
-            border-radius: 8px; /* פינות מעוגלות */
-            overflow: hidden; /* הסתרת תוכן שיוצא מגבולות */
+            aspect-ratio: 16/9;
+            border-radius: 8px;
+            overflow: hidden;
             background-color: #000;
         }
 
-        /* קונטיינר לכפתורי שליטה (השתק/מסך מלא) */
         .controls-container {
             position: absolute;
             top: 50%;
@@ -43,19 +41,17 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            align-items: center; /* מרכוז הכפתורים */
-            z-index: 10; /* ודא שהפקדים נמצאים מעל הוידאו */
-            opacity: 0; /* כברירת מחדל הכפתורים עמומים */
-            transition: opacity 0.3s ease; /* אנימציה חלקה למעבר שקיפות */
+            align-items: center;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
-        /* הצגת כפתורי השליטה במעבר עכבר/מגע */
         .video-container:hover .controls-container,
         .video-container.touch-active .controls-container {
             opacity: 1;
         }
 
-        /* פס שם הערוץ העליון */
         .channel-name-bar {
             position: absolute;
             top: 0;
@@ -71,13 +67,11 @@
             z-index: 10;
         }
 
-        /* הצגת פס שם הערוץ במעבר עכבר/מגע */
         .video-container:hover .channel-name-bar,
         .video-container.touch-active .channel-name-bar {
             opacity: 1;
         }
 
-        /* סגנון כללי לכפתורי סאונד ומסך מלא */
         .sound-toggle, .fullscreen-toggle {
             display: flex;
             justify-content: center;
@@ -93,15 +87,11 @@
             color: white;
         }
 
-        /* צבעים לכפתור סאונד בהתאם למצב */
         .sound-toggle.on { background: #10B981; }
         .sound-toggle.off { background: #EF4444; }
-
-        /* צבעים לכפתור מסך מלא בהתאם למצב */
         .fullscreen-toggle { background: #4B5563; }
         .fullscreen-toggle.active { background: #4F46E5; }
 
-        /* סגנון כפתורי בחירת ערוץ */
         .channel-button {
             padding: 10px 20px;
             border-radius: 8px;
@@ -115,7 +105,6 @@
         .channel-button:hover { background: #6B7280; }
         .channel-button.active { background: #1F6FEB; transform: translateY(-2px); }
 
-        /* סגנון חדש לכפתורי ניווט במסך מלא */
         .fullscreen-nav-arrow {
             background: rgba(30, 41, 59, 0.7);
             color: white;
@@ -137,7 +126,6 @@
             cursor: not-allowed;
         }
 
-        /* מדיה קוואריס לרשת וידאו - למסכים גדולים */
         @media (min-width: 768px) {
             #video-grid {
                 grid-template-columns: repeat(3, 1fr);
@@ -145,7 +133,6 @@
             }
         }
         
-        /* מצב מסך מלא */
         .fullscreen-mode .video-container:not(.active-fullscreen) {
             display: none !important;
         }
@@ -162,7 +149,6 @@
             animation: fadeIn 0.3s ease forwards;
         }
 
-        /* אנימציות */
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -195,40 +181,44 @@
 <p id="no-channel-message" class="text-center text-gray-300 mt-6 hidden">יש לבחור ערוץ מהכפתורים מעלה</p>
 
 <script>
-    // הגדרת הערוצים הזמינים
+    // הגדרת הערוצים הזמינים עם כל אפשרויות ההטמעה לערוץ 14
     const channels = {
         kan11: { name: 'כאן 11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-
-        // ערוץ 14 עם אפשרויות השתקה שונות לבדיקה
-        // כל אפשרויות ערוץ 14 עודכנו לכלול מפורשות פרמטרי השתקה והפעלה אוטומטית ב-URL
-        now14_muted1: {
-            name: 'עכשיו 14 (muted=1)',
-            type: 'iframe',
-            url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&muted=1&autoplay=1',
-            muteParam: 'muted'
+        
+        // גרסאות שונות של ערוץ 14 עם שיטות השתקה שונות
+        now14_mute1: { 
+            name: 'עכשיו 14 (mute=1)', 
+            type: 'iframe', 
+            url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&mute=1&autoplay=1', 
+            muteParam: 'mute' 
         },
-        now14_volume0: {
-            name: 'עכשיו 14 (volume=0)',
-            type: 'iframe',
-            url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&volume=0&autoplay=1',
-            muteParam: 'volume'
+        now14_muted1: { 
+            name: 'עכשיו 14 (muted=1)', 
+            type: 'iframe', 
+            url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&muted=1&autoplay=1', 
+            muteParam: 'muted' 
         },
-        now14_nosound: {
-            name: 'עכשיו 14 (ללא סאונד - מתוקן)', // שם הערוץ עודכן לבהירות
-            type: 'iframe',
-            url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&muted=1&autoplay=1', // הוספת הפרמטרים `muted=1` ו-`autoplay=1`
-            muteParam: 'muted' // עדכון הפרמטר מ-null ל-'muted' לקונסיסטנטיות
+        now14_volume0: { 
+            name: 'עכשיו 14 (volume=0)', 
+            type: 'iframe', 
+            url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==&volume=0&autoplay=1', 
+            muteParam: 'volume' 
         },
-
+        now14_nosound: { 
+            name: 'עכשיו 14 (ללא פרמטרים)', 
+            type: 'iframe', 
+            url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==', 
+            muteParam: null 
+        },
+        
         i24news: { name: 'i24NEWS', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
         news13: { name: 'חדשות 13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
-        // וודא שגם חדשות 12 מתחיל מושתק בהפעלה אוטומטית
-        news12: { name: 'חדשות 12', type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD&muted=1&autoplay=1', muteParam: 'muted' }
+        news12: { name: 'חדשות 12', type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD', muteParam: 'muted' }
     };
 
     // משתני מצב גלובליים
     let active = [];
-    let activeAudioKey = null; // מתחיל תמיד ללא סאונד
+    let activeAudioKey = null;
     let fullscreenKey = null;
     let lastDirection = null;
 
@@ -239,17 +229,14 @@
 
     /**
      * בונה כתובת URL ל-iframe עם פרמטרים נכונים.
-     * פונקציה זו משמשת רק אם ה-URL ב-channels אינו מכיל כבר את פרמטרי הנגינה/השתקה.
-     * בגרסה זו, ה-URL מוגדר מראש עם הפרמטרים הרצויים בתוך אובייקט channels.
      */
     function buildUrl(base, muted, muteParam = 'muted') {
         try {
             const url = new URL(base);
-            // שימוש ב-'true' ו-'false' כמחרוזות עבור תאימות רחבה
             if (muteParam) {
                 url.searchParams.set(muteParam, muted ? 'true' : 'false');
             }
-            url.searchParams.set('autoplay', 'true'); // תמיד מנסה להפעיל אוטומטית אם לא הושתק מראש
+            url.searchParams.set('autoplay', 'true');
             return url.toString();
         } catch (e) {
             console.error("Invalid URL:", base);
@@ -267,7 +254,7 @@
             if(document.fullscreenElement) document.exitFullscreen?.();
         } else {
             fullscreenKey = key;
-            activeAudioKey = key; // הערוץ במסך מלא תמיד יהיה עם שמע
+            activeAudioKey = key;
             document.body.classList.add('fullscreen-mode');
             document.documentElement.requestFullscreen?.().catch(err => {
                 console.log('Fullscreen request failed:', err);
@@ -302,7 +289,7 @@
     function render() {
         grid.innerHTML = '';
         message.classList.toggle('hidden', active.length > 0);
-        lastDirection = null; // איפוס אנימציה
+        lastDirection = null;
 
         active.forEach(key => {
             const ch = channels[key];
@@ -320,12 +307,11 @@
                 el.className = 'w-full h-full';
                 el.autoplay = true;
                 el.controls = true;
-                el.muted = !hasAudio; // ישמע רק אם זה הערוץ עם הסאונד הפעיל
+                el.muted = !hasAudio;
                 if (Hls.isSupported()) {
                     const hls = new Hls();
                     hls.loadSource(ch.url);
                     hls.attachMedia(el);
-                    // Add event listener to play after HLS is ready
                     hls.on(Hls.Events.MANIFEST_PARSED, function() {
                         el.play().catch(e => console.log("Video play failed:", e));
                     });
@@ -336,14 +322,19 @@
             } else { // iframe
                 el = document.createElement('iframe');
                 el.className = 'w-full h-full';
-                el.allow = 'autoplay; fullscreen';
-                el.allowFullscreen = true; // For security and compatibility
-                el.setAttribute('muted', ''); // הוספת התכונה muted ל-iframe (חשוב לדפדפנים מסוימים)
+                el.allow = 'autoplay; muted; fullscreen';
+                el.allowFullscreen = true;
+                el.setAttribute('muted', '');
 
-                // בגרסה זו, כל כתובות ה-URL של ערוצי iframe כבר מכילות את פרמטרי ההפעלה האוטומטית וההשתקה הרצויים
-                // לכן, ניתן להשתמש ב-URL המוגדר ישירות.
-                // הפונקציה buildUrl תשמש בעיקר עבור ערוצים עתידיים שלא יוגדרו מראש.
-                el.src = ch.url;
+                const urlContainsMuteParam = ch.url.includes('mute=') || ch.url.includes('muted=') || ch.url.includes('volume=');
+                const urlContainsAutoplay = ch.url.includes('autoplay=');
+
+                if (urlContainsAutoplay && urlContainsMuteParam) {
+                    el.src = ch.url;
+                } else {
+                    const muteParam = ch.muteParam || 'muted';
+                    el.src = buildUrl(ch.url, !hasAudio, muteParam);
+                }
             }
 
             const controlsContainer = document.createElement('div');
@@ -353,7 +344,6 @@
             channelNameBar.className = 'channel-name-bar';
             channelNameBar.textContent = ch.name;
 
-            // מאפשר כפתור סאונד לכל סוגי הערוצים
             if (ch.type === 'hls' || ch.type === 'iframe') {
                 const soundBtn = document.createElement('button');
                 soundBtn.className = `sound-toggle ${hasAudio ? 'on' : 'off'}`;
@@ -385,7 +375,7 @@
                 nextBtn.className = 'fullscreen-nav-arrow';
                 nextBtn.onclick = e => {
                     e.stopPropagation();
-                    lastDirection = 'left'; // כשמדפדפים קדימה, האנימציה תבוא משמאל
+                    lastDirection = 'left';
                     fullscreenKey = active[(idx + 1) % active.length];
                     activeAudioKey = fullscreenKey;
                     render();
@@ -396,7 +386,7 @@
                 prevBtn.className = 'fullscreen-nav-arrow';
                 prevBtn.onclick = e => {
                     e.stopPropagation();
-                    lastDirection = 'right'; // כשמדפדפים אחורה, האנימציה תבוא מימין
+                    lastDirection = 'right';
                     fullscreenKey = active[(idx - 1 + active.length) % active.length];
                     activeAudioKey = fullscreenKey;
                     render();
@@ -422,15 +412,12 @@
             btn.onclick = () => {
                 if (active.includes(key)) {
                     active = active.filter(k => k !== key);
-                    // אם הסרנו את הערוץ עם הסאונד, אפס את הסאונד
                     if (activeAudioKey === key) {
                         activeAudioKey = null;
                     }
                     if (fullscreenKey === key) toggleFullscreen(null);
                 } else {
                     active.unshift(key);
-                    // לא מפעילים סאונד אוטומטית. הכל מתחיל מושתק.
-                    // activeAudioKey נשאר null כברירת מחדל
                 }
                 render();
             };
@@ -445,7 +432,7 @@
     });
 
     document.addEventListener('keydown', (e) => {
-        if (!fullscreenKey || active.length <= 1) return; // לא לזפזף אם יש רק ערוץ אחד או פחות
+        if (!fullscreenKey || active.length <= 1) return;
         const idx = active.indexOf(fullscreenKey);
         if (e.key === 'ArrowRight') {
             lastDirection = 'right';
@@ -472,19 +459,19 @@
     }
 
     function handleDragEnd(clientX) {
-        if (!isDragging || !fullscreenKey || active.length <= 1) return; // לא לזפזף אם יש רק ערוץ אחד או פחות
+        if (!isDragging || !fullscreenKey || active.length <= 1) return;
         isDragging = false;
         
         const diffX = clientX - startX;
         const idx = active.indexOf(fullscreenKey);
 
-        if (diffX < -50) { // Swipe Left (next channel)
+        if (diffX < -50) {
             lastDirection = 'right';
             fullscreenKey = active[(idx + 1) % active.length];
             activeAudioKey = fullscreenKey;
             render();
         }
-        if (diffX > 50) { // Swipe Right (previous channel)
+        if (diffX > 50) {
             lastDirection = 'left';
             fullscreenKey = active[(idx - 1 + active.length) % active.length];
             activeAudioKey = fullscreenKey;
@@ -508,7 +495,11 @@
 </script>
 
 <footer class="mt-10 text-center text-sm text-gray-400">
-    
+    <p class="mb-4">
+        שימו לב: חלק מערוצי הווידאו מגיעים מנגנים המאפשרים שליטה מלאה על השמע מתוך הדף שלנו, ולכן תראו עבורם כפתור "שמע / השתק".
+        ערוצים אחרים מוטמעים מנגנים חיצוניים שאינם מאפשרים לנו לשלוט ישירות על השמע שלהם, ובמקרים אלו כפתור השמע לא יופיע.
+        זו אינה תקלה, אלא אילוצים טכניים של מקורות הווידאו השונים.
+    </p>
     <div class="mb-2">גם תחנות רדיו להאזנה:</div>
     <a href="https://mistralnet.github.io/radio" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded mb-4">🎧 תחנות רדיו</a>
     <div class="flex justify-center gap-4 flex-wrap mb-4">
@@ -517,12 +508,8 @@
         <a href="https://mistralnet.github.io/radio/tv2.html" class="text-blue-400 hover:text-blue-300">TV2</a>
         <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
         <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
-    </div> <p class="mb-4">
-כפתור השמע מופיע רק בערוצי הווידאו המאפשרים זאת, בשאר הערוצים אפשר לשלוט בעוצמת השמע באמצעות פקדי המדיה בחלק התחתון של נגן הווידאו.
-    </p>
-    <div class="version-info">גרסה 4 - עדכון פרמטרי השתקה והפעלה אוטומטית מפורשים לערוצי iframe</div>
-
-
+    </div>
+    <div class="version-info">גרסה 2.2 - כל אפשרויות ההשתקה לערוץ 14</div>
 </footer>
 </body>
 </html>
