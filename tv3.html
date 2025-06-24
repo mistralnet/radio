@@ -54,6 +54,30 @@
       opacity: 1; /* הצג את הכפתורים במעבר עכבר */
     }
 
+    /* פס שם הערוץ העליון */
+    .channel-name-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.7); /* רקע שקוף למחצה */
+      color: white;
+      padding: 4px 10px;
+      text-align: center;
+      font-size: 0.85rem;
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+      opacity: 0; /* כברירת מחדל עמום */
+      transition: opacity 0.3s ease; /* אנימציה חלקה למעבר שקיפות */
+      z-index: 10; /* מעל הוידאו */
+    }
+
+    /* הצגת פס שם הערוץ במעבר עכבר/מגע */
+    .video-container:hover .channel-name-bar,
+    .video-container.touch-active .channel-name-bar {
+      opacity: 1;
+    }
+
     /* סגנון כללי לכפתורי סאונד ומסך מלא */
     .sound-toggle, .fullscreen-toggle {
       display: flex;
@@ -166,15 +190,17 @@
 <script>
   // הגדרת הערוצים הזמינים, כולל סוג וידאו (hls/iframe) וכתובת URL
   const channels = {
-    kan11: { type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
+    kan11: { name: 'כאן 11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
     now14: {
+      name: 'עכשיו 14',
       type: 'iframe',
       url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==',
       muteParam: 'muted' // פרמטר השתקה אם קיים בנגן iframe
     },
-    i24news: { type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
-    news13: { type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
+    i24news: { name: 'i24NEWS', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
+    news13: { name: 'חדשות 13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
     news12: {
+      name: 'חדשות 12',
       type: 'iframe',
       url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD',
       muteParam: 'muted'
@@ -193,7 +219,8 @@
   const channelButtonsContainer = document.getElementById('channel-buttons');
 
   /**
-   * בונה כתובת URL ל-iframe עם פרמטרים של השתקה והפעלה אוטומטית.
+   * בונה כתובת URL ל-iframe עם פרמטרים של השתקה.
+   * פרמטר autoplay הוסר מכיוון שהוא מטופל ע"י allow="autoplay" ב-iframe.
    * @param {string} base - כתובת ה-URL הבסיסית.
    * @param {boolean} muted - האם להשתיק את הוידאו.
    * @param {string} muteParam - שם הפרמטר לשליטה בהשתקה ב-URL.
@@ -201,8 +228,10 @@
    */
   function buildUrl(base, muted, muteParam = 'muted') {
     const url = new URL(base);
-    url.searchParams.set(muteParam, muted ? '1' : '0');
-    url.searchParams.set('autoplay', '1');
+    // הוסף את פרמטר ההשתקה רק אם הוא מוגדר עבור הערוץ
+    if (muteParam) {
+      url.searchParams.set(muteParam, muted ? '1' : '0');
+    }
     return url.toString();
   }
 
@@ -301,29 +330,33 @@
         el.className = 'w-full h-full';
         el.allow = 'autoplay; fullscreen'; // הרשאות ל-iframe
 
-        // תיקון ספציפי לערוץ 14 - שימוש ב-URL ישירות
-        if (key === 'now14') {
-          el.src = ch.url;
-        } else {
-          const muteParam = ch.muteParam || 'muted';
-          el.src = buildUrl(ch.url, !hasAudio, muteParam);
-        }
+        // השתמש ב-buildUrl לכל האייפריים כדי לשלוט בהשתקה
+        const muteParam = ch.muteParam || 'muted';
+        el.src = buildUrl(ch.url, !hasAudio, muteParam);
       }
 
       // יצירת קונטיינר לכפתורי השליטה (שמע ומסך מלא)
       const controlsContainer = document.createElement('div');
       controlsContainer.className = 'controls-container';
 
-      // כפתור השתקה/הפעלה של שמע
-      const soundBtn = document.createElement('button');
-      soundBtn.className = `sound-toggle ${hasAudio ? 'on' : 'off'}`;
-      soundBtn.textContent = hasAudio ? '🔊 השתק' : '🔇 שמע';
-      soundBtn.onclick = e => {
-        e.stopPropagation(); // מנע התפשטות האירוע
-        activeAudioKey = hasAudio ? null : key; // שנה מצב שמע
-        render(); // רנדר מחדש כדי לעדכן מצב שמע
-        updateChannelButtons(); // עדכן אייקונים בכפתורים
-      };
+      // יצירת פס שם הערוץ
+      const channelNameBar = document.createElement('div');
+      channelNameBar.className = 'channel-name-bar';
+      channelNameBar.textContent = ch.name; // שם הערוץ מהאובייקט channels
+
+      // כפתור השתקה/הפעלה של שמע - רק עבור ערוצי HLS
+      if (ch.type === 'hls') {
+        const soundBtn = document.createElement('button');
+        soundBtn.className = `sound-toggle ${hasAudio ? 'on' : 'off'}`;
+        soundBtn.textContent = hasAudio ? '🔊 השתק' : '🔇 שמע';
+        soundBtn.onclick = e => {
+          e.stopPropagation(); // מנע התפשטות האירוע
+          activeAudioKey = hasAudio ? null : key; // שנה מצב שמע
+          render(); // רנדר מחדש כדי לעדכן מצב שמע
+          updateChannelButtons(); // עדכן אייקונים בכפתורים
+        };
+        controlsContainer.append(soundBtn);
+      }
 
       // כפתור מסך מלא
       const fullscreenBtn = document.createElement('button');
@@ -335,9 +368,9 @@
       };
 
       // הוסף כפתורים לקונטיינר השליטה
-      controlsContainer.append(soundBtn, fullscreenBtn);
+      controlsContainer.append(fullscreenBtn); // כעת רק כפתור המסך המלא או גם השמע עבור HLS
       // הוסף את הוידאו/iframe ואת הפקדים לקופסת הוידאו
-      box.append(el, controlsContainer);
+      box.append(el, controlsContainer, channelNameBar); // הוסף גם את פס שם הערוץ
       // הוסף את קופסת הוידאו לרשת הוידאו
       grid.appendChild(box);
     });
@@ -380,7 +413,7 @@
   document.addEventListener('touchstart', e => {
     if (e.touches.length === 1) {
       touchStartX = e.touches[0].clientX;
-      // Add a class for touch activity to show controls on touch devices
+      // הוסף קלאס לפעילות מגע כדי להציג פקדים במכשירי מגע
       e.target.closest('.video-container')?.classList.add('touch-active');
     }
   });
@@ -404,7 +437,7 @@
       activeAudioKey = fullscreenKey;
       render();
     }
-    // Remove the touch-active class after interaction
+    // הסר את הקלאס touch-active לאחר אינטראקציה
     e.target.closest('.video-container')?.classList.remove('touch-active');
   });
 
@@ -471,7 +504,7 @@
     <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
     <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
   </div>
-  <div class="version-info">גרסה5 6.4 - עם ניווט בין ערוצים במסך מלא ועיצוב כפתורים שמאלי</div>
+  <div class="version-info">גרסה 6.4 - עם ניווט בין ערוצים במסך מלא ועיצוב כפתורים שמאלי</div>
 </footer>
 </body>
 </html>
