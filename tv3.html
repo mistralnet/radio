@@ -198,8 +198,7 @@
     // הגדרת הערוצים הזמינים
     const channels = {
         kan11: { name: 'כאן 11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-        // [תיקון] שינוי שם פרמטר ההשתקה ל-'mute' עבור ערוץ 14
-        now14: { name: 'עכשיו 14', type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==', muteParam: 'mute' },
+        now14: { name: 'עכשיו 14', type: 'iframe', url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ==', muteParam: 'muted' },
         i24news: { name: 'i24NEWS', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
         news13: { name: 'חדשות 13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
         news12: { name: 'חדשות 12', type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD', muteParam: 'muted' }
@@ -207,7 +206,7 @@
 
     // משתני מצב גלובליים
     let active = [];
-    let activeAudioKey = null; // [שינוי] מתחיל תמיד ללא סאונד
+    let activeAudioKey = null;
     let fullscreenKey = null;
     let lastDirection = null;
 
@@ -222,7 +221,6 @@
     function buildUrl(base, muted, muteParam = 'muted') {
         try {
             const url = new URL(base);
-            // שימוש ב-'true' ו-'false' כמחרוזות עבור תאימות רחבה
             if (muteParam) {
                 url.searchParams.set(muteParam, muted ? 'true' : 'false');
             }
@@ -244,7 +242,7 @@
             if(document.fullscreenElement) document.exitFullscreen?.();
         } else {
             fullscreenKey = key;
-            activeAudioKey = key; // הערוץ במסך מלא תמיד יהיה עם שמע
+            activeAudioKey = key;
             document.body.classList.add('fullscreen-mode');
             document.documentElement.requestFullscreen?.().catch(err => {
                 console.log('Fullscreen request failed:', err);
@@ -279,7 +277,7 @@
     function render() {
         grid.innerHTML = '';
         message.classList.toggle('hidden', active.length > 0);
-        lastDirection = null; // איפוס אנימציה
+        lastDirection = null;
 
         active.forEach(key => {
             const ch = channels[key];
@@ -297,7 +295,7 @@
                 el.className = 'w-full h-full';
                 el.autoplay = true;
                 el.controls = true;
-                el.muted = !hasAudio; // ישמע רק אם זה הערוץ עם הסאונד הפעיל
+                el.muted = !hasAudio;
                 if (Hls.isSupported()) {
                     const hls = new Hls();
                     hls.loadSource(ch.url);
@@ -305,7 +303,7 @@
                 } else {
                     el.src = ch.url;
                 }
-            } else { // iframe
+            } else {
                 el = document.createElement('iframe');
                 el.className = 'w-full h-full';
                 el.allow = 'autoplay; fullscreen';
@@ -394,14 +392,12 @@
             btn.onclick = () => {
                 if (active.includes(key)) {
                     active = active.filter(k => k !== key);
-                    // אם הסרנו את הערוץ עם הסאונד, אפס את הסאונד
                     if (activeAudioKey === key) {
                         activeAudioKey = null;
                     }
                     if (fullscreenKey === key) toggleFullscreen(null);
                 } else {
                     active.unshift(key);
-                    // [שינוי] לא מפעילים סאונד אוטומטית. הכל מתחיל מושתק.
                 }
                 render();
             };
@@ -449,13 +445,13 @@
         const diffX = clientX - startX;
         const idx = active.indexOf(fullscreenKey);
 
-        if (diffX < -50 && idx < active.length - 1) { // Swipe Left
+        if (diffX < -50 && idx < active.length - 1) {
             lastDirection = 'right';
             fullscreenKey = active[idx + 1];
             activeAudioKey = fullscreenKey;
             render();
         }
-        if (diffX > 50 && idx > 0) { // Swipe Right
+        if (diffX > 50 && idx > 0) {
             lastDirection = 'left';
             fullscreenKey = active[idx - 1];
             activeAudioKey = fullscreenKey;
@@ -488,7 +484,7 @@
         <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
         <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
     </div>
-    <div class="version-info">גרסה 8.0 - תיקון נגן ערוץ 14 והשתקה בטעינה</div>
+    <div class="version-info">גרסה 8.2 - תיקון נגן ערוץ 14</div>
 </footer>
 </body>
 </html>
