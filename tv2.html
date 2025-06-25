@@ -1,79 +1,388 @@
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>צפייה בערוצים</title>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-J5WT91REYB');
-  </script>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { background-color: #111827; color: white; font-family: sans-serif; }
-    .sticky-header { position: sticky; top: 0; z-index: 50; background-color: #1f2937; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
-    .channel-button.active { background-color: #2563eb; }
-    .channel-button { padding: 8px 12px; border-radius: 8px; background: #374151; color: white; font-weight: bold; white-space: nowrap; transition: background 0.3s ease; }
-    .channel-button:hover { background: #4b5563; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>צפייה בערוצים</title>
+    <!-- Google Analytics Script -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J5WT91REYB');
+    </script>
+    <!-- HLS.js Library for HLS streams -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- YouTube IFrame Player API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #111827; /* bg-gray-900 */
+            --header-bg-color: #1f2937; /* bg-gray-800 */
+            --btn-active-border: #3b82f6; /* bg-blue-500 */
+            --text-color-inactive: #9ca3af; /* text-gray-400 */
+            --text-color-active: #ffffff;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: white;
+            font-family: 'Rubik', sans-serif;
+            margin: 0;
+            /* Padding bottom will be set by JS to avoid content being hidden by nav bar */
+        }
+
+        /* --- Main Content and Video Grid --- */
+        .main-content {
+            padding: 1.5rem 1rem; /* 24px horizontal, 16px vertical */
+        }
+        .video-container {
+            position: relative;
+            aspect-ratio: 16/9;
+            border-radius: 12px;
+            overflow: hidden;
+            background-color: #000;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+        }
+
+        /* --- Per-Video Controls --- */
+        .controls-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(2px);
+        }
+        .video-container:hover .controls-overlay,
+        .video-container.touch-active .controls-overlay {
+            opacity: 1;
+        }
+        .control-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 48px;
+            height: 48px;
+            font-size: 24px;
+        }
+        .control-btn:hover { transform: scale(1.1); background: rgba(55, 65, 81, 0.9); }
+        .channel-name-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+            color: white;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            z-index: 9;
+        }
+
+        /* --- Bottom Navigation Bar --- */
+        #bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 50;
+            background-color: var(--header-bg-color);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+        }
+        .channel-button {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 4px 0;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-color-inactive);
+            border-top: 3px solid transparent;
+            transition: all 0.2s ease-in-out;
+        }
+        .channel-button:hover {
+            color: var(--text-color-active);
+        }
+        .channel-button.active {
+            color: var(--text-color-active);
+            border-top-color: var(--btn-active-border);
+        }
+        .channel-button .audio-indicator {
+            font-size: 1.2rem;
+            line-height: 1;
+            height: 1.2rem; /* Reserve space to prevent layout shift */
+        }
+        
+        /* --- Fullscreen Mode --- */
+        .fullscreen-mode .video-container:not(.active-fullscreen) { display: none !important; }
+        .fullscreen-mode .video-container.active-fullscreen {
+            position: fixed; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
+            z-index: 9999; background: #000; border-radius: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    </style>
 </head>
-<body class="pb-32">
+<body>
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD" height="0" width="0" style="display:none"></iframe></noscript>
 
-  <!-- תפריט ערוצים קבוע -->
-  <div class="sticky-header p-3">
-    <h1 class="text-center text-xl font-bold mb-3">בחר ערוצים</h1>
+    <main class="main-content">
+        <h1 class="text-3xl font-bold text-center mb-6">צפייה בערוצים</h1>
+        <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <!-- סרטוני הערוצים יוצגו כאן -->
+        </div>
+        <p id="no-channel-message" class="text-center text-gray-400 mt-10 text-lg">יש לבחור ערוץ מהתפריט התחתון</p>
+    </main>
 
-    <!-- גרסה 1: תפריט רשת (3x2) -->
-    <div class="grid grid-cols-3 gap-2 justify-center mb-4 md:hidden">
-      <button class="channel-button">כאן 11</button>
-      <button class="channel-button">עכשיו 14</button>
-      <button class="channel-button">i24NEWS</button>
-      <button class="channel-button">חדשות 13</button>
-      <button class="channel-button">חדשות 12</button>
-    </div>
+    <!-- Bottom Navigation Bar -->
+    <nav id="bottom-nav">
+        <!-- Channel buttons will be dynamically inserted here -->
+    </nav>
+    
+    <script>
+        const channels = {
+            kan11: { name: 'כאן 11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
+            news12: { name: 'חדשות 12', type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD', muteParam: 'muted' },
+            news13: { name: 'חדשות 13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
+            now14: { name: 'עכשיו 14', type: 'youtube', videoId: '_qOB__gXgi0' },
+            i24news: { name: 'i24NEWS', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' }
+        };
 
-    <!-- גרסה 2: שורה צפופה נגללת בסמארטפון -->
-    <div class="hidden md:flex flex-wrap justify-center gap-2 mb-4">
-      <button class="channel-button">כאן 11</button>
-      <button class="channel-button">עכשיו 14</button>
-      <button class="channel-button">i24NEWS</button>
-      <button class="channel-button">חדשות 13</button>
-      <button class="channel-button">חדשות 12</button>
-    </div>
+        let active = [];
+        let activeAudioKey = null;
+        let fullscreenKey = null;
+        let youtubePlayers = {};
 
-    <!-- גרסה 3: סמלים בלבד - נגלל לרוחב אם נדרש -->
-    <div class="flex justify-center gap-2 overflow-x-auto md:hidden mb-4">
-      <button class="channel-button">📺11</button>
-      <button class="channel-button">📺14</button>
-      <button class="channel-button">🌐i24</button>
-      <button class="channel-button">📰13</button>
-      <button class="channel-button">📰12</button>
-    </div>
-  </div>
+        const grid = document.getElementById('video-grid');
+        const message = document.getElementById('no-channel-message');
+        const bottomNavContainer = document.getElementById('bottom-nav');
 
-  <!-- אזור הצגת הווידאו (placeholder) -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
-    <div class="video-container bg-black aspect-video flex items-center justify-center text-gray-500">וידאו יופיע כאן</div>
-  </div>
+        function createChannelButtons() {
+            bottomNavContainer.innerHTML = ''; // Clear previous buttons
+            Object.entries(channels).forEach(([key, ch]) => {
+                const btn = document.createElement('button');
+                btn.className = 'channel-button';
+                btn.dataset.channel = key;
+                btn.innerHTML = `
+                    <span class="audio-indicator">&nbsp;</span>
+                    <span>${ch.name}</span>
+                `;
+                btn.onclick = () => {
+                    if (active.includes(key)) {
+                        active = active.filter(k => k !== key);
+                        if (activeAudioKey === key) activeAudioKey = null;
+                        if (fullscreenKey === key) toggleFullscreen(null);
+                    } else {
+                        active.unshift(key);
+                    }
+                    render();
+                };
+                bottomNavContainer.appendChild(btn);
+            });
+        }
 
-  <!-- פוטר -->
-  <footer class="mt-12 text-center text-sm text-gray-400 px-4 pb-6">
-    <p class="mb-2">ℹ️  על מנת גם להאזין לערוץ 12, יש להפעיל את הסאונד ידנית</p>
-    <div class="mb-4">
-      <a href="https://mistralnet.github.io/radio" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded">🎧 האזנה לתחנות רדיו</a>
-    </div>
-    <div class="flex justify-center gap-4 flex-wrap mb-4">
-      <a href="https://mistralnet.github.io/radio/" class="text-blue-400 hover:text-blue-300">Radio</a>
-      <a href="https://mistralnet.github.io/radio/tv.html" class="text-blue-400 hover:text-blue-300">TV</a>
-      <a href="https://mistralnet.github.io/radio/tv2.html" class="text-blue-400 hover:text-blue-300">TV2</a>
-      <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
-      <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
-    </div>
-    <div class="text-gray-500">גרסה 3</div>
-  </footer>
+        function updateChannelButtonsUI() {
+            document.querySelectorAll('.channel-button').forEach(btn => {
+                const key = btn.dataset.channel;
+                const audioIndicator = btn.querySelector('.audio-indicator');
+                
+                btn.classList.toggle('active', active.includes(key));
+                
+                if (audioIndicator) {
+                    audioIndicator.innerHTML = (active.includes(key) && key === activeAudioKey) ? '🔊' : '&nbsp;';
+                }
+            });
+        }
 
+        function render() {
+            grid.innerHTML = '';
+            message.classList.toggle('hidden', active.length > 0);
+
+            active.forEach(key => {
+                const ch = channels[key];
+                const box = document.createElement('div');
+                box.className = `video-container ${fullscreenKey === key ? 'active-fullscreen' : ''}`;
+                
+                let playerElement;
+                const hasAudio = key === activeAudioKey;
+
+                if (ch.type === 'hls') {
+                    playerElement = document.createElement('video');
+                    playerElement.className = 'w-full h-full object-cover';
+                    playerElement.autoplay = true;
+                    playerElement.playsInline = true;
+                    playerElement.muted = !hasAudio;
+                    if (Hls.isSupported()) {
+                        const hls = new Hls();
+                        hls.loadSource(ch.url);
+                        hls.attachMedia(playerElement);
+                        hls.on(Hls.Events.MANIFEST_PARSED, () => playerElement.play().catch(e => {}));
+                    } else {
+                        playerElement.src = ch.url;
+                    }
+                } else if (ch.type === 'youtube') {
+                    playerElement = document.createElement('div');
+                    playerElement.id = `youtube-player-${key}`;
+                    playerElement.className = 'w-full h-full';
+                    setTimeout(() => initYouTubePlayer(playerElement.id, ch.videoId, !hasAudio), 0);
+                } else { // iframe
+                    playerElement = document.createElement('iframe');
+                    playerElement.className = 'w-full h-full';
+                    playerElement.allow = 'autoplay; fullscreen';
+                    playerElement.src = buildUrlWithParams(ch.url, !hasAudio, ch.muteParam);
+                }
+
+                box.appendChild(playerElement);
+                box.appendChild(createControlsOverlay(key, ch.name));
+                grid.appendChild(box);
+            });
+
+            updateChannelButtonsUI();
+        }
+        
+        function createControlsOverlay(key, name) {
+            const overlay = document.createElement('div');
+            overlay.className = 'controls-overlay';
+
+            const nameBar = document.createElement('div');
+            nameBar.className = 'channel-name-bar';
+            nameBar.textContent = name;
+            
+            const controlsWrapper = document.createElement('div');
+            controlsWrapper.className = 'flex gap-4';
+
+            const soundBtn = document.createElement('button');
+            soundBtn.className = 'control-btn';
+            soundBtn.innerHTML = key === activeAudioKey ? '🔊' : '🔇';
+            soundBtn.onclick = (e) => { e.stopPropagation(); toggleAudio(key); };
+
+            const fullscreenBtn = document.createElement('button');
+            fullscreenBtn.className = 'control-btn';
+            fullscreenBtn.innerHTML = '⛶';
+            fullscreenBtn.onclick = (e) => { e.stopPropagation(); toggleFullscreen(key); };
+            
+            controlsWrapper.append(soundBtn, fullscreenBtn);
+            overlay.append(nameBar, controlsWrapper);
+            return overlay;
+        }
+
+        function toggleAudio(key) {
+            activeAudioKey = activeAudioKey === key ? null : key;
+            // When toggling audio, ensure other players are muted correctly
+            Object.values(youtubePlayers).forEach(p => p.mute());
+            if (activeAudioKey) {
+                const activeYTPlayer = youtubePlayers[`youtube-player-${activeAudioKey}`];
+                if (activeYTPlayer) {
+                    activeYTPlayer.unMute();
+                }
+            }
+            render();
+        }
+
+        function toggleFullscreen(key) {
+            const isCurrentlyFullscreen = !!fullscreenKey;
+            if (isCurrentlyFullscreen) {
+                fullscreenKey = null;
+                document.body.classList.remove('fullscreen-mode');
+                if (document.fullscreenElement) document.exitFullscreen?.();
+            } else {
+                fullscreenKey = key;
+                if (activeAudioKey !== key) {
+                    toggleAudio(key); // This will also call render()
+                    return; // a render call is already queued
+                }
+                document.body.classList.add('fullscreen-mode');
+                document.documentElement.requestFullscreen?.catch(err => {});
+            }
+            render();
+        }
+        
+        function initYouTubePlayer(elementId, videoId, isMuted) {
+            if (youtubePlayers[elementId] && youtubePlayers[elementId].playerInfo) {
+                 isMuted ? youtubePlayers[elementId].mute() : youtubePlayers[elementId].unMute();
+                 return;
+            }
+            youtubePlayers[elementId] = new YT.Player(elementId, {
+                videoId: videoId,
+                playerVars: { autoplay: 1, mute: isMuted ? 1 : 0, controls: 0, modestbranding: 1, rel: 0 },
+                events: { 'onReady': (e) => e.target.playVideo() }
+            });
+        }
+        
+        function buildUrlWithParams(base, isMuted, muteParam = 'muted') {
+            try {
+                let url = new URL(base);
+                url.searchParams.set('autoplay', 'true');
+                if (muteParam) url.searchParams.set(muteParam, isMuted ? 'true' : 'false');
+                return url.toString();
+            } catch (e) { return base; }
+        }
+        
+        function adjustBodyPadding() {
+            const navHeight = bottomNavContainer.offsetHeight;
+            document.body.style.paddingBottom = `${navHeight}px`;
+        }
+
+        // --- Event Listeners ---
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && fullscreenKey) {
+                toggleFullscreen(fullscreenKey);
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (!fullscreenKey || active.length <= 1) return;
+            const idx = active.indexOf(fullscreenKey);
+            let nextIdx = -1;
+            if (e.key === 'ArrowRight') nextIdx = (idx + 1) % active.length;
+            if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + active.length) % active.length;
+            
+            if (nextIdx !== -1) {
+                fullscreenKey = active[nextIdx];
+                toggleAudio(fullscreenKey); // This will handle audio and call render
+            }
+        });
+
+        document.addEventListener('touchstart', e => {
+            e.target.closest('.video-container')?.classList.add('touch-active');
+        }, { passive: true });
+        
+        document.addEventListener('touchend', () => {
+            document.querySelectorAll('.touch-active').forEach(el => el.classList.remove('touch-active'));
+        });
+        
+        window.addEventListener('resize', adjustBodyPadding);
+
+        // --- Initial Load ---
+        createChannelButtons();
+        render();
+        adjustBodyPadding();
+    </script>
 </body>
 </html>
