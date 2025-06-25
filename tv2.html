@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>צפייה בערוצים</title>
+    
     <!-- Google Analytics Script -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
     <script>
@@ -12,378 +13,689 @@
         gtag('js', new Date());
         gtag('config', 'G-J5WT91REYB');
     </script>
+    
     <!-- HLS.js Library for HLS streams -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    <!-- YouTube IFrame Player API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
+    
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Feather Icons for clear UI icons -->
+    <script src="https://unpkg.com/feather-icons"></script>
+    
     <style>
         :root {
-            --bg-color: #111827; /* bg-gray-900 */
-            --header-bg-color: #1f2937; /* bg-gray-800 */
-            --btn-active-border: #3b82f6; /* bg-blue-500 */
+            --bg-color: #0a0a0a;
+            --header-bg-color: #1a1a1a;
+            --nav-bg-color: #1f2937; /* bg-gray-800 */
+            --nav-btn-bg-color: #374151; /* bg-gray-700 */
+            --nav-btn-active-bg-color: #4f46e5; /* bg-indigo-600 */
+            --text-color: #f9fafb; /* text-gray-50 */
             --text-color-inactive: #9ca3af; /* text-gray-400 */
-            --text-color-active: #ffffff;
         }
+        
+        /* --- General Body and Typography --- */
         body {
             background-color: var(--bg-color);
-            color: white;
-            font-family: 'Rubik', sans-serif;
+            color: var(--text-color);
+            font-family: 'Heebo', sans-serif;
             margin: 0;
-            /* Padding bottom will be set by JS to avoid content being hidden by nav bar */
+            padding-bottom: 90px; /* Reserve space for bottom nav bar */
         }
 
         /* --- Main Content and Video Grid --- */
         .main-content {
-            padding: 1.5rem 1rem; /* 24px horizontal, 16px vertical */
+            padding: 1.5rem 1rem;
         }
+        
         .video-container {
             position: relative;
             aspect-ratio: 16/9;
             border-radius: 12px;
             overflow: hidden;
             background-color: #000;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            transition: transform 0.2s ease-in-out;
+        }
+        
+        .video-container video, .video-container iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
-        /* --- Per-Video Controls --- */
-        .controls-overlay {
+        /* --- Per-Video Controls (Grid View) --- */
+        .grid-controls-overlay {
             position: absolute;
             inset: 0;
             display: flex;
-            flex-direction: row;
-            justify-content: center;
+            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            gap: 1rem;
+            padding: 8px;
             z-index: 10;
             opacity: 0;
             transition: opacity 0.3s ease;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.2);
             backdrop-filter: blur(2px);
         }
-        .video-container:hover .controls-overlay,
-        .video-container.touch-active .controls-overlay {
+        
+        .video-container:hover .grid-controls-overlay {
             opacity: 1;
         }
-        .control-btn {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: rgba(30, 41, 59, 0.8);
-            padding: 10px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            color: white;
-            border: 1px solid rgba(255,255,255,0.2);
-            width: 48px;
-            height: 48px;
-            font-size: 24px;
-        }
-        .control-btn:hover { transform: scale(1.1); background: rgba(55, 65, 81, 0.9); }
+        
         .channel-name-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
+            width: 100%;
+            text-align: right;
             background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
             color: white;
             padding: 8px 12px;
             font-size: 0.9rem;
             font-weight: 500;
-            z-index: 9;
         }
 
-        /* --- Bottom Navigation Bar --- */
+        .grid-control-buttons {
+            display: flex;
+            gap: 1rem;
+            padding-bottom: 1rem;
+        }
+
+        .control-btn {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 44px;
+            height: 44px;
+        }
+        
+        .control-btn:hover { 
+            transform: scale(1.1);
+            background: rgba(55, 65, 81, 0.9); 
+        }
+
+        /* --- Redesigned Bottom Navigation Bar --- */
         #bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            z-index: 50;
-          background-color: #E91E63;
-
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+            z-index: 1000;
+            background-color: var(--nav-bg-color);
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.4);
             border-top: 1px solid rgba(255,255,255,0.1);
             display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
+            justify-content: center; /* Center the buttons */
+            align-items: center;
+            padding: 12px 0;
+            gap: 10px; /* Space between buttons */
+            height: 75px;
         }
+
         .channel-button {
-            flex-grow: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
-            padding: 4px 0;
             cursor: pointer;
-            font-size: 0.8rem;
-            font-weight: 500;
             color: var(--text-color-inactive);
-            border-top: 3px solid transparent;
+            background-color: var(--nav-btn-bg-color);
+            border-radius: 12px; /* Rounded corners */
+            width: 60px;
+            height: 55px;
             transition: all 0.2s ease-in-out;
+            font-size: 1.1rem; /* Larger font size */
+            font-weight: 700;
+            position: relative;
+            border: 2px solid transparent;
         }
+        
         .channel-button:hover {
-            color: var(--text-color-active);
+            transform: translateY(-3px);
+            color: var(--text-color);
         }
+
         .channel-button.active {
-            color: var(--text-color-active);
-            border-top-color: var(--btn-active-border);
+            color: var(--text-color);
+            background-color: var(--nav-btn-active-bg-color);
+            border-color: #a5b4fc; /* indigo-200 */
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.7);
         }
-        .channel-button .audio-indicator {
-            font-size: 1.2rem;
-            line-height: 1;
-            height: 1.2rem; /* Reserve space to prevent layout shift */
+        
+        .audio-indicator {
+            position: absolute;
+            top: 2px;
+            right: 5px;
+            font-size: 0.8rem;
+            color: #fde047; /* yellow-300 */
         }
         
         /* --- Fullscreen Mode --- */
-        .fullscreen-mode .video-container:not(.active-fullscreen) { display: none !important; }
-        .fullscreen-mode .video-container.active-fullscreen {
-            position: fixed; top: 0; left: 0; width: 100vw !important; height: 100vh !important;
-            z-index: 9999; background: #000; border-radius: 0;
-            animation: fadeIn 0.3s ease forwards;
+        body.fullscreen-mode .main-content {
+            display: none; /* Hide grid view */
         }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        body.fullscreen-mode #bottom-nav {
+            display: none; /* Hide bottom nav */
+        }
 
+        #fullscreen-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 9999;
+            background: #000;
+            display: none; /* Hidden by default */
+            justify-content: center;
+            align-items: center;
+        }
+        
+        body.fullscreen-mode #fullscreen-container {
+            display: flex;
+        }
+        
+        #fullscreen-container .video-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 0;
+        }
+
+        /* --- Fullscreen Controls --- */
+        #fullscreen-controls {
+            position: absolute;
+            inset: 0;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 2rem;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent 25%, transparent 75%, rgba(0,0,0,0.5));
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        #fullscreen-container:hover #fullscreen-controls,
+        #fullscreen-container.touch-active #fullscreen-controls {
+            opacity: 1;
+        }
+        
+        .fullscreen-top-controls, .fullscreen-bottom-controls {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .fullscreen-bottom-controls {
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .fullscreen-channel-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px #000;
+        }
+
+        .fs-btn {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        .fs-btn:hover {
+            transform: scale(1.1);
+            background: rgba(55, 65, 81, 0.9);
+        }
     </style>
 </head>
 <body>
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD" height="0" width="0" style="display:none"></iframe></noscript>
 
     <main class="main-content">
-        <h1 class="text-3xl font-bold text-center mb-6">צפייה בערוצים</h1>
+        <h1 class="text-3xl font-bold text-center mb-2">צפייה בערוצים</h1>
+        <p class="text-center text-gray-400 mb-6">לחצו על מספר ערוץ כדי להוסיף אותו לתצוגה</p>
         <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            <!-- סרטוני הערוצים יוצגו כאן -->
+            <!-- Video players will be inserted here -->
         </div>
         <p id="no-channel-message" class="text-center text-gray-400 mt-10 text-lg">יש לבחור ערוץ מהתפריט התחתון</p>
     </main>
 
-    <!-- Bottom Navigation Bar -->
+    <!-- Container for the fullscreen player -->
+    <div id="fullscreen-container">
+        <!-- The single fullscreen video player will be injected here -->
+    </div>
+    
+    <!-- Redesigned Bottom Navigation Bar -->
     <nav id="bottom-nav">
         <!-- Channel buttons will be dynamically inserted here -->
     </nav>
-    
+        
     <script>
+        // --- Configuration and State ---
         const channels = {
-            kan11: { name: 'כאן 11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-            news12: { name: 'חדשות 12', type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD', muteParam: 'muted' },
-            news13: { name: 'חדשות 13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
-            now14: { name: 'עכשיו 14', type: 'youtube', videoId: '_qOB__gXgi0' },
-            i24news: { name: 'i24NEWS', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' }
+            kan11: { name: 'כאן 11', short: '11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
+            news12: { name: 'חדשות 12', short: '12', type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM100000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD', muteParam: 'muted' },
+            news13: { name: 'חדשות 13', short: '13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
+            now14: { name: 'עכשיו 14', short: '14', type: 'hls', url: 'https://now14.g-mana.live/media/91517651-71c1-4775-a85f-dedf4df89f92/main.m3u8' },
+            i24news: { name: 'i24NEWS', short: 'i24', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' }
         };
 
-        let active = [];
+        let activeChannels = [];
         let activeAudioKey = null;
         let fullscreenKey = null;
-        let youtubePlayers = {};
+        let hlsInstances = {}; // Track HLS instances for cleanup
 
         const grid = document.getElementById('video-grid');
         const message = document.getElementById('no-channel-message');
         const bottomNavContainer = document.getElementById('bottom-nav');
+        const fullscreenContainer = document.getElementById('fullscreen-container');
 
+        // --- Core Functions ---
+        
+        /**
+         * Main render function. Decides whether to show the grid or fullscreen view.
+         */
+        function render() {
+            if (fullscreenKey) {
+                renderFullscreenView();
+            } else {
+                renderGridView();
+            }
+            updateChannelButtonsUI();
+            feather.replace(); // Redraw icons
+        }
+
+        /**
+         * Renders the grid of active video players.
+         */
+        function renderGridView() {
+            grid.innerHTML = '';
+            message.style.display = activeChannels.length > 0 ? 'none' : 'block';
+
+            activeChannels.forEach(key => {
+                const box = createPlayerContainer(key);
+                grid.appendChild(box);
+            });
+        }
+        
+        /**
+         * Renders the single fullscreen video player and its controls.
+         */
+        function renderFullscreenView() {
+            fullscreenContainer.innerHTML = '';
+            if (!fullscreenKey) return;
+                    
+            const box = createPlayerContainer(fullscreenKey);
+            const controls = createFullscreenControls(fullscreenKey);
+            box.appendChild(controls);
+                    
+            fullscreenContainer.appendChild(box);
+        }
+
+        /**
+         * Creates a single player container (for grid or fullscreen).
+         * @param {string} key - The channel key.
+         * @returns {HTMLElement} The container div with the player inside.
+         */
+        function createPlayerContainer(key) {
+            const ch = channels[key];
+            const box = document.createElement('div');
+            box.className = 'video-container';
+            box.dataset.channelKey = key;
+                    
+            let playerElement;
+            const hasAudio = key === activeAudioKey;
+
+            if (ch.type === 'hls') {
+                playerElement = document.createElement('video');
+                playerElement.autoplay = true;
+                playerElement.playsInline = true;
+                playerElement.muted = !hasAudio;
+                
+                // Clean up any existing HLS instance for this key
+                if (hlsInstances[key]) {
+                    hlsInstances[key].destroy();
+                    delete hlsInstances[key];
+                }
+
+                if (Hls.isSupported()) {
+                    const hls = new Hls({ 
+                        enableWorker: true, 
+                        lowLatencyMode: true,
+                        startLevel: -1 // Auto quality
+                    });
+                    hls.loadSource(ch.url);
+                    hls.attachMedia(playerElement);
+                    hls.on(Hls.Events.ERROR, (event, data) => {
+                        if (data.fatal) {
+                            console.error('HLS fatal error:', data);
+                            switch(data.type) {
+                                case Hls.ErrorTypes.NETWORK_ERROR:
+                                    hls.startLoad();
+                                    break;
+                                case Hls.ErrorTypes.MEDIA_ERROR:
+                                    hls.recoverMediaError();
+                                    break;
+                                default:
+                                    // Cannot recover
+                                    break;
+                            }
+                        }
+                    });
+                    hlsInstances[key] = hls;
+                } else if (playerElement.canPlayType('application/vnd.apple.mpegurl')) {
+                    // For Safari
+                    playerElement.src = ch.url;
+                }
+            } else { // iframe for Channel 12
+                playerElement = document.createElement('iframe');
+                playerElement.allow = 'autoplay; fullscreen';
+                playerElement.src = buildUrlWithParams(ch.url, !hasAudio, ch.muteParam);
+            }
+
+            box.appendChild(playerElement);
+            
+            // Only add grid controls if not in fullscreen mode
+            if (!fullscreenKey) {
+                box.appendChild(createGridControlsOverlay(key, ch.name));
+            }
+            return box;
+        }
+        
+        /**
+         * Builds an iframe URL with autoplay and mute parameters.
+         * @param {string} base - The base URL.
+         * @param {boolean} isMuted - Whether the stream should be muted.
+         * @param {string} muteParam - The name of the mute parameter in the URL.
+         * @returns {string} The final URL.
+         */
+        function buildUrlWithParams(base, isMuted, muteParam = 'muted') {
+            try {
+                let url = base;
+                url += `&autoplay=${isMuted ? 'false' : 'true'}`;
+                url += `&${muteParam}=${isMuted ? 'true' : 'false'}`;
+                return url;
+            } catch (e) {
+                console.error("Error building URL:", e);
+                return base;
+            }
+        }
+
+        // --- UI Creation Functions ---
+
+        /**
+         * Creates the redesigned channel buttons for the bottom navigation bar.
+         */
         function createChannelButtons() {
-            bottomNavContainer.innerHTML = ''; // Clear previous buttons
+            bottomNavContainer.innerHTML = '';
             Object.entries(channels).forEach(([key, ch]) => {
                 const btn = document.createElement('button');
                 btn.className = 'channel-button';
                 btn.dataset.channel = key;
                 btn.innerHTML = `
-                    <span class="audio-indicator">&nbsp;</span>
-                    <span>${ch.name}</span>
+                    <span class="audio-indicator"></span>
+                    <span>${ch.short}</span>
                 `;
-                btn.onclick = () => {
-                    if (active.includes(key)) {
-                        active = active.filter(k => k !== key);
-                        if (activeAudioKey === key) activeAudioKey = null;
-                        if (fullscreenKey === key) toggleFullscreen(null);
-                    } else {
-                        active.unshift(key);
-                    }
-                    render();
-                };
+                btn.onclick = () => toggleChannel(key);
                 bottomNavContainer.appendChild(btn);
             });
         }
-
+        
+        /**
+         * Updates the visual state of the bottom navigation buttons (active, audio).
+         */
         function updateChannelButtonsUI() {
             document.querySelectorAll('.channel-button').forEach(btn => {
                 const key = btn.dataset.channel;
                 const audioIndicator = btn.querySelector('.audio-indicator');
                 
-                btn.classList.toggle('active', active.includes(key));
+                btn.classList.toggle('active', activeChannels.includes(key));
                 
                 if (audioIndicator) {
-                    audioIndicator.innerHTML = (active.includes(key) && key === activeAudioKey) ? '🔊' : '&nbsp;';
+                    audioIndicator.innerHTML = (activeChannels.includes(key) && key === activeAudioKey) ? '🔊' : '';
                 }
             });
         }
 
-        function render() {
-            grid.innerHTML = '';
-            message.classList.toggle('hidden', active.length > 0);
-
-            active.forEach(key => {
-                const ch = channels[key];
-                const box = document.createElement('div');
-                box.className = `video-container ${fullscreenKey === key ? 'active-fullscreen' : ''}`;
-                
-                let playerElement;
-                const hasAudio = key === activeAudioKey;
-
-                if (ch.type === 'hls') {
-                    playerElement = document.createElement('video');
-                    playerElement.className = 'w-full h-full object-cover';
-                    playerElement.autoplay = true;
-                    playerElement.playsInline = true;
-                    playerElement.muted = !hasAudio;
-                    if (Hls.isSupported()) {
-                        const hls = new Hls();
-                        hls.loadSource(ch.url);
-                        hls.attachMedia(playerElement);
-                        hls.on(Hls.Events.MANIFEST_PARSED, () => playerElement.play().catch(e => {}));
-                    } else {
-                        playerElement.src = ch.url;
-                    }
-                } else if (ch.type === 'youtube') {
-                    playerElement = document.createElement('div');
-                    playerElement.id = `youtube-player-${key}`;
-                    playerElement.className = 'w-full h-full';
-                    setTimeout(() => initYouTubePlayer(playerElement.id, ch.videoId, !hasAudio), 0);
-                } else { // iframe
-                    playerElement = document.createElement('iframe');
-                    playerElement.className = 'w-full h-full';
-                    playerElement.allow = 'autoplay; fullscreen';
-                    playerElement.src = buildUrlWithParams(ch.url, !hasAudio, ch.muteParam);
-                }
-
-                box.appendChild(playerElement);
-                box.appendChild(createControlsOverlay(key, ch.name));
-                grid.appendChild(box);
-            });
-
-            updateChannelButtonsUI();
-        }
-        
-        function createControlsOverlay(key, name) {
+        /**
+         * Creates the simple overlay for grid view with mute and fullscreen buttons.
+         * @param {string} key - The channel key.
+         * @param {string} name - The channel name.
+         * @returns {HTMLElement} The overlay div.
+         */
+        function createGridControlsOverlay(key, name) {
             const overlay = document.createElement('div');
-            overlay.className = 'controls-overlay';
+            overlay.className = 'grid-controls-overlay';
 
             const nameBar = document.createElement('div');
             nameBar.className = 'channel-name-bar';
             nameBar.textContent = name;
             
             const controlsWrapper = document.createElement('div');
-            controlsWrapper.className = 'flex gap-4';
-
+            controlsWrapper.className = 'grid-control-buttons';
+            
             const soundBtn = document.createElement('button');
             soundBtn.className = 'control-btn';
-            soundBtn.innerHTML = key === activeAudioKey ? '🔊' : '🔇';
+            soundBtn.innerHTML = key === activeAudioKey ? '<i data-feather="volume-2"></i>' : '<i data-feather="volume-x"></i>';
             soundBtn.onclick = (e) => { e.stopPropagation(); toggleAudio(key); };
-
+            
             const fullscreenBtn = document.createElement('button');
             fullscreenBtn.className = 'control-btn';
-            fullscreenBtn.innerHTML = '⛶';
+            fullscreenBtn.innerHTML = '<i data-feather="maximize"></i>';
             fullscreenBtn.onclick = (e) => { e.stopPropagation(); toggleFullscreen(key); };
-            
+
             controlsWrapper.append(soundBtn, fullscreenBtn);
             overlay.append(nameBar, controlsWrapper);
             return overlay;
         }
+        
+        /**
+         * Creates the new, comprehensive controls for the fullscreen view.
+         * @param {string} key - The channel key.
+         * @returns {HTMLElement} The fullscreen controls div.
+         */
+        function createFullscreenControls(key) {
+            const ch = channels[key];
+            const controls = document.createElement('div');
+            controls.id = 'fullscreen-controls';
 
-        function toggleAudio(key) {
-            activeAudioKey = activeAudioKey === key ? null : key;
-            // When toggling audio, ensure other players are muted correctly
-            Object.values(youtubePlayers).forEach(p => p.mute());
-            if (activeAudioKey) {
-                const activeYTPlayer = youtubePlayers[`youtube-player-${activeAudioKey}`];
-                if (activeYTPlayer) {
-                    activeYTPlayer.unMute();
-                }
-            }
-            render();
+            const hasPrev = activeChannels.length > 1;
+            const hasNext = activeChannels.length > 1;
+
+            controls.innerHTML = `
+                <div class="fullscreen-top-controls">
+                    <span class="fullscreen-channel-name">${ch.name}</span>
+                    <button class="fs-btn" id="exit-fs-btn" title="חזרה לתצוגת רשת">
+                        <i data-feather="minimize-2" style="width: 32px; height: 32px;"></i>
+                    </button>
+                </div>
+                <div class="fullscreen-bottom-controls">
+                    <button class="fs-btn" id="prev-ch-btn" title="ערוץ קודם" ${!hasPrev ? 'style="display:none;"' : ''}>
+                        <i data-feather="arrow-right" style="width: 32px; height: 32px;"></i>
+                    </button>
+                    <button class="fs-btn" id="fs-sound-btn" title="הפעל/כבה שמע">
+                        ${key === activeAudioKey ? '<i data-feather="volume-2" style="width: 32px; height: 32px;"></i>' : '<i data-feather="volume-x" style="width: 32px; height: 32px;"></i>'}
+                    </button>
+                    <button class="fs-btn" id="next-ch-btn" title="ערוץ הבא" ${!hasNext ? 'style="display:none;"' : ''}>
+                        <i data-feather="arrow-left" style="width: 32px; height: 32px;"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Attach event listeners
+            controls.querySelector('#exit-fs-btn').onclick = (e) => { e.stopPropagation(); toggleFullscreen(null); };
+            controls.querySelector('#fs-sound-btn').onclick = (e) => { e.stopPropagation(); toggleAudio(key); };
+            controls.querySelector('#next-ch-btn').onclick = (e) => { e.stopPropagation(); zapChannel('next'); };
+            controls.querySelector('#prev-ch-btn').onclick = (e) => { e.stopPropagation(); zapChannel('prev'); };
+
+            return controls;
         }
 
-        function toggleFullscreen(key) {
-            const isCurrentlyFullscreen = !!fullscreenKey;
-            if (isCurrentlyFullscreen) {
-                fullscreenKey = null;
-                document.body.classList.remove('fullscreen-mode');
-                if (document.fullscreenElement) document.exitFullscreen?.();
+        // --- Event Handlers and Toggles ---
+        
+        /**
+         * Toggles a channel's visibility in the grid.
+         * @param {string} key - The channel key.
+         */
+        function toggleChannel(key) {
+            const index = activeChannels.indexOf(key);
+            if (index > -1) {
+                activeChannels.splice(index, 1);
+                // Clean up HLS instance when removing channel
+                if (hlsInstances[key]) {
+                    hlsInstances[key].destroy();
+                    delete hlsInstances[key];
+                }
+                // If the channel with audio is removed, clear audio key
+                if (activeAudioKey === key) {
+                    activeAudioKey = null;
+                }
+                if (fullscreenKey === key) {
+                    toggleFullscreen(null);
+                }
             } else {
-                fullscreenKey = key;
-                if (activeAudioKey !== key) {
-                    toggleAudio(key); // This will also call render()
-                    return; // a render call is already queued
-                }
-                document.body.classList.add('fullscreen-mode');
-                document.documentElement.requestFullscreen?.catch(err => {});
+                activeChannels.unshift(key); // Add to the beginning
             }
             render();
         }
-        
-        function initYouTubePlayer(elementId, videoId, isMuted) {
-            if (youtubePlayers[elementId] && youtubePlayers[elementId].playerInfo) {
-                 isMuted ? youtubePlayers[elementId].mute() : youtubePlayers[elementId].unMute();
-                 return;
+
+        /**
+         * Toggles audio between channels or mutes all.
+         * @param {string} key - The channel key to give audio to.
+         */
+        function toggleAudio(key) {
+            // If clicking on the currently active audio channel, mute all
+            if (activeAudioKey === key) {
+                activeAudioKey = null;
+            } 
+            // Otherwise, set this channel as the active audio channel
+            else {
+                activeAudioKey = key;
             }
-            youtubePlayers[elementId] = new YT.Player(elementId, {
-                videoId: videoId,
-                playerVars: { autoplay: 1, mute: isMuted ? 1 : 0, controls: 0, modestbranding: 1, rel: 0 },
-                events: { 'onReady': (e) => e.target.playVideo() }
-            });
+            render();
         }
-        
-        function buildUrlWithParams(base, isMuted, muteParam = 'muted') {
-            try {
-                let url = new URL(base);
-                url.searchParams.set('autoplay', 'true');
-                if (muteParam) url.searchParams.set(muteParam, isMuted ? 'true' : 'false');
-                return url.toString();
-            } catch (e) { return base; }
+
+        /**
+         * Enters or exits fullscreen mode for a specific channel.
+         * @param {string|null} key - The channel to make fullscreen, or null to exit.
+         */
+        function toggleFullscreen(key) {
+            fullscreenKey = key;
+            document.body.classList.toggle('fullscreen-mode', !!key);
+            
+            if (key && activeAudioKey !== key) {
+                // If entering fullscreen on a muted channel, also give it audio.
+                activeAudioKey = key;
+            }
+            render();
         }
-        
-        function adjustBodyPadding() {
-            const navHeight = bottomNavContainer.offsetHeight;
-            document.body.style.paddingBottom = `${navHeight}px`;
+
+        /**
+         * "Zaps" or switches to the next/previous channel in fullscreen view.
+         * @param {'next'|'prev'} direction - The direction to switch.
+         */
+        function zapChannel(direction) {
+            if (!fullscreenKey || activeChannels.length <= 1) return;
+            
+            const currentIndex = activeChannels.indexOf(fullscreenKey);
+            let nextIndex;
+            
+            if (direction === 'next') {
+                nextIndex = (currentIndex + 1) % activeChannels.length;
+            } else { // 'prev'
+                nextIndex = (currentIndex - 1 + activeChannels.length) % activeChannels.length;
+            }
+            
+            const newKey = activeChannels[nextIndex];
+            fullscreenKey = newKey;
+            activeAudioKey = newKey; // Always give audio to the zapped channel
+            
+            render();
+        }
+
+        // --- Cleanup Function ---
+        function cleanup() {
+            // Destroy all HLS instances
+            Object.values(hlsInstances).forEach(hls => hls.destroy());
+            hlsInstances = {};
+            activeChannels = [];
+            activeAudioKey = null;
+            fullscreenKey = null;
         }
 
         // --- Event Listeners ---
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement && fullscreenKey) {
-                toggleFullscreen(fullscreenKey);
-            }
-        });
-
         document.addEventListener('keydown', (e) => {
-            if (!fullscreenKey || active.length <= 1) return;
-            const idx = active.indexOf(fullscreenKey);
-            let nextIdx = -1;
-            if (e.key === 'ArrowRight') nextIdx = (idx + 1) % active.length;
-            if (e.key === 'ArrowLeft') nextIdx = (idx - 1 + active.length) % active.length;
+            if (!fullscreenKey) return;
             
-            if (nextIdx !== -1) {
-                fullscreenKey = active[nextIdx];
-                toggleAudio(fullscreenKey); // This will handle audio and call render
+            if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                zapChannel('prev');
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                zapChannel('next');
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                toggleFullscreen(null);
+            } else if (e.key === 'm' || e.key === 'M') {
+                e.preventDefault();
+                toggleAudio(fullscreenKey);
             }
         });
-
-        document.addEventListener('touchstart', e => {
-            e.target.closest('.video-container')?.classList.add('touch-active');
+        
+        let touchTimeout;
+        fullscreenContainer.addEventListener('touchstart', e => {
+            fullscreenContainer.classList.add('touch-active');
+            clearTimeout(touchTimeout);
+            touchTimeout = setTimeout(() => {
+                fullscreenContainer.classList.remove('touch-active');
+            }, 3000);
         }, { passive: true });
         
-        document.addEventListener('touchend', () => {
-            document.querySelectorAll('.touch-active').forEach(el => el.classList.remove('touch-active'));
+        // Clean up when page is hidden (tab switch, minimize, etc.)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Mute all when page is hidden
+                activeAudioKey = null;
+                render();
+            }
         });
-        
-        window.addEventListener('resize', adjustBodyPadding);
 
         // --- Initial Load ---
-        createChannelButtons();
-        render();
-        adjustBodyPadding();
+        function initialize() {
+            createChannelButtons();
+            render();
+            const navHeight = document.getElementById('bottom-nav').offsetHeight;
+            document.body.style.paddingBottom = `${navHeight}px`;
+            
+            // Clean up on page unload
+            window.addEventListener('unload', cleanup);
+        }
+
+        window.onload = initialize;
+        window.onresize = () => {
+            const navHeight = document.getElementById('bottom-nav').offsetHeight;
+            document.body.style.paddingBottom = `${navHeight}px`;
+        };
     </script>
 </body>
 </html>
