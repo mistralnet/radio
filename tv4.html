@@ -171,12 +171,14 @@
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.7); /* Adjusted shadow to match active color */
         }
 
+        /* Updated audio indicator styling for better visibility */
         .audio-indicator {
             position: absolute;
-            top: 2px;
-            right: 5px;
-            font-size: 0.8rem;
+            top: 0px; /* Adjusted to be slightly higher */
+            left: 5px; /* Moved to the left for better visibility */
+            font-size: 1rem; /* Increased font size for prominence */
             color: #fde047; /* yellow-300 */
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.7); /* Added subtle shadow for contrast */
         }
 
         /* --- Fullscreen Mode --- */
@@ -615,12 +617,12 @@
                 <div class="fullscreen-top-controls">
                     <span class="fullscreen-channel-name">${ch.name}</span>
                     <button class="fs-btn" id="exit-fs-btn" title="חזרה לתצוגת רשת">
-                        <i data-feather="minimize-2" style="width: 32px; height: 32px;"></i>
+                        <i data-feather="minimize-2"></i>
                     </button>
                 </div>
                 <div class="fullscreen-bottom-controls">
                     <button class="fs-btn" id="prev-ch-btn" title="ערוץ קודם" ${!hasPrevNext ? 'style="display:none;"' : ''}>
-                        <i data-feather="arrow-right" style="width: 32px; height: 32px;"></i>
+                        <i data-feather="arrow-right"></i>
                     </button>
                     <button class="fs-btn" id="fs-sound-btn" title="הפעל/כבה שמע">
                         ${key === activeAudioKey ? '<i data-feather="volume-2"></i>' : '<i data-feather="volume-x"></i>'}
