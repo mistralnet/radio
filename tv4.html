@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>צפייה בערוצים</title>
-    
+
     <!-- Google Analytics Script -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
     <script>
@@ -13,19 +13,19 @@
         gtag('js', new Date());
         gtag('config', 'G-J5WT91REYB');
     </script>
-    
+
     <!-- HLS.js Library for HLS streams -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-    
+
     <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
-    
+
     <!-- Feather Icons for clear UI icons -->
     <script src="https://unpkg.com/feather-icons"></script>
-    
+
     <style>
         :root {
             --bg-color: #0a0a0a;
@@ -36,7 +36,7 @@
             --text-color: #f9fafb; /* text-gray-50 */
             --text-color-inactive: #9ca3af; /* text-gray-400 */
         }
-        
+
         /* --- General Body and Typography --- */
         body {
             background-color: var(--bg-color);
@@ -50,7 +50,7 @@
         .main-content {
             padding: 1.5rem 1rem;
         }
-        
+
         .video-container {
             position: relative;
             aspect-ratio: 16/9;
@@ -60,7 +60,7 @@
             box-shadow: 0 5px 20px rgba(0,0,0,0.5);
             transition: transform 0.2s ease-in-out;
         }
-        
+
         .video-container video, .video-container iframe {
             width: 100%;
             height: 100%;
@@ -82,11 +82,11 @@
             background: rgba(0,0,0,0.2);
             backdrop-filter: blur(2px);
         }
-        
+
         .video-container:hover .grid-controls-overlay {
             opacity: 1;
         }
-        
+
         .channel-name-bar {
             width: 100%;
             text-align: right;
@@ -116,11 +116,11 @@
             width: 44px;
             height: 44px;
         }
-        
-        .control-btn:hover { 
-            transform: scale(1.1);
-            background: rgba(55, 65, 81, 0.9); 
-        }
+
+        .control-btn:hover {
+             transform: scale(1.1);
+            background: rgba(55, 65, 81, 0.9);
+         }
 
         /* --- Redesigned Bottom Navigation Bar --- */
         #bottom-nav {
@@ -157,7 +157,7 @@
             position: relative;
             border: 2px solid transparent;
         }
-        
+
         .channel-button:hover {
             transform: translateY(-3px);
             color: var(--text-color);
@@ -169,7 +169,7 @@
             border-color: #a5b4fc; /* indigo-200 */
             box-shadow: 0 0 15px rgba(79, 70, 229, 0.7);
         }
-        
+
         .audio-indicator {
             position: absolute;
             top: 2px;
@@ -177,7 +177,7 @@
             font-size: 0.8rem;
             color: #fde047; /* yellow-300 */
         }
-        
+
         /* --- Fullscreen Mode --- */
         body.fullscreen-mode .main-content {
             display: none; /* Hide grid view */
@@ -198,11 +198,11 @@
             justify-content: center;
             align-items: center;
         }
-        
+
         body.fullscreen-mode #fullscreen-container {
             display: flex;
         }
-        
+
         #fullscreen-container .video-container {
             width: 100%;
             height: 100%;
@@ -223,12 +223,12 @@
             opacity: 0;
             transition: opacity 0.4s ease;
         }
-        
+
         #fullscreen-container:hover #fullscreen-controls,
         #fullscreen-container.touch-active #fullscreen-controls {
             opacity: 1;
         }
-        
+
         .fullscreen-top-controls, .fullscreen-bottom-controls {
             width: 100%;
             display: flex;
@@ -261,7 +261,7 @@
             justify-content: center;
             transition: all 0.2s ease;
         }
-        
+
         .fs-btn:hover {
             transform: scale(1.1);
             background: rgba(55, 65, 81, 0.9);
@@ -284,12 +284,12 @@
     <div id="fullscreen-container">
         <!-- The single fullscreen video player will be injected here -->
     </div>
-    
+
     <!-- Redesigned Bottom Navigation Bar -->
     <nav id="bottom-nav">
         <!-- Channel buttons will be dynamically inserted here -->
     </nav>
-        
+
     <script>
         // --- Configuration and State ---
         const channels = {
@@ -302,121 +302,204 @@
         };
 
         let activeChannels = [];
-        let activeAudioKey = null;
+        let activeAudioKey = null; // Starts null, so all players are muted initially
         let fullscreenKey = null;
+
+        // Object to store Hls.js instances for proper cleanup when channels are removed
+        const hlsInstances = {};
 
         const grid = document.getElementById('video-grid');
         const message = document.getElementById('no-channel-message');
         const bottomNavContainer = document.getElementById('bottom-nav');
         const fullscreenContainer = document.getElementById('fullscreen-container');
 
-        // --- Core Functions ---
-        
+        // --- Inactivity Timer Variables and Functions ---
+        let userActivityTimeout;
+        const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
+
         /**
-         * Main render function. Decides whether to show the grid or fullscreen view.
+         * Resets the inactivity timer. If no activity is detected for 10 minutes,
+         * the active audio channel will be muted.
+         */
+        function resetActivityTimer() {
+            clearTimeout(userActivityTimeout);
+            userActivityTimeout = setTimeout(() => {
+                // Only mute if there are currently active channels and audio is playing
+                if (activeChannels.length > 0 && activeAudioKey !== null) {
+                    activeAudioKey = null; // Mute all audio
+                    console.log('Inactivity detected, muting all channels.');
+                    render(); // Re-render to apply the muted state
+                }
+            }, INACTIVITY_TIMEOUT_MS);
+        }
+
+        // Attach global activity listeners to reset the timer
+        document.addEventListener('mousemove', resetActivityTimer);
+        document.addEventListener('keydown', resetActivityTimer);
+        document.addEventListener('touchstart', resetActivityTimer);
+        document.addEventListener('click', resetActivityTimer); // General clicks
+
+        // --- Core Functions ---
+
+        /**
+         * Cleans up existing video players by pausing them and destroying HLS instances.
+         * This prevents audio from continuing in the background when players are removed.
+         * @param {HTMLElement} container - The container element (e.g., video-grid or fullscreen-container).
+         */
+        function cleanupPlayers(container) {
+            // Select all .video-container elements within the given container
+            Array.from(container.querySelectorAll('.video-container')).forEach(box => {
+                const key = box.dataset.channelKey; // Get the channel key from data attribute
+                const playerElement = box.querySelector('video') || box.querySelector('iframe');
+
+                if (playerElement && playerElement.tagName === 'VIDEO') {
+                    // For <video> elements, pause and destroy HLS instance if it exists
+                    playerElement.pause();
+                    if (hlsInstances[key]) {
+                        console.log(`Destroying HLS instance for channel: ${key}`);
+                        hlsInstances[key].destroy(); // Clean up HLS.js resources
+                        delete hlsInstances[key];    // Remove from our tracking object
+                    }
+                }
+                // For <iframe> elements, we cannot directly control their internal state
+                // Removing them from the DOM is the primary way to stop them.
+            });
+            container.innerHTML = ''; // Clear the container's HTML after explicit cleanup
+        }
+
+
+        /**
+         * Main render function. This function is responsible for updating the UI
+         * based on the current state (active channels, fullscreen, active audio).
+         * It first cleans up existing players to prevent audio issues.
          */
         function render() {
+            // Always clean up existing players from both possible containers before re-rendering
+            cleanupPlayers(grid);
+            cleanupPlayers(fullscreenContainer);
+
             if (fullscreenKey) {
+                // If a channel is in fullscreen mode, show the fullscreen container
+                document.body.classList.add('fullscreen-mode');
                 renderFullscreenView();
             } else {
+                // If not in fullscreen, show the grid view and hide the fullscreen container
+                document.body.classList.remove('fullscreen-mode');
                 renderGridView();
             }
-            updateChannelButtonsUI();
-            feather.replace(); // Redraw icons
+            updateChannelButtonsUI(); // Update the bottom navigation buttons' appearance
+            feather.replace();        // Redraw Feather icons
         }
 
         /**
-         * Renders the grid of active video players.
+         * Renders the grid of active video players in the main content area.
          */
         function renderGridView() {
-            grid.innerHTML = '';
+            // Show or hide the "no channel selected" message based on active channels
             message.style.display = activeChannels.length > 0 ? 'none' : 'block';
 
             activeChannels.forEach(key => {
+                // Create and append a player container for each active channel
                 const box = createPlayerContainer(key);
                 grid.appendChild(box);
             });
         }
-        
+
         /**
          * Renders the single fullscreen video player and its controls.
          */
         function renderFullscreenView() {
-            fullscreenContainer.innerHTML = '';
-            if (!fullscreenKey) return;
-            
-            const box = createPlayerContainer(fullscreenKey);
-            const controls = createFullscreenControls(fullscreenKey);
-            box.appendChild(controls);
-            
-            fullscreenContainer.appendChild(box);
+            if (!fullscreenKey) return; // Do nothing if no channel is designated for fullscreen
+
+            const box = createPlayerContainer(fullscreenKey); // Create the player for the fullscreen channel
+            const controls = createFullscreenControls(fullscreenKey); // Create fullscreen specific controls
+            box.appendChild(controls); // Add controls to the player box
+
+            fullscreenContainer.appendChild(box); // Add the player box (with controls) to the fullscreen container
         }
 
         /**
-         * Creates a single player container (for grid or fullscreen).
-         * @param {string} key - The channel key.
-         * @returns {HTMLElement} The container div with the player inside.
+         * Creates a single player container (for grid or fullscreen display).
+         * This function handles both HLS (<video>) and iframe players.
+         * @param {string} key - The channel key (e.g., 'kan11').
+         * @returns {HTMLElement} The container div with the player element inside.
          */
         function createPlayerContainer(key) {
             const ch = channels[key];
             const box = document.createElement('div');
             box.className = 'video-container';
-            box.dataset.channelKey = key;
-            
+            box.dataset.channelKey = key; // Store the channel key as a data attribute
+
             let playerElement;
-            const hasAudio = key === activeAudioKey;
+            // Determine if this channel should have audio based on activeAudioKey
+            const wantsAudio = key === activeAudioKey;
 
             if (ch.type === 'hls') {
                 playerElement = document.createElement('video');
-                playerElement.autoplay = true;
-                playerElement.playsInline = true;
-                playerElement.muted = !hasAudio;
+                playerElement.autoplay = true;      // Start playing automatically
+                playerElement.playsInline = true;   // Important for mobile playback
+                playerElement.muted = !wantsAudio;  // Mute if not the designated active audio channel
+
                 if (Hls.isSupported()) {
+                    // Ensure any old Hls instance for this key is destroyed before creating a new one
+                    if (hlsInstances[key]) {
+                        hlsInstances[key].destroy();
+                        delete hlsInstances[key];
+                    }
                     const hls = new Hls({ enableWorker: true, lowLatencyMode: true });
                     hls.loadSource(ch.url);
                     hls.attachMedia(playerElement);
+                    hlsInstances[key] = hls; // Store the new Hls instance
+
                     hls.on(Hls.Events.ERROR, (event, data) => {
                         if (data.fatal) {
-                            console.error('HLS fatal error:', data);
+                            console.error(`HLS fatal error for channel ${key}:`, data);
+                            // Attempt to recover from common errors
+                            if (data.type === Hls.ErrorTypes.MEDIA_ERROR) {
+                                hls.recoverMediaError();
+                            } else if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                                hls.loadSource(ch.url); // Try reloading source for network errors
+                            }
                         }
                     });
                 } else {
+                    // Fallback for browsers not supporting HLS.js
                     playerElement.src = ch.url;
                 }
-            } else { // iframe for Channel 12
+            } else { // iframe for Channel 12 (and potentially others)
                 playerElement = document.createElement('iframe');
-                playerElement.allow = 'autoplay; fullscreen';
-                playerElement.src = buildUrlWithParams(ch.url, !hasAudio, ch.muteParam);
-                // The sandbox attribute can help with compatibility but might break some players.
-                // playerElement.sandbox = 'allow-scripts allow-same-origin allow-presentation';
+                playerElement.allow = 'autoplay; fullscreen'; // Allow autoplay and fullscreen
+                // Build the iframe src with autoplay and mute parameters.
+                // It will always try to autoplay, but be muted if not the active audio channel.
+                playerElement.src = buildUrlWithParams(ch.url, !wantsAudio, ch.muteParam);
             }
 
             box.appendChild(playerElement);
-            // Only add grid controls if not in fullscreen mode
+            // Only add grid view controls if not in fullscreen mode
             if (!fullscreenKey) {
-                 box.appendChild(createGridControlsOverlay(key, ch.name));
+                box.appendChild(createGridControlsOverlay(key, ch.name));
             }
             return box;
         }
-        
+
         /**
          * Builds an iframe URL with autoplay and mute parameters.
-         * @param {string} base - The base URL.
-         * @param {boolean} isMuted - Whether the stream should be muted.
-         * @param {string} muteParam - The name of the mute parameter in the URL.
-         * @returns {string} The final URL.
+         * Corrected logic: Always requests autoplay, but sets the mute parameter
+         * based on whether the channel `isMuted`.
+         * @param {string} base - The base URL of the iframe content.
+         * @param {boolean} isMuted - True if the stream should be muted, false otherwise.
+         * @param {string} muteParam - The name of the mute parameter in the URL (e.g., 'muted').
+         * @returns {string} The final URL with parameters appended.
          */
         function buildUrlWithParams(base, isMuted, muteParam = 'muted') {
             try {
-                // For Mako, we can't use URLSearchParams as it's not a standard URL.
-                // We just append parameters.
                 let url = base;
-                url += `&autoplay=${isMuted ? 'false' : 'true'}`; // Mako autoplay logic seems inverted with sound
-                url += `&${muteParam}=${isMuted ? 'true' : 'false'}`;
+                url += `&autoplay=true`; // Always try to autoplay the iframe content
+                url += `&${muteParam}=${isMuted ? 'true' : 'false'}`; // Set mute state
                 return url;
             } catch (e) {
-                console.error("Error building URL:", e);
-                return base;
+                console.error("Error building URL for iframe:", e);
+                return base; // Return original base URL on error
             }
         }
 
@@ -424,32 +507,36 @@
 
         /**
          * Creates the redesigned channel buttons for the bottom navigation bar.
+         * These buttons allow users to add/remove channels from the grid.
          */
         function createChannelButtons() {
-            bottomNavContainer.innerHTML = '';
+            bottomNavContainer.innerHTML = ''; // Clear existing buttons
             Object.entries(channels).forEach(([key, ch]) => {
                 const btn = document.createElement('button');
                 btn.className = 'channel-button';
-                btn.dataset.channel = key;
+                btn.dataset.channel = key; // Store channel key for easy lookup
                 btn.innerHTML = `
                     <span class="audio-indicator"></span>
                     <span>${ch.short}</span>
                 `;
-                btn.onclick = () => toggleChannel(key);
+                btn.onclick = () => toggleChannel(key); // Attach click handler
                 bottomNavContainer.appendChild(btn);
             });
         }
-        
+
         /**
-         * Updates the visual state of the bottom navigation buttons (active, audio).
+         * Updates the visual state of the bottom navigation buttons,
+         * highlighting active channels and showing the audio indicator.
          */
         function updateChannelButtonsUI() {
             document.querySelectorAll('.channel-button').forEach(btn => {
                 const key = btn.dataset.channel;
                 const audioIndicator = btn.querySelector('.audio-indicator');
-                
+
+                // Toggle 'active' class based on whether the channel is in activeChannels
                 btn.classList.toggle('active', activeChannels.includes(key));
-                
+
+                // Display audio indicator (🔊) only if the channel is active AND is the audio source
                 if (audioIndicator) {
                     audioIndicator.innerHTML = (activeChannels.includes(key) && key === activeAudioKey) ? '🔊' : '';
                 }
@@ -457,10 +544,10 @@
         }
 
         /**
-         * Creates the simple overlay for grid view with mute and fullscreen buttons.
+         * Creates the simple overlay with mute and fullscreen buttons for grid view.
          * @param {string} key - The channel key.
          * @param {string} name - The channel name.
-         * @returns {HTMLElement} The overlay div.
+         * @returns {HTMLElement} The overlay div for grid view.
          */
         function createGridControlsOverlay(key, name) {
             const overlay = document.createElement('div');
@@ -469,15 +556,16 @@
             const nameBar = document.createElement('div');
             nameBar.className = 'channel-name-bar';
             nameBar.textContent = name;
-            
+
             const controlsWrapper = document.createElement('div');
             controlsWrapper.className = 'grid-control-buttons';
-            
+
             const soundBtn = document.createElement('button');
             soundBtn.className = 'control-btn';
+            // Set icon based on whether this channel is the active audio source
             soundBtn.innerHTML = key === activeAudioKey ? '<i data-feather="volume-2"></i>' : '<i data-feather="volume-x"></i>';
             soundBtn.onclick = (e) => { e.stopPropagation(); toggleAudio(key); };
-            
+
             const fullscreenBtn = document.createElement('button');
             fullscreenBtn.className = 'control-btn';
             fullscreenBtn.innerHTML = '<i data-feather="maximize"></i>';
@@ -487,10 +575,11 @@
             overlay.append(nameBar, controlsWrapper);
             return overlay;
         }
-        
+
         /**
          * Creates the new, comprehensive controls for the fullscreen view.
-         * @param {string} key - The channel key.
+         * Includes exit, sound, and channel zapping buttons.
+         * @param {string} key - The channel key currently in fullscreen.
          * @returns {HTMLElement} The fullscreen controls div.
          */
         function createFullscreenControls(key) {
@@ -498,8 +587,8 @@
             const controls = document.createElement('div');
             controls.id = 'fullscreen-controls';
 
-            const hasPrev = activeChannels.length > 1;
-            const hasNext = activeChannels.length > 1;
+            // Check if there are other channels to zap to
+            const hasPrevNext = activeChannels.length > 1;
 
             controls.innerHTML = `
                 <div class="fullscreen-top-controls">
@@ -509,19 +598,19 @@
                     </button>
                 </div>
                 <div class="fullscreen-bottom-controls">
-                    <button class="fs-btn" id="prev-ch-btn" title="ערוץ קודם" ${!hasPrev ? 'style="display:none;"' : ''}>
+                    <button class="fs-btn" id="prev-ch-btn" title="ערוץ קודם" ${!hasPrevNext ? 'style="display:none;"' : ''}>
                         <i data-feather="arrow-right" style="width: 32px; height: 32px;"></i>
                     </button>
                     <button class="fs-btn" id="fs-sound-btn" title="הפעל/כבה שמע">
                         ${key === activeAudioKey ? '<i data-feather="volume-2" style="width: 32px; height: 32px;"></i>' : '<i data-feather="volume-x" style="width: 32px; height: 32px;"></i>'}
                     </button>
-                    <button class="fs-btn" id="next-ch-btn" title="ערוץ הבא" ${!hasNext ? 'style="display:none;"' : ''}>
+                    <button class="fs-btn" id="next-ch-btn" title="ערוץ הבא" ${!hasPrevNext ? 'style="display:none;"' : ''}>
                         <i data-feather="arrow-left" style="width: 32px; height: 32px;"></i>
                     </button>
                 </div>
             `;
-            
-            // Attach event listeners
+
+            // Attach event listeners for fullscreen controls
             controls.querySelector('#exit-fs-btn').onclick = (e) => { e.stopPropagation(); toggleFullscreen(null); };
             controls.querySelector('#fs-sound-btn').onclick = (e) => { e.stopPropagation(); toggleAudio(key); };
             controls.querySelector('#next-ch-btn').onclick = (e) => { e.stopPropagation(); zapChannel('next'); };
@@ -531,113 +620,167 @@
         }
 
         // --- Event Handlers and Toggles ---
-        
+
         /**
-         * Toggles a channel's visibility in the grid.
-         * @param {string} key - The channel key.
+         * Toggles a channel's visibility in the grid and manages its audio state.
+         * @param {string} key - The channel key to add or remove.
          */
         function toggleChannel(key) {
+            resetActivityTimer(); // User interacted, reset inactivity timer
+
             const index = activeChannels.indexOf(key);
             if (index > -1) {
+                // Channel is currently active, so remove it
                 activeChannels.splice(index, 1);
-                if (activeAudioKey === key) activeAudioKey = null;
-                if (fullscreenKey === key) toggleFullscreen(null);
+                // If the removed channel was the active audio source, mute all audio
+                if (activeAudioKey === key) {
+                    activeAudioKey = null;
+                }
+                // If the removed channel was in fullscreen, exit fullscreen mode
+                if (fullscreenKey === key) {
+                    toggleFullscreen(null);
+                }
             } else {
-                activeChannels.unshift(key); // Add to the beginning
+                // Channel is not active, so add it
+                // Add to the beginning of the list, making it the most recently added/active
+                activeChannels.unshift(key);
+                // When a new channel is added, it automatically becomes the active audio source
+                activeAudioKey = key;
             }
-            render();
+            render(); // Re-render the UI to reflect changes
+
+            // After rendering, if no channels are left, ensure activeAudioKey is null
+            // This handles cases where the last channel is removed, ensuring no background audio.
+            if (activeChannels.length === 0) {
+                activeAudioKey = null; // Explicitly mute all
+                render(); // Re-render one more time for a clean state
+            }
         }
 
         /**
-         * Toggles audio between channels or mutes all.
-         * @param {string} key - The channel key to give audio to.
+         * Toggles audio for a specific channel. Ensures only one channel can have audio at a time.
+         * If the current channel has audio, it mutes it. Otherwise, it makes it the active audio source.
+         * @param {string} key - The channel key whose audio state is to be toggled.
          */
         function toggleAudio(key) {
-            activeAudioKey = activeAudioKey === key ? null : key;
-            render(); // Rerender to apply muted state to all players
+            resetActivityTimer(); // User interacted, reset inactivity timer
+
+            if (activeAudioKey === key) {
+                // If this channel is currently playing audio, mute it (set activeAudioKey to null)
+                activeAudioKey = null;
+            } else {
+                // If another channel is playing or all are muted, switch audio to this channel
+                activeAudioKey = key;
+            }
+            render(); // Re-render to apply the new muted/unmuted state to all players
         }
 
         /**
          * Enters or exits fullscreen mode for a specific channel.
-         * @param {string|null} key - The channel to make fullscreen, or null to exit.
+         * @param {string|null} key - The channel to make fullscreen, or null to exit fullscreen.
          */
         function toggleFullscreen(key) {
-            fullscreenKey = key;
-            document.body.classList.toggle('fullscreen-mode', !!key);
-            
-            if (key && activeAudioKey !== key) {
-                // If entering fullscreen on a muted channel, also give it audio.
-                activeAudioKey = key;
+            resetActivityTimer(); // User interacted, reset inactivity timer
+
+            fullscreenKey = key; // Set the fullscreen channel key
+
+            if (key) {
+                // If entering fullscreen, ensure the channel is in activeChannels
+                if (!activeChannels.includes(key)) {
+                    activeChannels.unshift(key); // Add it if not present
+                }
+                activeAudioKey = key; // The fullscreen channel always gets audio
+            } else {
+                // If exiting fullscreen, re-evaluate activeAudioKey.
+                // If no channels are left in the grid, ensure audio is off.
+                if (activeChannels.length === 0) {
+                    activeAudioKey = null;
+                }
+                // Otherwise, activeAudioKey remains as it was, which is desired for grid view.
             }
-            render();
+            render(); // Re-render the UI to transition to/from fullscreen
         }
 
         /**
-         * "Zaps" or switches to the next/previous channel in fullscreen view.
-         * @param {'next'|'prev'} direction - The direction to switch.
+         * "Zaps" (switches) to the next or previous channel in fullscreen view.
+         * @param {'next'|'prev'} direction - The direction to switch ('next' or 'prev').
          */
         function zapChannel(direction) {
+            resetActivityTimer(); // User interacted, reset inactivity timer
+
+            // Only allow zapping if a channel is in fullscreen and there's more than one active channel
             if (!fullscreenKey || activeChannels.length <= 1) return;
-            
+
             const currentIndex = activeChannels.indexOf(fullscreenKey);
             let nextIndex;
-            
+
             if (direction === 'next') {
                 nextIndex = (currentIndex + 1) % activeChannels.length;
             } else { // 'prev'
+                // Handle negative index for 'prev' to loop correctly
                 nextIndex = (currentIndex - 1 + activeChannels.length) % activeChannels.length;
             }
-            
-            const newKey = activeChannels[nextIndex];
-            fullscreenKey = newKey;
-            activeAudioKey = newKey; // Always give audio to the zapped channel
-            
-            render();
+
+            const newKey = activeChannels[nextIndex]; // Get the key of the next/previous channel
+            fullscreenKey = newKey; // Update fullscreen channel
+            activeAudioKey = newKey; // The new fullscreen channel always gets audio
+
+            render(); // Re-render to show the new fullscreen channel
         }
 
-        // --- Event Listeners ---
+        // --- Global Event Listeners (for keyboard navigation in fullscreen) ---
         document.addEventListener('keydown', (e) => {
-            if (!fullscreenKey) return;
-            
+            if (!fullscreenKey) return; // Only process key events if in fullscreen
+
             if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
-                 e.preventDefault();
-                 zapChannel('prev'); // RTL layout means right arrow goes to previous item
+                e.preventDefault(); // Prevent default browser scroll behavior
+                zapChannel('prev'); // RTL layout: Right arrow goes to previous item
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
-                 e.preventDefault();
-                 zapChannel('next'); // RTL layout means left arrow goes to next item
+                e.preventDefault(); // Prevent default browser scroll behavior
+                zapChannel('next'); // RTL layout: Left arrow goes to next item
             } else if (e.key === 'Escape') {
-                 e.preventDefault();
-                 toggleFullscreen(null);
+                e.preventDefault();
+                toggleFullscreen(null); // Exit fullscreen on Escape key
             } else if (e.key === 'm' || e.key === 'M') {
-                 e.preventDefault();
-                 toggleAudio(fullscreenKey);
+                e.preventDefault();
+                toggleAudio(fullscreenKey); // Toggle audio for the current fullscreen channel
             }
         });
-        
+
+        // Add touch-active class to show controls on touch for fullscreen
         let touchTimeout;
         fullscreenContainer.addEventListener('touchstart', e => {
             fullscreenContainer.classList.add('touch-active');
             clearTimeout(touchTimeout);
             touchTimeout = setTimeout(() => {
                 fullscreenContainer.classList.remove('touch-active');
-            }, 3000);
-        }, { passive: true });
-        
+            }, 3000); // Remove touch-active class after 3 seconds of no further touch
+        }, { passive: true }); // Use passive listener for better scroll performance
 
-        // --- Initial Load ---
+        // --- Initial Load and Window Resize ---
+        /**
+         * Initializes the application: creates channel buttons, renders initial view,
+         * and starts the inactivity timer.
+         */
         function initialize() {
             createChannelButtons();
+            // Initial render: activeAudioKey is null by default, ensuring all players start muted.
             render();
-            const navHeight = document.getElementById('bottom-nav').offsetHeight;
+            // Start the inactivity timer immediately after initial load
+            resetActivityTimer();
+            // Adjust body padding to account for the fixed bottom navigation bar
+            const navHeight = bottomNavContainer.offsetHeight;
             document.body.style.paddingBottom = `${navHeight}px`;
         }
 
+        // Call initialize when the window is fully loaded
         window.onload = initialize;
+
+        // Re-adjust body padding if window is resized (e.g., orientation change on mobile)
         window.onresize = () => {
-             const navHeight = document.getElementById('bottom-nav').offsetHeight;
+             const navHeight = bottomNavContainer.offsetHeight;
              document.body.style.paddingBottom = `${navHeight}px`;
         };
-
     </script>
 </body>
 </html>
