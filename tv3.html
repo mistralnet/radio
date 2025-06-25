@@ -3,196 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>נגן ערוצים ישראליים</title>
+    <title>שידורי טלוויזיה ישראליים בשידור חי (ללמידה ובדיקה)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-            text-align: center;
+            font-family: "Inter", sans-serif; /* שימוש בפונט Inter */
+            direction: rtl; /* כיוון מימין לשמאל לעברית */
         }
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background-color: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-        }
-        .player-container {
-            margin: 20px 0;
-        }
-        video {
-            width: 100%;
-            max-height: 500px;
-            background-color: black;
-        }
-        .controls {
-            margin: 15px 0;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px;
-        }
-        select, button {
-            padding: 10px 15px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-        }
-        button {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        .channel-info {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 5px;
-        }
-        @media (max-width: 600px) {
-            .controls {
-                flex-direction: column;
-            }
-            select, button {
-                width: 100%;
-            }
-        }
+        /* הסגנונות הבסיסיים של Tailwind כבר מסופקים דרך הסקריפט למעלה */
+        /* ניתן להוסיף סגנונות מותאמים אישית או לדרוס את Tailwind במידת הצורך */
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>נגן ערוצים ישראליים</h1>
-        
-        <div class="controls">
-            <select id="channelSelect">
-                <option value="">בחר ערוץ</option>
-                <option value="channel12">ערוץ 12 (קשת)</option>
-                <option value="channel14">עכשיו 14</option>
-            </select>
-            
-            <select id="sourceSelect" disabled>
-                <option value="">בחר מקור שידור</option>
-            </select>
-            
-            <button id="playBtn" disabled>הפעל</button>
+<body class="bg-gray-100 text-gray-800 p-4 sm:p-6 md:p-8">
+    <div class="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-6 sm:p-8 md:p-10">
+        <h1 class="text-3xl sm:text-4xl font-bold text-center text-blue-700 mb-6">שידורי טלוויזיה ישראליים בשידור חי</h1>
+        <p class="text-center text-lg mb-8">דף זה נועד למטרות למידה ובדיקה, ומציג קישורים ומטמיעים של ערוץ 12 וערוץ 14 ממקורות פעילים.</p>
+
+        <!-- קטע ערוץ 12 (קשת) -->
+        <div class="channel-section bg-blue-50 border border-blue-200 rounded-lg p-5 mb-8 shadow-md">
+            <h2 class="text-2xl sm:text-3xl font-semibold text-blue-800 text-center mb-4">ערוץ 12 (קשת) - שידור חי</h2>
+            <p class="text-center text-md mb-4">ערוץ 12 משדר באופן קבוע דרך הפלטפורמה הרשמית שלו.</p>
+
+            <h3 class="text-xl font-medium text-blue-700 mb-3 text-center">אתר מאקו הרשמי (נגן מוטמע)</h3>
+            <p class="text-center text-sm text-gray-600 mb-4">
+                אם הנגן המוטמע למטה אינו נטען, אנא השתמש בקישור הישיר.
+                <br>
+                שים לב כי ייתכנו הגבלות הטמעה (X-Frame-Options) מצד האתר הרשמי.
+            </p>
+            <!-- נגן וידאו מוטמע של מאקו -->
+            <div class="relative pt-[56.25%] mb-6 rounded-lg overflow-hidden border border-gray-300">
+                <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.mako.co.il/tv" frameborder="0" allow="fullscreen" allowfullscreen></iframe>
+            </div>
+            <p class="text-center mb-4">
+                <a href="https://www.mako.co.il/tv" target="_blank" class="inline-block bg-blue-600 text-white font-bold py-2 px-6 rounded-full hover:bg-blue-700 transition duration-300 shadow-lg">
+                    פתח את ערוץ 12 בשידור חי במאקו (קישור ישיר)
+                </a>
+            </p>
+            <p class="text-center text-sm text-gray-700 mt-4">
+                <strong>הערה:</strong> עבור חווית צפייה יציבה ומתקדמת יותר, מומלץ להוריד את האפליקציה הרשמית "+12" הזמינה בחנויות היישומים עבור מכשירים ניידים וטלוויזיות חכמות.
+            </p>
         </div>
-        
-        <div class="player-container">
-            <video id="videoPlayer" controls></video>
+
+        <!-- קטע ערוץ 14 (עכשיו 14) -->
+        <div class="channel-section bg-green-50 border border-green-200 rounded-lg p-5 mb-8 shadow-md">
+            <h2 class="text-2xl sm:text-3xl font-semibold text-green-800 text-center mb-4">ערוץ 14 (עכשיו 14) - שידור חי</h2>
+            <p class="text-center text-md mb-4">ערוץ 14 זמין לשידור חי דרך מספר פלטפורמות רשמיות.</p>
+
+            <!-- אתר now14.co.il -->
+            <h3 class="text-xl font-medium text-green-700 mb-3 text-center">אתר now14.co.il הרשמי (נגן מוטמע)</h3>
+            <p class="text-center text-sm text-gray-600 mb-4">
+                אם הנגן המוטמע למטה אינו נטען, אנא השתמש בקישור הישיר.
+                <br>
+                שים לב כי ייתכנו הגבלות הטמעה (X-Frame-Options) מצד האתר הרשמי.
+            </p>
+            <div class="relative pt-[56.25%] mb-6 rounded-lg overflow-hidden border border-gray-300">
+                <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.now14.co.il/?p=1025858" frameborder="0" allow="fullscreen" allowfullscreen></iframe>
+            </div>
+            <p class="text-center mb-4">
+                <a href="https://www.now14.co.il/?p=1025858" target="_blank" class="inline-block bg-green-600 text-white font-bold py-2 px-6 rounded-full hover:bg-green-700 transition duration-300 shadow-lg">
+                    פתח את ערוץ 14 בשידור חי ב-now14.co.il (קישור ישיר)
+                </a>
+            </p>
+
+            <!-- אתר c14.co.il -->
+            <h3 class="text-xl font-medium text-green-700 mb-3 text-center mt-8">אתר c14.co.il הרשמי (נגן מוטמע)</h3>
+            <p class="text-center text-sm text-gray-600 mb-4">
+                אם הנגן המוטמע למטה אינו נטען, אנא השתמש בקישור הישיר.
+                <br>
+                שים לב כי ייתכנו הגבלות הטמעה (X-Frame-Options) מצד האתר הרשמי.
+            </p>
+            <div class="relative pt-[56.25%] mb-6 rounded-lg overflow-hidden border border-gray-300">
+                <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.c14.co.il/live" frameborder="0" allow="fullscreen" allowfullscreen></iframe>
+            </div>
+            <p class="text-center mb-4">
+                <a href="https://www.c14.co.il/live" target="_blank" class="inline-block bg-green-600 text-white font-bold py-2 px-6 rounded-full hover:bg-green-700 transition duration-300 shadow-lg">
+                    פתח את ערוץ 14 בשידור חי ב-c14.co.il (קישור ישיר)
+                </a>
+            </p>
+
+            <!-- הטמעת יוטיוב רשמית של ערוץ 14 -->
+            <h3 class="text-xl font-medium text-green-700 mb-3 text-center mt-8">הטמעת יוטיוב רשמית של ערוץ 14 (כאשר פעיל)</h3>
+            <p class="text-center text-sm text-gray-600 mb-4">
+                הטמעה זו תציג את השידור החי כאשר ערוץ 14 משדר פעיל ביוטיוב. שימו לב שזמינות השידור החי ביוטיוב יכולה להיות דינמית.
+                <br>
+                <a href="https://www.youtube.com/channel/UCKEImtWikw9usC1pl_9m1nQ/live" target="_blank" class="text-blue-500 hover:underline">
+                    לדף השידור החי ביוטיוב (ישירות)
+                </a>
+            </p>
+            <div class="relative pt-[56.25%] mb-6 rounded-lg overflow-hidden border border-gray-300">
+                <iframe class="absolute top-0 left-0 w-full h-full" src="https://www.youtube.com/embed/live_stream?channel=UCKEImtWikw9usC1pl_9m1nQ" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <p class="text-center mb-4">
+                <a href="https://www.youtube.com/@C14news/live" target="_blank" class="inline-block bg-green-600 text-white font-bold py-2 px-6 rounded-full hover:bg-green-700 transition duration-300 shadow-lg">
+                    בקר במדור השידור החי של ערוץ 14 ביוטיוב (קישור לערוץ)
+                </a>
+            </p>
+            <p class="text-center text-sm text-gray-700 mt-4">
+                <strong>הערה:</strong> עבור חווית צפייה יציבה ומתקדמת יותר, מומלץ להוריד את האפליקציה הרשמית "עכשיו 14" הזמינה בחנויות היישומים עבור מכשירים ניידים וטלוויזיות חכמות.
+            </p>
         </div>
-        
-        <div class="channel-info" id="channelInfo">
-            בחר ערוץ ומקור שידור להפעלה
+
+        <!-- קטע הסבר על קישורי M3U מ-GitHub -->
+        <div class="disclaimer bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-5 rounded-lg shadow-md">
+            <h2 class="text-xl font-bold mb-3">שיקולים לגבי רשימות השמעה בפורמט M3U מ-GitHub</h2>
+            <p class="text-base mb-3">
+                במהלך המחקר, זוהו מספר קישורי M3U8 עבור ערוצים 12 ו-14 ב-Gists של GitHub.
+                (לדוגמה, <a href="https://gist.github.com/d5bc827b44542ee1a405059b11ab7b21" target="_blank" class="text-blue-600 hover:underline">eliransapir/channels.m3u</a>,
+                <a href="https://gist.github.com/meatyite/464ab8948b4476757163e37a8d6aee7b" target="_blank" class="text-blue-600 hover:underline">meatyite/israeltv.m3u</a>).
+            </p>
+            <p class="text-base mb-3">
+                עם זאת, באימות, כתובות URL ישירות אלו לסטרימינג נמצאו <strong>בלתי נגישות</strong>. עובדה זו מדגישה אתגר נפוץ ברשימות M3U המתוחזקות על ידי הקהילה: כתובות ה-URL של הזרמים הן דינמיות ביותר ועלולות להפוך ללא פעילות במהירות עקב שינויים ברשתות אספקת תוכן, חסימות גיאוגרפיות, או אמצעים נגד פיראטיות.
+            </p>
+            <p class="text-base">
+                לצורך "למידה ובדיקה" אמינה, מומלץ להתמקד במקורות רשמיים ובנגנים המוטמעים שלהם, אשר מתוחזקים באופן פעיל על ידי גופי השידור.
+            </p>
         </div>
     </div>
-
-    <script>
-        // נתוני הערוצים
-        const channels = {
-            channel12: {
-                name: "ערוץ 12 (קשת)",
-                sources: [
-                    { name: "מקור 1 (רשמי - Mako)", url: "https://mako-streaming.akamaized.net/stream/hls/live/2033791/k12/index.m3u8" },
-                    { name: "מקור 2 (CDN חלופי)", url: "https://d35s5gz35zs8sk.cloudfront.net/k12/index.m3u8" },
-                    { name: "מקור 3 (שרת מדיה)", url: "https://keshethlslive.w-pm.com/live/keshet12.m3u8" },
-                    { name: "מקור 4 (CDN נוסף)", url: "https://cdn.stream-ops.com/k12/index.m3u8" },
-                    { name: "מקור 5 (שרת חלופי)", url: "https://live.il.tivio.tv/l_2/index.m3u8" }
-                ]
-            },
-            channel14: {
-                name: "עכשיו 14",
-                sources: [
-                    { name: "מקור 1 (רשמי - 14now)", url: "https://now14.g-mana.live/media/91515/live/master.m3u8" },
-                    { name: "מקור 2 (CDN חלופי)", url: "https://d2q576st6m4f24.cloudfront.net/ch20/index.m3u8" },
-                    { name: "מקור 3 (שרת מדיה)", url: "https://14now-hlslive.w-pm.com/live/14now.m3u8" },
-                    { name: "מקור 4 (שרת חלופי)", url: "https://live.il.tivio.tv/l_3/index.m3u8" },
-                    { name: "מקור 5 (CDN נוסף)", url: "https://ch14-channel.global.ssl.fastly.net/ch14/ch14/playlist.m3u8" }
-                ]
-            }
-        };
-
-        // אלמנטים ב-DOM
-        const channelSelect = document.getElementById('channelSelect');
-        const sourceSelect = document.getElementById('sourceSelect');
-        const playBtn = document.getElementById('playBtn');
-        const videoPlayer = document.getElementById('videoPlayer');
-        const channelInfo = document.getElementById('channelInfo');
-
-        // מאזינים לאירועים
-        channelSelect.addEventListener('change', function() {
-            const selectedChannel = this.value;
-            
-            if (selectedChannel) {
-                // מלא את רשימת המקורות
-                sourceSelect.innerHTML = '<option value="">בחר מקור שידור</option>';
-                channels[selectedChannel].sources.forEach((source, index) => {
-                    sourceSelect.innerHTML += `<option value="${index}">${source.name}</option>`;
-                });
-                
-                sourceSelect.disabled = false;
-                playBtn.disabled = true;
-                channelInfo.textContent = `נבחר: ${channels[selectedChannel].name}`;
-            } else {
-                sourceSelect.innerHTML = '<option value="">בחר מקור שידור</option>';
-                sourceSelect.disabled = true;
-                playBtn.disabled = true;
-                channelInfo.textContent = 'בחר ערוץ ומקור שידור להפעלה';
-            }
-        });
-
-        sourceSelect.addEventListener('change', function() {
-            playBtn.disabled = !this.value;
-        });
-
-        playBtn.addEventListener('click', function() {
-            const selectedChannel = channelSelect.value;
-            const selectedSource = sourceSelect.value;
-            
-            if (selectedChannel && selectedSource) {
-                const sourceUrl = channels[selectedChannel].sources[selectedSource].url;
-                const sourceName = channels[selectedChannel].sources[selectedSource].name;
-                
-                // הפעל את הסרטון
-                if (Hls.isSupported()) {
-                    const hls = new Hls();
-                    hls.loadSource(sourceUrl);
-                    hls.attachMedia(videoPlayer);
-                    hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                        videoPlayer.play();
-                    });
-                } else if (videoPlayer.canPlayType('application/vnd.apple.mpegurl')) {
-                    // תמיכה בספארי
-                    videoPlayer.src = sourceUrl;
-                    videoPlayer.addEventListener('loadedmetadata', function() {
-                        videoPlayer.play();
-                    });
-                }
-                
-                channelInfo.textContent = `צופה ב: ${channels[selectedChannel].name} - ${sourceName}`;
-            }
-        });
-
-        // טען את ספריית HLS.js אם נדרש
-        if (!window.Hls) {
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/hls.js@latest';
-            document.head.appendChild(script);
-            
-            script.onload = function() {
-                console.log('HLS.js loaded successfully');
-            };
-        }
-    </script>
 </body>
 </html>
