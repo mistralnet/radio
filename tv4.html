@@ -31,10 +31,11 @@
             --bg-color: #0a0a0a;
             --header-bg-color: #1a1a1a;
             --nav-bg-color: #1f2937; /* bg-gray-800 */
-            --nav-btn-bg-color: #374151; /* bg-gray-700 */
-            --nav-btn-active-bg-color: #4f46e5; /* bg-indigo-600 */
+            /* Updated button colors for higher contrast */
+            --nav-btn-bg-color: #3b82f6; /* A clear blue, bg-blue-500 */
+            --nav-btn-active-bg-color: #10b981; /* A bright green, bg-emerald-500 */
             --text-color: #f9fafb; /* text-gray-50 */
-            --text-color-inactive: #9ca3af; /* text-gray-400 */
+            --text-color-inactive: #e5e7eb; /* text-gray-200 for better readability on blue */
         }
 
         /* --- General Body and Typography --- */
@@ -146,8 +147,8 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            color: var(--text-color-inactive);
-            background-color: var(--nav-btn-bg-color);
+            color: var(--text-color-inactive); /* Use inactive text color */
+            background-color: var(--nav-btn-bg-color); /* Use inactive button color */
             border-radius: 12px; /* Rounded corners */
             width: 60px;
             height: 55px;
@@ -160,14 +161,14 @@
 
         .channel-button:hover {
             transform: translateY(-3px);
-            color: var(--text-color);
+            color: var(--text-color); /* Use active text color on hover */
         }
 
         .channel-button.active {
-            color: var(--text-color);
-            background-color: var(--nav-btn-active-bg-color);
-            border-color: #a5b4fc; /* indigo-200 */
-            box-shadow: 0 0 15px rgba(79, 70, 229, 0.7);
+            color: var(--text-color); /* Use active text color */
+            background-color: var(--nav-btn-active-bg-color); /* Use active button color */
+            border-color: #6ee7b7; /* emerald-200 for active border */
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.7); /* Adjusted shadow to match active color */
         }
 
         .audio-indicator {
@@ -279,6 +280,22 @@
         </div>
         <p id="no-channel-message" class="text-center text-gray-400 mt-10 text-lg">יש לבחור ערוץ מהתפריט התחתון</p>
     </main>
+
+    <!-- New Footer Section for additional links and information -->
+    <footer class="mt-10 text-center text-sm text-gray-400">
+        <div class="mb-2">גם תחנות רדיו להאזנה:</div>
+        <a href="https://mistralnet.github.io/radio" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded mb-4">🎧 תחנות רדיו</a>
+        <div class="flex justify-center gap-4 flex-wrap mb-4">
+            <a href="https://mistralnet.github.io/radio/" class="text-blue-400 hover:text-blue-300">Radio</a>
+            <a href="https://mistralnet.github.io/radio/tv.html" class="text-blue-400 hover:text-blue-300">TV</a>
+            <a href="https://mistralnet.github.io/radio/tv2.html" class="text-blue-400 hover:text-blue-300">TV2</a>
+            <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
+            <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
+        </div>
+        <div class="version-info">
+            גרסה 3
+        </div>
+    </footer>
 
     <!-- Container for the fullscreen player -->
     <div id="fullscreen-container">
