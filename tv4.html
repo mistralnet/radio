@@ -318,12 +318,15 @@
             i24news: { name: 'i24NEWS', short: 'i24', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' }
         };
 
-        let activeChannels = [];
-        let activeAudioKey = null; // Starts null, so all players are muted initially
-        let fullscreenKey = null;
+        // Changed from let to var for broader compatibility/global scope certainty
+        var activeChannels = [];
+        var activeAudioKey = null; // Starts null, so all players are muted initially
+        // New Set to track channels that have been loaded at least once in the current session
+        var sessionLoadedChannels = new Set();
+        var fullscreenKey = null; // Moved for clarity with other var declarations
 
         // Object to store Hls.js instances for proper cleanup when channels are removed
-        const hlsInstances = {};
+        var hlsInstances = {}; 
 
         const grid = document.getElementById('video-grid');
         const message = document.getElementById('no-channel-message');
@@ -331,7 +334,7 @@
         const fullscreenContainer = document.getElementById('fullscreen-container');
 
         // --- Inactivity Timer Variables and Functions ---
-        let userActivityTimeout;
+        var userActivityTimeout; // Changed to var
         const INACTIVITY_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes in milliseconds
 
         /**
@@ -395,7 +398,8 @@
             cleanupPlayers(grid);
             cleanupPlayers(fullscreenContainer);
 
-            if (fullscreenKey) {
+            // Access fullscreenKey without needing 'var' here as it's already declared
+            if (fullscreenKey) { 
                 // If a channel is in fullscreen mode, show the fullscreen container
                 document.body.classList.add('fullscreen-mode');
                 renderFullscreenView();
@@ -619,13 +623,18 @@
                         <i data-feather="arrow-right" style="width: 32px; height: 32px;"></i>
                     </button>
                     <button class="fs-btn" id="fs-sound-btn" title="הפעל/כבה שמע">
-                        ${key === activeAudioKey ? '<i data-feather="volume-2" style="width: 32px; height: 32px;"></i>' : '<i data-feather="volume-x" style="width: 32px; height: 32px;"></i>'}
+                        ${key === activeAudioKey ? '<i data-feather="volume-2"></i>' : '<i data-feather="volume-x"></i>'}
                     </button>
                     <button class="fs-btn" id="next-ch-btn" title="ערוץ הבא" ${!hasPrevNext ? 'style="display:none;"' : ''}>
-                        <i data-feather="arrow-left" style="width: 32px; height: 32px;"></i>
+                        <i data-feather="arrow-left"></i>
                     </button>
                 </div>
             `;
+            // Set size for Feather icons inside buttons
+            controls.querySelectorAll('.fs-btn i').forEach(icon => {
+                icon.style.width = '32px';
+                icon.style.height = '32px';
+            });
 
             // Attach event listeners for fullscreen controls
             controls.querySelector('#exit-fs-btn').onclick = (e) => { e.stopPropagation(); toggleFullscreen(null); };
@@ -649,9 +658,10 @@
             if (index > -1) {
                 // Channel is currently active, so remove it
                 activeChannels.splice(index, 1);
-                // If the removed channel was the active audio source, mute all audio
+                // If the removed channel was the active audio source, find a new active audio key
+                // or set to null if no other active channels.
                 if (activeAudioKey === key) {
-                    activeAudioKey = null;
+                    activeAudioKey = activeChannels.length > 0 ? activeChannels[0] : null;
                 }
                 // If the removed channel was in fullscreen, exit fullscreen mode
                 if (fullscreenKey === key) {
@@ -659,18 +669,28 @@
                 }
             } else {
                 // Channel is not active, so add it
-                // Add to the beginning of the list, making it the most recently added/active
-                activeChannels.unshift(key);
-                // When a new channel is added, it automatically becomes the active audio source
-                activeAudioKey = key;
-            }
-            render(); // Re-render the UI to reflect changes
+                activeChannels.unshift(key); // Add to the beginning
 
-            // After rendering, if no channels are left, ensure activeAudioKey is null
-            // This handles cases where the last channel is removed, ensuring no background audio.
+                // Logic for "first load muted":
+                if (!sessionLoadedChannels.has(key)) {
+                    // This is the first time this specific channel is added in the current session.
+                    // It should *not* get audio automatically. The current activeAudioKey should remain.
+                    console.log(`First load of channel ${key}. Will play muted. Current activeAudioKey remains: ${activeAudioKey}`);
+                    // No change to activeAudioKey here. It retains its current value (could be null or another channel).
+                } else {
+                    // This channel has been loaded before in this session (it's being re-added).
+                    // It should now become the active audio source, muting any other.
+                    console.log(`Re-adding channel ${key}. It will now become the active audio source.`);
+                    activeAudioKey = key;
+                }
+                sessionLoadedChannels.add(key); // Mark as loaded for this session
+            }
+            render(); // Re-render to apply all state changes
+
+            // Final check: if no channels are left, ensure activeAudioKey is truly null.
             if (activeChannels.length === 0) {
                 activeAudioKey = null; // Explicitly mute all
-                render(); // Re-render one more time for a clean state
+                render(); // Render again for a clean state, though previous render might have handled it.
             }
         }
 
@@ -706,14 +726,17 @@
                 if (!activeChannels.includes(key)) {
                     activeChannels.unshift(key); // Add it if not present
                 }
-                activeAudioKey = key; // The fullscreen channel always gets audio
+                // When entering fullscreen, it always becomes the active audio source
+                activeAudioKey = key;
             } else {
                 // If exiting fullscreen, re-evaluate activeAudioKey.
                 // If no channels are left in the grid, ensure audio is off.
                 if (activeChannels.length === 0) {
                     activeAudioKey = null;
+                } else {
+                    // When exiting fullscreen, the audio should revert to the first active channel in the grid
+                    activeAudioKey = activeChannels[0];
                 }
-                // Otherwise, activeAudioKey remains as it was, which is desired for grid view.
             }
             render(); // Re-render the UI to transition to/from fullscreen
         }
@@ -765,7 +788,7 @@
         });
 
         // Add touch-active class to show controls on touch for fullscreen
-        let touchTimeout;
+        var touchTimeout; // Changed to var
         fullscreenContainer.addEventListener('touchstart', e => {
             fullscreenContainer.classList.add('touch-active');
             clearTimeout(touchTimeout);
