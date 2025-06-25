@@ -1,295 +1,550 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>צפייה בערוצים</title>
+    <!-- Google Analytics Script -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-J5WT91REYB');
+    </script>
+    <!-- HLS.js Library for HLS streams -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- YouTube IFrame Player API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            direction: rtl;
-            background-color: #1F2937;
+            background: #1F2937;
             color: white;
+            font-family: 'Inter', sans-serif;
             margin: 0;
-            font-family: Arial, sans-serif;
-            padding: 20px;
+            padding-top: 80px; /* מרווח לתפריט הדביק */
         }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        .sticky-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: #1F2937;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        h1 {
-            text-align: center;
-            margin-bottom: 30px;
+        .channel-scroll-container {
+            overflow-x: auto;
+            white-space: nowrap;
+            padding: 8px 4px;
+            scrollbar-width: none;
         }
-        .channel-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-        .channel-button {
-            padding: 12px 24px;
-            background-color: #4B5563;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        .channel-button:hover {
-            background-color: #6B7280;
-        }
-        .channel-button.active {
-            background-color: #1F6FEB;
-        }
-        .video-grid {
-            display: grid;
-            gap: 20px;
-        }
-        .video-grid.grid-1 {
-            grid-template-columns: 1fr;
-        }
-        .video-grid.grid-2 {
-            grid-template-columns: 1fr 1fr;
+        .channel-scroll-container::-webkit-scrollbar {
+            display: none;
         }
         .video-container {
             position: relative;
             aspect-ratio: 16/9;
             border-radius: 8px;
             overflow: hidden;
+            background-color: #000;
+            margin-bottom: 16px;
         }
-        .video-container iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .controls {
+        .controls-container {
             position: absolute;
-            left: 50%;
             top: 50%;
-            transform: translate(-50%, -50%);
+            left: 12px;
+            transform: translateY(-50%);
             display: flex;
             flex-direction: column;
             gap: 10px;
+            align-items: center;
+            z-index: 10;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.3s ease;
         }
-        .video-container:hover .controls {
+        .video-container:hover .controls-container,
+        .video-container.touch-active .controls-container {
             opacity: 1;
         }
-        .control-btn {
-            background-color: rgba(0,0,0,0.7);
+        .channel-name-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
             color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 10px 15px;
+            padding: 4px 10px;
+            text-align: center;
+            font-size: 0.85rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 10;
+        }
+        .video-container:hover .channel-name-bar,
+        .video-container.touch-active .channel-name-bar {
+            opacity: 1;
+        }
+        .sound-toggle, .fullscreen-toggle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 12px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 14px;
-            white-space: nowrap;
+            font-size: 0.9rem;
+            min-width: 80px;
+            text-align: center;
+            transition: 0.2s ease;
+            color: white;
         }
-        .control-btn:hover {
-            background-color: rgba(0,0,0,0.9);
+        .sound-toggle.on { background: #10B981; }
+        .sound-toggle.off { background: #EF4444; }
+        .sound-toggle.transitioning {
+            transform: scale(1.1);
+            transition: transform 0.2s ease;
         }
-        .fullscreen-overlay {
+        .fullscreen-toggle { background: #4B5563; }
+        .fullscreen-toggle.active { background: #4F46E5; }
+        .channel-button {
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: #4B5563;
+            transition: 0.2s;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 4px;
+            font-size: 0.9rem;
+        }
+        .channel-button:hover { background: #6B7280; }
+        .channel-button.active { 
+            background: #1F6FEB; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .fullscreen-nav-arrow {
+            background: rgba(30, 41, 59, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            border: 1px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+        .fullscreen-nav-arrow:hover:not(:disabled) {
+            background: rgba(30, 41, 59, 1);
+        }
+        .fullscreen-nav-arrow:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        @media (min-width: 768px) {
+            body {
+                padding-top: 100px;
+            }
+            .channel-button {
+                padding: 10px 16px;
+                font-size: 1rem;
+                margin: 0 6px;
+            }
+            #video-grid {
+                grid-template-columns: repeat(3, 1fr);
+                grid-auto-rows: auto;
+            }
+        }
+        .fullscreen-mode .video-container:not(.active-fullscreen) {
+            display: none !important;
+        }
+        .fullscreen-mode .video-container.active-fullscreen {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: black;
-            z-index: 1000;
-            display: none;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999;
+            background: #000;
+            border-radius: 0;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
         }
-        .fullscreen-overlay.active {
-            display: block;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        .fullscreen-video {
-            width: 100%;
-            height: 100%;
+        .slide-left { animation: slideLeft 0.3s ease forwards; }
+        .slide-right { animation: slideRight 0.3s ease forwards; }
+        @keyframes slideLeft {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
-        .fullscreen-controls {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 1001;
-        }
-        .no-channel {
-            text-align: center;
-            color: #9CA3AF;
-            font-size: 18px;
-            margin-top: 50px;
-        }
-        @media (max-width: 768px) {
-            .video-grid.grid-2 {
-                grid-template-columns: 1fr;
-            }
+        @keyframes slideRight {
+            from { transform: translateX(-100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>צפייה בערוצים</h1>
-        
-        <div class="channel-buttons">
-            <button class="channel-button" data-channel="now14">עכשיו 14</button>
-            <button class="channel-button" data-channel="news12">חדשות 12</button>
-        </div>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-P5QLH7TD" height="0" width="0" style="display:none"></iframe></noscript>
 
-        <div id="video-grid" class="video-grid"></div>
-        <div id="no-channel" class="no-channel" style="display: none;">
-            בחר ערוץ מהכפתורים למעלה
-        </div>
+<div class="sticky-header">
+    <h1 class="text-xl md:text-2xl font-bold text-center py-2">צפייה בערוצים</h1>
+    <div id="channel-buttons" class="channel-scroll-container">
+        <!-- הכפתורים יתווספו כאן דינמית -->
+    </div>
+</div>
+
+<div class="container mx-auto px-4">
+    <div id="video-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- סרטוני הערוצים יוצגו כאן על ידי JavaScript -->
     </div>
 
-    <div id="fullscreen-overlay" class="fullscreen-overlay">
-        <div class="fullscreen-controls">
-            <button id="prev-channel" class="control-btn">◀ קודם</button>
-            <button id="exit-fullscreen" class="control-btn">חזרה</button>
-            <button id="next-channel" class="control-btn">הבא ▶</button>
-        </div>
-        <div id="fullscreen-content"></div>
-    </div>
+    <p id="no-channel-message" class="text-center text-gray-300 mt-6 hidden">יש לבחור ערוץ מהכפתורים מעלה</p>
+</div>
 
-    <script>
-        const channels = {
-            now14: {
-                name: 'עכשיו 14',
-                url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3YWU2YTNjMDMiLCJjbGllbnQiOiJjaGFubmVsMTQiLCJhcGkiOiJodHRwczovL2luc2lnaHQtYXBpLWNoYW5uZWwxNC51bml2dGVjLmNvbS8ifQ=='
-            },
-            news12: {
-                name: 'חדשות 12',
-                url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD'
+<script>
+    const channels = {
+        kan11: { name: 'כאן 11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
+        now14: { name: 'עכשיו 14', type: 'youtube', videoId: '_qOB__gXgi0' },
+        i24news: { name: 'i24NEWS', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' },
+        news13: { name: 'חדשות 13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
+        news12: { name: 'חדשות 12', type: 'iframe', url: 'https://www.mako.co.il/AjaxPage?jspName=embedHTML5video.jsp&galleryChannelId=798cfb1e06667910VgnVCM200000650a10acRCRD&videoChannelId=7690b3a2a4ac5910VgnVCM200000650a10acRCRD&vcmid=003432e70df02310VgnVCM100000290b320aRCRD', muteParam: 'muted' }
+    };
+
+    let active = [];
+    let activeAudioKey = null;
+    let fullscreenKey = null;
+    let lastDirection = null;
+    let youtubePlayers = {};
+
+    const grid = document.getElementById('video-grid');
+    const message = document.getElementById('no-channel-message');
+    const channelButtonsContainer = document.getElementById('channel-buttons');
+
+    function buildUrl(base, muted, muteParam = 'muted') {
+        try {
+            const url = new URL(base);
+            if (muteParam) {
+                url.searchParams.set(muteParam, muted ? 'true' : 'false');
             }
-        };
-
-        let activeChannels = [];
-        let currentFullscreenChannel = null;
-        let audioChannel = null;
-
-        const videoGrid = document.getElementById('video-grid');
-        const noChannelDiv = document.getElementById('no-channel');
-        const fullscreenOverlay = document.getElementById('fullscreen-overlay');
-        const fullscreenContent = document.getElementById('fullscreen-content');
-
-        function buildUrl(channel, muted = true) {
-            const separator = channels[channel].url.includes('?') ? '&' : '?';
-            return `${channels[channel].url}${separator}autoplay=1&muted=${muted ? '1' : '0'}`;
+            url.searchParams.set('autoplay', 'true');
+            return url.toString();
+        } catch (e) {
+            console.error("Invalid URL:", base);
+            return base;
         }
+    }
 
-        function updateGrid() {
-            videoGrid.innerHTML = '';
-            
-            if (activeChannels.length === 0) {
-                noChannelDiv.style.display = 'block';
-                videoGrid.className = 'video-grid';
-                return;
-            }
-
-            noChannelDiv.style.display = 'none';
-            videoGrid.className = `video-grid grid-${activeChannels.length}`;
-
-            activeChannels.forEach(channel => {
-                const container = document.createElement('div');
-                container.className = 'video-container';
-                
-                const iframe = document.createElement('iframe');
-                iframe.src = buildUrl(channel, audioChannel !== channel);
-                iframe.allow = 'autoplay; fullscreen';
-                
-                const controls = document.createElement('div');
-                controls.className = 'controls';
-                
-                const audioBtn = document.createElement('button');
-                audioBtn.className = 'control-btn';
-                audioBtn.textContent = audioChannel === channel ? '🔊 השתק' : '🔇 שמע';
-                audioBtn.onclick = () => toggleAudio(channel);
-                
-                const fullscreenBtn = document.createElement('button');
-                fullscreenBtn.className = 'control-btn';
-                fullscreenBtn.textContent = '⛶ מסך מלא';
-                fullscreenBtn.onclick = () => enterFullscreen(channel);
-                
-                controls.appendChild(audioBtn);
-                controls.appendChild(fullscreenBtn);
-                
-                container.appendChild(iframe);
-                container.appendChild(controls);
-                videoGrid.appendChild(container);
+    function toggleFullscreen(key) {
+        if (fullscreenKey === key) {
+            fullscreenKey = null;
+            document.body.classList.remove('fullscreen-mode');
+            if (document.fullscreenElement) document.exitFullscreen?.();
+        } else {
+            fullscreenKey = key;
+            activeAudioKey = key;
+            document.body.classList.add('fullscreen-mode');
+            document.documentElement.requestFullscreen?.().catch(err => {
+                console.log('Fullscreen request failed:', err);
             });
         }
+        render();
+    }
 
-        function toggleAudio(channel) {
-            audioChannel = audioChannel === channel ? null : channel;
-            updateGrid();
-        }
-
-        function enterFullscreen(channel) {
-            currentFullscreenChannel = channel;
-            fullscreenContent.innerHTML = `<iframe class="fullscreen-video" src="${buildUrl(channel, audioChannel !== channel)}" allow="autoplay; fullscreen"></iframe>`;
-            fullscreenOverlay.classList.add('active');
-        }
-
-        function exitFullscreen() {
-            fullscreenOverlay.classList.remove('active');
-            fullscreenContent.innerHTML = '';
-            currentFullscreenChannel = null;
-        }
-
-        function switchFullscreenChannel(direction) {
-            if (!currentFullscreenChannel) return;
-            
-            const currentIndex = activeChannels.indexOf(currentFullscreenChannel);
-            let newIndex;
-            
-            if (direction === 'next') {
-                newIndex = (currentIndex + 1) % activeChannels.length;
-            } else {
-                newIndex = (currentIndex - 1 + activeChannels.length) % activeChannels.length;
-            }
-            
-            currentFullscreenChannel = activeChannels[newIndex];
-            fullscreenContent.innerHTML = `<iframe class="fullscreen-video" src="${buildUrl(currentFullscreenChannel, audioChannel !== currentFullscreenChannel)}" allow="autoplay; fullscreen"></iframe>`;
-        }
-
-        // Event listeners
+    function updateChannelButtons() {
         document.querySelectorAll('.channel-button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const channel = btn.dataset.channel;
-                
-                if (activeChannels.includes(channel)) {
-                    activeChannels = activeChannels.filter(c => c !== channel);
-                    btn.classList.remove('active');
-                    if (audioChannel === channel) audioChannel = null;
-                } else {
-                    activeChannels.push(channel);
-                    btn.classList.add('active');
-                }
-                
-                updateGrid();
-            });
-        });
-
-        document.getElementById('exit-fullscreen').addEventListener('click', exitFullscreen);
-        document.getElementById('prev-channel').addEventListener('click', () => switchFullscreenChannel('prev'));
-        document.getElementById('next-channel').addEventListener('click', () => switchFullscreenChannel('next'));
-
-        // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
-            if (currentFullscreenChannel) {
-                if (e.key === 'Escape') exitFullscreen();
-                if (e.key === 'ArrowLeft') switchFullscreenChannel('next');
-                if (e.key === 'ArrowRight') switchFullscreenChannel('prev');
+            const key = btn.dataset.channel;
+            btn.querySelectorAll('.channel-icon').forEach(icon => icon.remove());
+            if (active.includes(key)) {
+                btn.classList.add('active');
+                const icon = document.createElement('span');
+                icon.className = 'channel-icon ml-1';
+                icon.textContent = (key === activeAudioKey) ? '🔊' : '✅';
+                btn.appendChild(icon);
+            } else {
+                btn.classList.remove('active');
             }
         });
+    }
 
-        // Initialize
-        updateGrid();
-    </script>
+    function initYouTubePlayer(elementId, videoId, muted) {
+        youtubePlayers[elementId] = new YT.Player(elementId, {
+            videoId: videoId,
+            playerVars: {
+                autoplay: 1,
+                mute: muted ? 1 : 0,
+                modestbranding: 1,
+                rel: 0
+            },
+            events: {
+                'onReady': (event) => {
+                    if (muted) event.target.mute();
+                    else event.target.unMute();
+                    event.target.playVideo().catch(e => console.log("YouTube play failed:", e));
+                },
+                'onError': (event) => {
+                    console.error("YouTube Player Error:", event.data);
+                }
+            }
+        });
+    }
+
+    function render() {
+        grid.innerHTML = '';
+        message.classList.toggle('hidden', active.length > 0);
+        lastDirection = null;
+
+        active.forEach(key => {
+            const ch = channels[key];
+            const box = document.createElement('div');
+            box.className = `video-container ${fullscreenKey === key ? 'active-fullscreen' : ''}`;
+            if (fullscreenKey === key && lastDirection) {
+                box.classList.add(lastDirection === 'right' ? 'slide-left' : 'slide-right');
+            }
+
+            let el;
+            const hasAudio = key === activeAudioKey;
+
+            if (ch.type === 'hls') {
+                el = document.createElement('video');
+                el.className = 'w-full h-full';
+                el.autoplay = true;
+                el.controls = true;
+                el.muted = !hasAudio;
+                if (Hls.isSupported()) {
+                    const hls = new Hls();
+                    hls.loadSource(ch.url);
+                    hls.attachMedia(el);
+                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                        el.play().catch(e => console.log("Video play failed:", e));
+                    });
+                } else {
+                    el.src = ch.url;
+                    el.play().catch(e => console.log("Video play failed:", e));
+                }
+            } else if (ch.type === 'youtube') {
+                el = document.createElement('div');
+                el.id = `youtube-player-${key}`;
+                el.className = 'w-full h-full';
+                setTimeout(() => {
+                    initYouTubePlayer(`youtube-player-${key}`, ch.videoId, !hasAudio);
+                }, 0);
+            } else {
+                el = document.createElement('iframe');
+                el.className = 'w-full h-full';
+                el.allow = 'autoplay; fullscreen';
+                el.allowFullscreen = true;
+                const urlContainsMuteParam = ch.url.includes('mute=') || ch.url.includes('muted=') || ch.url.includes('volume=');
+                const urlContainsAutoplay = ch.url.includes('autoplay=');
+                if (urlContainsAutoplay && urlContainsMuteParam) {
+                    el.src = ch.url;
+                } else {
+                    const muteParam = ch.muteParam || 'muted';
+                    el.src = buildUrl(ch.url, !hasAudio, muteParam);
+                }
+                if (!hasAudio) el.setAttribute('muted', '');
+                else el.removeAttribute('muted');
+            }
+
+            const controlsContainer = document.createElement('div');
+            controlsContainer.className = 'controls-container';
+
+            const channelNameBar = document.createElement('div');
+            channelNameBar.className = 'channel-name-bar';
+            channelNameBar.textContent = ch.name;
+
+            const soundBtn = document.createElement('button');
+            soundBtn.className = `sound-toggle ${hasAudio ? 'on' : 'off'}`;
+            soundBtn.textContent = hasAudio ? '🔊 השתק' : '🔇 שמע';
+            soundBtn.onclick = e => {
+                e.stopPropagation();
+                soundBtn.classList.add('transitioning');
+                setTimeout(() => soundBtn.classList.remove('transitioning'), 200);
+                if (hasAudio) {
+                    activeAudioKey = null;
+                } else {
+                    activeAudioKey = key;
+                    active.forEach(k => {
+                        if (k !== key) {
+                            const el = document.getElementById(`youtube-player-${k}`) || grid.querySelector(`[data-channel="${k}"] video`) || grid.querySelector(`[data-channel="${k}"] iframe`);
+                            if (el && k !== key) {
+                                if (channels[k].type === 'youtube' && youtubePlayers[`youtube-player-${k}`]) {
+                                    youtubePlayers[`youtube-player-${k}`].mute();
+                                } else if (el.tagName === 'VIDEO') {
+                                    el.muted = true;
+                                } else if (el.tagName === 'IFRAME') {
+                                    const muteParam = channels[k].muteParam || 'muted';
+                                    el.src = buildUrl(channels[k].url, true, muteParam);
+                                    el.setAttribute('muted', '');
+                                }
+                            }
+                        }
+                    });
+                }
+                render();
+            };
+            controlsContainer.append(soundBtn);
+
+            const fullscreenBtn = document.createElement('button');
+            fullscreenBtn.className = `fullscreen-toggle ${fullscreenKey === key ? 'active' : ''}`;
+            fullscreenBtn.textContent = fullscreenKey === key ? '↩️ חזרה' : '⛶ מסך מלא';
+            fullscreenBtn.onclick = e => {
+                e.stopPropagation();
+                toggleFullscreen(key);
+            };
+            controlsContainer.append(fullscreenBtn);
+
+            if (fullscreenKey === key) {
+                const idx = active.indexOf(fullscreenKey);
+                const navContainer = document.createElement('div');
+                navContainer.className = 'flex justify-center items-center gap-4 mt-2';
+
+                const nextBtn = document.createElement('button');
+                nextBtn.textContent = '⬅️';
+                nextBtn.className = 'fullscreen-nav-arrow';
+                nextBtn.onclick = e => {
+                    e.stopPropagation();
+                    lastDirection = 'left';
+                    fullscreenKey = active[(idx + 1) % active.length];
+                    activeAudioKey = fullscreenKey;
+                    render();
+                };
+
+                const prevBtn = document.createElement('button');
+                prevBtn.textContent = '➡️';
+                prevBtn.className = 'fullscreen-nav-arrow';
+                prevBtn.onclick = e => {
+                    e.stopPropagation();
+                    lastDirection = 'right';
+                    fullscreenKey = active[(idx - 1 + active.length) % active.length];
+                    activeAudioKey = fullscreenKey;
+                    render();
+                };
+
+                navContainer.append(nextBtn, prevBtn);
+                controlsContainer.append(navContainer);
+            }
+
+            box.append(el, controlsContainer, channelNameBar);
+            box.dataset.channel = key;
+            grid.appendChild(box);
+        });
+
+        updateChannelButtons();
+    }
+
+    function createChannelButtons() {
+        Object.keys(channels).forEach(key => {
+            const btn = document.createElement('button');
+            btn.className = 'channel-button';
+            btn.dataset.channel = key;
+            btn.textContent = channels[key].name;
+            btn.onclick = () => {
+                if (active.includes(key)) {
+                    active = active.filter(k => k !== key);
+                    if (activeAudioKey === key) {
+                        activeAudioKey = null;
+                    }
+                    if (fullscreenKey === key) toggleFullscreen(null);
+                } else {
+                    active.unshift(key);
+                }
+                render();
+            };
+            channelButtonsContainer.appendChild(btn);
+        });
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && fullscreenKey) {
+            toggleFullscreen(null);
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (!fullscreenKey || active.length <= 1) return;
+        const idx = active.indexOf(fullscreenKey);
+        if (e.key === 'ArrowRight') {
+            lastDirection = 'right';
+            fullscreenKey = active[(idx + 1) % active.length];
+            activeAudioKey = fullscreenKey;
+            render();
+        }
+        if (e.key === 'ArrowLeft') {
+            lastDirection = 'left';
+            fullscreenKey = active[(idx - 1 + active.length) % active.length];
+            activeAudioKey = fullscreenKey;
+            render();
+        }
+    });
+
+    let startX = 0;
+    let isDragging = false;
+
+    function handleDragStart(clientX) {
+        if (fullscreenKey) {
+            startX = clientX;
+            isDragging = true;
+        }
+    }
+
+    function handleDragEnd(clientX) {
+        if (!isDragging || !fullscreenKey || active.length <= 1) return;
+        isDragging = false;
+        const diffX = clientX - startX;
+        const idx = active.indexOf(fullscreenKey);
+        if (diffX < -50) {
+            lastDirection = 'right';
+            fullscreenKey = active[(idx + 1) % active.length];
+            activeAudioKey = fullscreenKey;
+            render();
+        }
+        if (diffX > 50) {
+            lastDirection = 'left';
+            fullscreenKey = active[(idx - 1 + active.length) % active.length];
+            activeAudioKey = fullscreenKey;
+            render();
+        }
+    }
+
+    document.addEventListener('mousedown', e => handleDragStart(e.clientX));
+    document.addEventListener('mouseup', e => handleDragEnd(e.clientX));
+    document.addEventListener('touchstart', e => {
+        if (e.touches.length === 1) handleDragStart(e.touches[0].clientX);
+        e.target.closest('.video-container')?.classList.add('touch-active');
+    }, { passive: true });
+    document.addEventListener('touchend', e => {
+        if (e.changedTouches.length === 1) handleDragEnd(e.changedTouches[0].clientX);
+        document.querySelectorAll('.touch-active').forEach(el => el.classList.remove('touch-active'));
+    });
+
+    createChannelButtons();
+    render();
+</script>
+
+<footer class="mt-10 text-center text-sm text-gray-400 pb-4">
+    <p class="mb-4">
+         על מנת גם להאזין לערוץ 12, יש להפעיל את הסאונד בערוץ ידנית
+    </p>
+    <div class="mb-2">גם תחנות רדיו להאזנה:</div>
+    <a href="https://mistralnet.github.io/radio" class="inline-block bg-indigo-600 hover:bg-indigo-500 text-white py-2 px-4 rounded mb-4">🎧 תחנות רדיו</a>
+    <div class="flex justify-center gap-4 flex-wrap mb-4">
+        <a href="https://mistralnet.github.io/radio/" class="text-blue-400 hover:text-blue-300">Radio</a>
+        <a href="https://mistralnet.github.io/radio/tv.html" class="text-blue-400 hover:text-blue-300">TV</a>
+        <a href="https://mistralnet.github.io/radio/tv2.html" class="text-blue-400 hover:text-blue-300">TV2</a>
+        <a href="https://mistralnet.github.io/radio/tv3.html" class="text-blue-400 hover:text-blue-300">TV3</a>
+        <a href="https://mistralnet.github.io/radio/tv4.html" class="text-blue-400 hover:text-blue-300">TV4</a>
+    </div>
+    <div class="version-info">
+גרסה 3.1 deepseek
+    </div>
+</footer>
 </body>
 </html>
