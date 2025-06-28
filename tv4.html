@@ -309,16 +309,17 @@
         .fullscreen-top-controls {
             width: 100%;
             display: flex;
-            justify-content: flex-end; /* Push channel name to right in RTL, exit button will be on left */
+            justify-content: center; /* Center the channel name */
             align-items: center;
         }
 
         .fullscreen-bottom-controls {
             width: 100%;
             display: flex;
-            justify-content: space-between; /* Distribute items with space between them */
+            justify-content: center; /* Center the buttons */
             align-items: center;
             padding: 0 1rem; /* Add some horizontal padding */
+            gap: 2rem; /* Space between buttons */
         }
 
         .fullscreen-center-buttons {
@@ -330,7 +331,7 @@
             font-size: 1.5rem;
             font-weight: bold;
             text-shadow: 2px 2px 5px #000;
-            margin-right: auto; /* Pushes channel name to the right in RTL */
+            margin: 0; /* Remove auto margin to truly center */
         }
 
         .fs-btn {
@@ -410,8 +411,8 @@
         // --- Configuration and State ---
         const channels = {
             kan11: { name: 'כאן 11', short: '11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-            news12: { name: 'חדשות 12', short: '12', type: 'iframe', url: 'https://www.mako.co.il/player-embed-mako3/?vid=33ae8c620b8df810VgnVCM200000650a10acRCRD&cid=6c311f1cf23ff210VgnVCM2000002a0c10acRCRD&galleryCid=3d385dd2dd5d4110VgnVCM100000290c10acRCRD&showAds=true&isAutoplay=true&isLive=true&isHomePage=mako3&isMainTeaser=true', muteParam: 'muted' }, // Changed isAutoplay to true
-            now14: { name: 'עכשיו 14', short: '14', type: 'iframe', url: 'https://www.c14.co.il/live', muteParam: null },
+            news12: { name: 'חדשות 12', short: '12', type: 'iframe', url: 'https://www.mako.co.il/player-embed-mako3/?vid=33ae8c620b8df810VgnVCM200000650a10acRCRD&cid=6c311f1cf23ff210VgnVCM2000002a0c10acRCRD&galleryCid=3d385dd2dd5d4110VgnVCM100000290c10acRCRD&showAds=true&isAutoplay=true&isLive=true&isHomePage=mako3&isMainTeaser=true', muteParam: 'muted' },
+            now14: { name: 'עכשיו 14', short: '14', type: 'iframe', url: 'https://insightplayer.c14.co.il/player.php?id=live', muteParam: null }, // Updated URL for direct player embed
             news13: { name: 'חדשות 13', short: '13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
             i24news: { name: 'i24NEWS', short: 'i24', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' }
         };
@@ -444,6 +445,11 @@
         const CONTROLS_HIDE_TIMEOUT_MS = 5000; // 5 seconds for fullscreen controls to hide
         const GRID_CONTROLS_HIDE_TIMEOUT_MS = 2000; // 2 seconds for grid controls to hide
 
+        // Touch swipe variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+        const SWIPE_THRESHOLD = 50; // pixels for a valid swipe
+
         /**
          * Saves the current state to localStorage
          */
@@ -473,16 +479,45 @@
 
         // Attach global activity listeners to reset the main timer
         document.addEventListener('mousemove', showFullscreenControls);
-        document.addEventListener('keydown', showFullscreenControls);
         document.addEventListener('click', showFullscreenControls);
+        // Keydown listener for fullscreen navigation
+        document.addEventListener('keydown', (e) => {
+            if (fullscreenKey) { // Only active in fullscreen
+                if (e.key === 'ArrowLeft') {
+                    showNextChannel(); // In RTL, left arrow typically means next logical item
+                    e.preventDefault();
+                } else if (e.key === 'ArrowRight') {
+                    showPreviousChannel(); // In RTL, right arrow typically means previous logical item
+                    e.preventDefault();
+                }
+                showFullscreenControls(); // Also show controls on keydown
+            }
+        });
         document.addEventListener('touchstart', (e) => {
             if (fullscreenKey) { // Only apply touch-active for fullscreen container
                 fullscreenContainer.classList.add('touch-active');
             }
-            showFullscreenControls();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            showFullscreenControls(); // Also show controls on touch start
         }, { passive: true });
         document.addEventListener('touchend', (e) => {
             if (fullscreenKey) {
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const diffX = touchEndX - touchStartX;
+                const diffY = touchEndY - touchStartY;
+
+                // Check for horizontal swipe
+                if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(diffX) > Math.abs(diffY)) {
+                    if (diffX > 0) {
+                        // Swiped right (RTL: previous channel)
+                        showPreviousChannel();
+                    } else {
+                        // Swiped left (RTL: next channel)
+                        showNextChannel();
+                    }
+                }
                 setTimeout(() => fullscreenContainer.classList.remove('touch-active'), CONTROLS_HIDE_TIMEOUT_MS + 100);
             }
         }, { passive: true });
@@ -493,7 +528,7 @@
          */
         function showGridControls(gridItem) {
             gridItem.classList.add('controls-visible');
-            const key = gridItem.querySelector('.video-container').dataset.channelKey;
+            const key = gridItem.dataset.channelKey; // Get key from grid-item
             clearTimeout(gridControlsTimeouts[key]);
             gridControlsTimeouts[key] = setTimeout(() => {
                 gridItem.classList.remove('controls-visible');
@@ -505,7 +540,7 @@
          * @param {HTMLElement} gridItem - The .grid-item element.
          */
         function hideGridControls(gridItem) {
-            const key = gridItem.querySelector('.video-container').dataset.channelKey;
+            const key = gridItem.dataset.channelKey; // Get key from grid-item
             clearTimeout(gridControlsTimeouts[key]);
             gridItem.classList.remove('controls-visible');
         }
@@ -614,8 +649,9 @@
             if (ch.type === 'hls') {
                 playerElement.muted = shouldBeMuted;
                 playerElement.volume = shouldBeMuted ? 0 : 1;
-                if (!shouldBeMuted && playerElement.paused) {
-                    playerElement.play().catch(e => console.warn(`Play failed for ${key} after unmute:`, e));
+                // Always attempt to play if it should be unmuted, to ensure it starts if paused
+                if (!shouldBeMuted) {
+                    playerElement.play().catch(e => console.warn(`Play failed for ${key} after unmute/initial load:`, e));
                 }
             } else if (ch.type === 'iframe') {
                 // For iframes, recreate to reliably change mute state
@@ -694,7 +730,9 @@
                     hls.on(Hls.Events.MANIFEST_PARSED, () => {
                         console.log(`Manifest parsed for ${key}`);
                         loadingIndicator.classList.add('hidden');
-                        playerElement.play().catch(e => console.warn(`Play failed for ${key} after manifest parsed:`, e));
+                        if (wantsAudio) { // Attempt play if unmuted
+                            playerElement.play().catch(e => console.warn(`Play failed for ${key} after manifest parsed:`, e));
+                        }
                     });
 
                     hls.on(Hls.Events.ERROR, (event, data) => {
@@ -722,14 +760,18 @@
 
                     hls.loadSource(ch.url);
                     hls.attachMedia(playerElement);
-                    playerElement.play().catch(e => console.warn(`Play failed for ${key}:`, e));
+                    if (wantsAudio) { // Attempt play if unmuted
+                        playerElement.play().catch(e => console.warn(`Play failed for ${key} on initial HLS load:`, e));
+                    }
 
                 } else {
                     // Native HLS support or fallback for other types
                     playerElement.src = ch.url;
                     playerElement.muted = !wantsAudio;
                     playerElement.volume = wantsAudio ? 1 : 0;
-                    playerElement.play().catch(e => console.warn(`Native play failed for ${key}:`, e));
+                    if (wantsAudio) { // Also attempt play for native HLS if unmuted
+                        playerElement.play().catch(e => console.warn(`Native play failed for ${key} on initial load:`, e));
+                    }
                 }
                 videoBox.appendChild(playerElement);
 
@@ -1008,6 +1050,28 @@
         }
 
         /**
+         * Shows the next channel in fullscreen mode.
+         */
+        function showNextChannel() {
+            if (!fullscreenKey || activeChannels.length <= 1) return;
+
+            const currentIndex = activeChannels.indexOf(fullscreenKey);
+            const nextIndex = (currentIndex + 1) % activeChannels.length;
+            enterFullscreen(activeChannels[nextIndex]);
+        }
+
+        /**
+         * Shows the previous channel in fullscreen mode.
+         */
+        function showPreviousChannel() {
+            if (!fullscreenKey || activeChannels.length <= 1) return;
+
+            const currentIndex = activeChannels.indexOf(fullscreenKey);
+            const prevIndex = (currentIndex - 1 + activeChannels.length) % activeChannels.length;
+            enterFullscreen(activeChannels[prevIndex]);
+        }
+
+        /**
          * Enters fullscreen mode for a specific channel.
          * @param {string} key - The channel key to display in fullscreen.
          */
@@ -1051,17 +1115,29 @@
             const bottomControls = document.createElement('div');
             bottomControls.className = 'fullscreen-bottom-controls';
 
-            const centerButtons = document.createElement('div');
-            centerButtons.className = 'fullscreen-center-buttons';
+            // Previous Channel button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'fs-btn';
+            prevBtn.innerHTML = '<i data-feather="arrow-right"></i>'; // Right arrow for previous in RTL
+            prevBtn.title = 'ערוץ קודם';
+            prevBtn.onclick = showPreviousChannel;
+            bottomControls.appendChild(prevBtn);
 
             // Mute/Unmute button
             const muteBtn = document.createElement('button');
             muteBtn.id = 'fullscreen-mute-btn';
             muteBtn.className = 'fs-btn';
             muteBtn.onclick = toggleMute; // Use the global toggleMute
-            centerButtons.appendChild(muteBtn);
+            bottomControls.appendChild(muteBtn);
 
-            bottomControls.appendChild(centerButtons);
+            // Next Channel button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'fs-btn';
+            nextBtn.innerHTML = '<i data-feather="arrow-left"></i>'; // Left arrow for next in RTL
+            nextBtn.title = 'ערוץ הבא';
+            nextBtn.onclick = showNextChannel;
+            bottomControls.appendChild(nextBtn);
+
             controlsOverlay.appendChild(bottomControls);
             fullscreenContainer.appendChild(controlsOverlay);
 
