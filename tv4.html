@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>צפייה בערוצים</title>
+    <title>צפייה בער1וצים</title>
 
     <!-- Google Analytics Script -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-J5WT91REYB"></script>
@@ -307,8 +307,14 @@
         .fullscreen-bottom-controls {
             width: 100%;
             display: flex;
-            justify-content: center; /* Center buttons at the bottom */
-            gap: 2rem;
+            justify-content: space-between; /* Distribute items with space between them */
+            align-items: center;
+            padding: 0 1rem; /* Add some horizontal padding */
+        }
+
+        .fullscreen-center-buttons {
+            display: flex;
+            gap: 2rem; /* Space between mute and exit buttons */
         }
 
         .fullscreen-channel-name {
@@ -407,8 +413,6 @@
         let activeChannels = savedState.activeChannels || []; // Array of channel keys currently displayed in the grid
         let activeAudioKey = savedState.activeAudioKey || null; // Key of the channel that currently has audio
         let fullscreenKey = savedState.fullscreenKey || null; // Key of the channel currently in fullscreen mode
-
-        // New: lastAudioPreference remembers if user wants sound ON or OFF, default is OFF (muted)
         let lastAudioPreference = savedState.lastAudioPreference !== undefined ? savedState.lastAudioPreference : false;
 
         // Object to store Hls.js instances for proper cleanup
@@ -424,8 +428,8 @@
 
         // --- Inactivity Timer Variables and Functions ---
         let userActivityTimeout;
-        let controlsVisibilityTimeout; // Timeout for fullscreen controls visibility
-        const CONTROLS_HIDE_TIMEOUT_MS = 5000; // 5 seconds for fullscreen controls to hide
+        let controlsVisibilityTimeout;
+        const CONTROLS_HIDE_TIMEOUT_MS = 5000;
 
         /**
          * Saves the current state to localStorage
@@ -454,12 +458,12 @@
             }
         }
 
-        // Attach global activity listeners to reset the main timer
+        // Attach global activity listeners
         document.addEventListener('mousemove', showFullscreenControls);
         document.addEventListener('keydown', showFullscreenControls);
         document.addEventListener('click', showFullscreenControls);
         document.addEventListener('touchstart', (e) => {
-            if (fullscreenKey) { // Only apply touch-active for fullscreen container
+            if (fullscreenKey) {
                 fullscreenContainer.classList.add('touch-active');
             }
             showFullscreenControls();
@@ -470,28 +474,98 @@
             }
         }, { passive: true });
 
+        // --- Player Creation Functions ---
+        function createPlayerContainer(key, isFullscreenContext = false) {
+            const ch = channels[key];
+            if (!ch) {
+                console.error(`Channel config not found for key: ${key}`);
+                return null;
+            }
 
-        // --- Core Functions ---
+            const box = document.createElement('div');
+            box.className = 'video-container';
+            box.dataset.channelKey = key;
 
-        /**
-         * Cleans up a single video player by pausing it, destroying HLS instance,
-         * and removing its container element from the DOM.
-         * @param {string} key - The channel key.
-         */
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'loading-indicator';
+            loadingIndicator.innerHTML = '<span class="spinner"></span> טוען...';
+            box.appendChild(loadingIndicator);
+
+            const wantsAudio = (activeAudioKey === key && lastAudioPreference);
+            const playerElement = ch.type === 'hls' ? createHlsPlayer(ch, key, loadingIndicator, wantsAudio) 
+                                                  : createIframePlayer(ch, wantsAudio, loadingIndicator);
+
+            playerElements[key] = playerElement;
+            box.appendChild(playerElement);
+            return box;
+        }
+
+        function createHlsPlayer(ch, key, loadingIndicator, wantsAudio) {
+            const player = document.createElement('video');
+            player.autoplay = true;
+            player.playsInline = true;
+            player.muted = !wantsAudio;
+            player.volume = wantsAudio ? 1 : 0;
+
+            if (Hls.isSupported()) {
+                const hls = hlsInstances[key] || new Hls({ enableWorker: true, lowLatencyMode: true });
+                hlsInstances[key] = hls;
+
+                hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    loadingIndicator.classList.add('hidden');
+                    player.play().catch(e => console.warn(`Play failed for ${key}:`, e));
+                });
+
+                hls.on(Hls.Events.ERROR, (event, data) => handleHlsError(key, data, hls, ch.url));
+                hls.loadSource(ch.url);
+                hls.attachMedia(player);
+            } else {
+                player.src = ch.url;
+            }
+
+            player.play().catch(e => console.warn(`Initial play failed for ${key}:`, e));
+            return player;
+        }
+
+        function createIframePlayer(ch, wantsAudio, loadingIndicator) {
+            const iframe = document.createElement('iframe');
+            iframe.allow = 'autoplay; fullscreen; encrypted-media';
+            iframe.src = buildUrlWithParams(ch.url, !wantsAudio, ch.muteParam);
+            iframe.onload = () => loadingIndicator.classList.add('hidden');
+            return iframe;
+        }
+
+        function handleHlsError(key, data, hls, url) {
+            console.error(`HLS error for channel ${key}:`, data);
+            if (data.fatal) {
+                switch (data.type) {
+                    case Hls.ErrorTypes.MEDIA_ERROR:
+                        hls.recoverMediaError();
+                        break;
+                    case Hls.ErrorTypes.NETWORK_ERROR:
+                        hls.loadSource(url);
+                        break;
+                    default:
+                        hls.destroy();
+                        delete hlsInstances[key];
+                        break;
+                }
+            }
+        }
+
+        // --- Player Management Functions ---
         function cleanupPlayer(key) {
             const playerContainer = document.querySelector(`.video-container[data-channel-key="${key}"]`);
             if (playerContainer) {
-                console.log(`Cleaning up player for ${key}`);
                 const playerElement = playerElements[key];
 
                 if (playerElement && playerElement.tagName === 'VIDEO') {
                     playerElement.pause();
-                    playerElement.removeAttribute('src'); // Clear src to stop loading
-                    playerElement.load(); // Load empty to truly stop
+                    playerElement.removeAttribute('src');
+                    playerElement.load();
                 }
 
                 if (hlsInstances[key]) {
-                    console.log(`Destroying HLS instance for: ${key}`);
                     hlsInstances[key].destroy();
                     delete hlsInstances[key];
                 }
@@ -503,74 +577,31 @@
             }
         }
 
-        /**
-         * Cleans up ALL existing video players by pausing them, destroying HLS instances,
-         * and removing elements from the DOM. This ensures no audio or processes
-         * are running from hidden/stale players.
-         */
         function cleanupAllPlayers() {
-            // Get all currently rendered video containers
-            const allPlayerContainers = document.querySelectorAll('.video-container');
-            allPlayerContainers.forEach(container => {
-                const key = container.dataset.channelKey;
-                cleanupPlayer(key); // Use the specific cleanup function
+            document.querySelectorAll('.video-container').forEach(container => {
+                cleanupPlayer(container.dataset.channelKey);
             });
-
-            // Ensure playerElements and hlsInstances maps are truly empty
-            for (const key in playerElements) {
-                if (playerElements.hasOwnProperty(key)) {
-                    cleanupPlayer(key); // Fallback for any lingering references
-                }
-            }
-            for (const key in hlsInstances) {
-                if (hlsInstances.hasOwnProperty(key)) {
-                    if (hlsInstances[key]) {
-                        hlsInstances[key].destroy();
-                    }
-                    delete hlsInstances[key];
-                }
-            }
-            grid.innerHTML = ''; // Clear grid
-            fullscreenContainer.innerHTML = ''; // Clear fullscreen container
-            playerElements = {}; // Reset the map
-            hlsInstances = {}; // Reset the map
+            fullscreenContainer.innerHTML = '';
+            playerElements = {};
+            hlsInstances = {};
         }
 
-        /**
-         * Builds the URL for an iframe with mute/autoplay parameters.
-         * @param {string} baseUrl - The base URL of the iframe.
-         * @param {boolean} muted - Whether the iframe should be muted.
-         * @param {string} muteParamName - The name of the mute parameter (e.g., 'muted').
-         * @returns {string} The constructed URL.
-         */
         function buildUrlWithParams(baseUrl, muted, muteParamName) {
             const url = new URL(baseUrl);
-            // Add autoplay if not already present
             if (!url.searchParams.has('autoplay')) {
                 url.searchParams.set('autoplay', '1');
             }
-            // Set mute parameter based on desired state
             if (muteParamName) {
                 url.searchParams.set(muteParamName, muted ? '1' : '0');
             }
             return url.toString();
         }
 
-        /**
-         * Updates the mute state of a player element in the DOM.
-         * For iframes, this often requires recreating the iframe.
-         * @param {string} key - The channel key.
-         * @param {boolean} shouldBeMuted - True if the player should be muted.
-         * @param {boolean} isFullscreenPlayer - True if this is the player in the fullscreen container.
-         */
-        function updateMuteState(key, shouldBeMuted, isFullscreenPlayer = false) {
+        function updateMuteState(key, shouldBeMuted) {
             const playerElement = playerElements[key];
             const ch = channels[key];
 
-            if (!playerElement || !ch) {
-                console.warn(`Player or channel config not found for key: ${key}`);
-                return;
-            }
+            if (!playerElement || !ch) return;
 
             if (ch.type === 'hls') {
                 playerElement.muted = shouldBeMuted;
@@ -579,8 +610,6 @@
                     playerElement.play().catch(e => console.warn(`Play failed for ${key} after unmute:`, e));
                 }
             } else if (ch.type === 'iframe') {
-                // For iframes, recreate to reliably change mute state
-                console.log(`Recreating iframe for ${key} to change mute state to ${shouldBeMuted}`);
                 const parentContainer = playerElement.parentNode;
                 if (parentContainer) {
                     const newIframe = document.createElement('iframe');
@@ -591,184 +620,49 @@
                         if (loadingIndicator) loadingIndicator.classList.add('hidden');
                     };
                     parentContainer.replaceChild(newIframe, playerElement);
-                    playerElements[key] = newIframe; // Update reference
+                    playerElements[key] = newIframe;
                 }
             }
         }
 
-
-        /**
-         * Creates a single player container (for grid or fullscreen display).
-         * This function handles both HLS (<video>) and iframe players.
-         * It attaches the player element and returns the container div.
-         * It also stores the player element reference in playerElements.
-         * @param {string} key - The channel key (e.g., 'kan11').
-         * @param {boolean} isFullscreenContext - True if this player is being created for the fullscreen container.
-         * @returns {HTMLElement} The container div with the player element inside.
-         */
-        function createPlayerContainer(key, isFullscreenContext = false) {
-            const ch = channels[key];
-            if (!ch) {
-                console.error(`Channel config not found for key: ${key}`);
-                return null;
-            }
-
-            console.log(`Creating player for ${key} (Fullscreen Context: ${isFullscreenContext})`);
-
-            const box = document.createElement('div');
-            box.className = 'video-container';
-            box.dataset.channelKey = key;
-
-            // Add loading indicator
-            const loadingIndicator = document.createElement('div');
-            loadingIndicator.className = 'loading-indicator';
-            loadingIndicator.innerHTML = '<span class="spinner"></span> טוען...';
-            box.appendChild(loadingIndicator);
-
-            let playerElement;
-
-            // Determine if this specific player should have audio based on current state
-            // It should have audio if it's the active audio channel AND lastAudioPreference is true
-            const wantsAudio = (activeAudioKey === key && lastAudioPreference);
-
-            if (ch.type === 'hls') {
-                playerElement = document.createElement('video');
-                playerElement.autoplay = true;
-                playerElement.playsInline = true;
-                playerElement.muted = !wantsAudio; // Mute based on wantsAudio
-                playerElement.volume = wantsAudio ? 1 : 0; // Ensure volume is set
-
-                if (Hls.isSupported()) {
-                    let hls = hlsInstances[key];
-                    if (!hls) {
-                        console.log(`Creating new HLS instance for ${key}`);
-                        hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-                        hlsInstances[key] = hls; // Store new instance
-                    } else {
-                        console.log(`Re-using existing HLS instance for ${key}`);
-                        // If an HLS instance exists, ensure it's detached from old media before attaching to new
-                        if (hls.media && hls.media !== playerElement) {
-                            hls.detachMedia();
-                        }
-                    }
-
-                    hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                        console.log(`Manifest parsed for ${key}`);
-                        loadingIndicator.classList.add('hidden');
-                        playerElement.play().catch(e => console.warn(`Play failed for ${key} after manifest parsed:`, e));
-                    });
-
-                    hls.on(Hls.Events.ERROR, (event, data) => {
-                        console.error(`HLS error for channel ${key}:`, data);
-                        loadingIndicator.classList.add('hidden'); // Hide on error too
-                        if (data.fatal) {
-                            console.error(`Fatal HLS error for ${key}:`, data.details);
-                            switch (data.type) {
-                                case Hls.ErrorTypes.MEDIA_ERROR:
-                                    console.log(`Attempting media error recovery for ${key}`);
-                                    hls.recoverMediaError();
-                                    break;
-                                case Hls.ErrorTypes.NETWORK_ERROR:
-                                    console.log(`Attempting network error recovery for ${key}, reloading source`);
-                                    hls.loadSource(ch.url);
-                                    break;
-                                default:
-                                    console.error(`Unrecoverable fatal error for ${key}, destroying HLS`);
-                                    hls.destroy();
-                                    delete hlsInstances[key];
-                                    break;
-                            }
-                        }
-                    });
-
-                    hls.loadSource(ch.url);
-                    hls.attachMedia(playerElement);
-                    playerElement.play().catch(e => console.warn(`Play failed for ${key}:`, e));
-
-                } else {
-                    // Native HLS support or fallback for other types
-                    playerElement.src = ch.url;
-                    playerElement.muted = !wantsAudio;
-                    playerElement.volume = wantsAudio ? 1 : 0;
-                    playerElement.play().catch(e => console.warn(`Native play failed for ${key}:`, e));
-                }
-                box.appendChild(playerElement);
-
-            } else if (ch.type === 'iframe') {
-                playerElement = document.createElement('iframe');
-                playerElement.allow = 'autoplay; fullscreen; encrypted-media';
-                playerElement.src = buildUrlWithParams(ch.url, !wantsAudio, ch.muteParam);
-                playerElement.onload = () => {
-                    loadingIndicator.classList.add('hidden');
-                };
-                box.appendChild(playerElement);
-            }
-
-            playerElements[key] = playerElement; // Store the actual video/iframe element
-            return box;
-        }
-
-        /**
-         * Sets the active audio channel and mutes/unmutes players accordingly.
-         * @param {string|null} key - The key of the channel to set as active audio, or null to mute all.
-         */
+        // --- Audio Management Functions ---
         function setAudioChannel(key) {
             activeAudioKey = key;
-            if (key !== null) {
-                lastAudioPreference = true; // If user explicitly sets audio, they want it on.
-            }
-
-            // Mute/unmute all players based on activeAudioKey and lastAudioPreference
+            
             for (const pKey in playerElements) {
                 if (playerElements.hasOwnProperty(pKey)) {
-                    const shouldBeMuted = !(pKey === activeAudioKey && lastAudioPreference);
-                    updateMuteState(pKey, shouldBeMuted);
+                    updateMuteState(pKey, !(pKey === activeAudioKey && lastAudioPreference));
                 }
             }
 
-            // Update highlight for grid view
             document.querySelectorAll('.video-container').forEach(container => {
-                if (container.dataset.channelKey === activeAudioKey && lastAudioPreference) {
-                    container.classList.add('active-audio-highlight');
-                } else {
-                    container.classList.remove('active-audio-highlight');
-                }
+                container.classList.toggle('active-audio-highlight', 
+                    container.dataset.channelKey === activeAudioKey && lastAudioPreference);
             });
 
-            // Update mute button icon in fullscreen if active
             updateFullscreenMuteButton();
-
             saveState();
-            renderBottomNav(); // Update audio indicator on bottom nav buttons
+            renderBottomNav();
         }
 
-        /**
-         * Toggles the mute state for the currently active audio channel.
-         * If no active audio channel, this will unmute the fullscreen channel if active,
-         * or the first channel in the grid if not in fullscreen.
-         */
         function toggleMute() {
+            lastAudioPreference = !lastAudioPreference;
+
             if (fullscreenKey) {
-                // If in fullscreen, toggle audio for the fullscreen channel
-                lastAudioPreference = !lastAudioPreference;
                 setAudioChannel(lastAudioPreference ? fullscreenKey : null);
             } else if (activeAudioKey) {
-                // If in grid and an audio channel is active, toggle its mute state
-                lastAudioPreference = !lastAudioPreference;
                 setAudioChannel(lastAudioPreference ? activeAudioKey : null);
-            } else if (activeChannels.length > 0) {
-                // If no audio active, but channels are open, unmute the first one
-                lastAudioPreference = true;
+            } else if (activeChannels.length > 0 && lastAudioPreference) {
                 setAudioChannel(activeChannels[0]);
+            } else {
+                setAudioChannel(null);
             }
-            updateFullscreenMuteButton(); // Ensure fullscreen mute button reflects state
+            
+            updateFullscreenMuteButton();
             saveState();
-            renderBottomNav(); // Update audio indicator on bottom nav buttons
+            renderBottomNav();
         }
 
-        /**
-         * Updates the mute/unmute icon in the fullscreen controls.
-         */
         function updateFullscreenMuteButton() {
             const muteButton = document.getElementById('fs-mute-btn');
             if (muteButton) {
@@ -776,30 +670,22 @@
             }
         }
 
-
-        /**
-         * Renders (or re-renders) the video grid based on `activeChannels`.
-         */
+        // --- Rendering Functions ---
         function renderGrid() {
-            grid.innerHTML = ''; // Clear existing grid
+            grid.innerHTML = '';
             message.classList.toggle('hidden', activeChannels.length > 0);
 
             activeChannels.forEach(key => {
                 let playerContainer = document.querySelector(`.video-container[data-channel-key="${key}"]`);
                 if (!playerContainer) {
-                    // Create new player container if it doesn't exist in DOM
                     playerContainer = createPlayerContainer(key, false);
                 } else {
-                    // If it exists, ensure it's in the grid and not hidden
                     playerContainer.style.display = '';
                 }
                 grid.appendChild(playerContainer);
 
-                // Ensure correct mute state for grid players
-                const shouldBeMuted = !(key === activeAudioKey && lastAudioPreference);
-                updateMuteState(key, shouldBeMuted);
+                updateMuteState(key, !(key === activeAudioKey && lastAudioPreference));
 
-                // Add event listeners for grid controls
                 const overlay = document.createElement('div');
                 overlay.className = 'grid-controls-overlay';
                 overlay.innerHTML = `
@@ -819,8 +705,14 @@
                 playerContainer.appendChild(overlay);
 
                 overlay.querySelector('[data-action="audio"]').addEventListener('click', (e) => {
-                    e.stopPropagation(); // Prevent fullscreen on click
-                    setAudioChannel(key);
+                    e.stopPropagation();
+                    if (activeAudioKey === key && lastAudioPreference) {
+                        lastAudioPreference = false;
+                        setAudioChannel(null);
+                    } else {
+                        lastAudioPreference = true;
+                        setAudioChannel(key);
+                    }
                 });
                 overlay.querySelector('[data-action="fullscreen"]').addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -831,15 +723,10 @@
                     toggleChannel(key);
                 });
 
-                // Apply audio highlight
-                if (key === activeAudioKey && lastAudioPreference) {
-                    playerContainer.classList.add('active-audio-highlight');
-                } else {
-                    playerContainer.classList.remove('active-audio-highlight');
-                }
+                playerContainer.classList.toggle('active-audio-highlight', 
+                    key === activeAudioKey && lastAudioPreference);
             });
 
-            // Cleanup players that are no longer in activeChannels
             document.querySelectorAll('.video-container').forEach(container => {
                 const key = container.dataset.channelKey;
                 if (!activeChannels.includes(key) && container.parentNode === grid) {
@@ -848,56 +735,46 @@
             });
         }
 
-        /**
-         * Renders the fullscreen player and its controls.
-         */
         function renderFullscreen() {
-            fullscreenContainer.innerHTML = ''; // Clear existing fullscreen content
+            fullscreenContainer.innerHTML = '';
 
             if (fullscreenKey) {
                 const ch = channels[fullscreenKey];
                 if (!ch) {
-                    console.error(`Fullscreen channel config not found for key: ${fullscreenKey}`);
                     exitFullscreen();
                     return;
                 }
 
-                // Create a new player container for fullscreen
                 const fsPlayerContainer = createPlayerContainer(fullscreenKey, true);
                 fullscreenContainer.appendChild(fsPlayerContainer);
+                updateMuteState(fullscreenKey, !lastAudioPreference);
 
-                // Ensure the fullscreen player has audio if lastAudioPreference is true
-                updateMuteState(fullscreenKey, !lastAudioPreference, true);
-
-                // Create fullscreen controls
                 const fsControls = document.createElement('div');
                 fsControls.id = 'fullscreen-controls';
                 fsControls.innerHTML = `
                     <div class="fullscreen-top-controls">
                         <span class="fullscreen-channel-name">${ch.name}</span>
-                        <button id="fs-exit-btn" class="fs-btn">${feather.icons['minimize'].toSvg()}</button>
                     </div>
                     <div class="fullscreen-bottom-controls">
                         <button id="fs-prev-btn" class="fs-btn">${feather.icons['chevron-right'].toSvg()}</button>
-                        <button id="fs-mute-btn" class="fs-btn">${lastAudioPreference ? feather.icons['volume-2'].toSvg() : feather.icons['volume-x'].toSvg()}</button>
+                        <div class="fullscreen-center-buttons">
+                            <button id="fs-mute-btn" class="fs-btn">${lastAudioPreference ? feather.icons['volume-2'].toSvg() : feather.icons['volume-x'].toSvg()}</button>
+                            <button id="fs-exit-btn" class="fs-btn">${feather.icons['minimize'].toSvg()}</button>
+                        </div>
                         <button id="fs-next-btn" class="fs-btn">${feather.icons['chevron-left'].toSvg()}</button>
                     </div>
                 `;
                 fullscreenContainer.appendChild(fsControls);
 
-                // Attach event listeners for fullscreen controls
                 document.getElementById('fs-exit-btn').addEventListener('click', exitFullscreen);
                 document.getElementById('fs-mute-btn').addEventListener('click', toggleMute);
-                document.getElementById('fs-prev-btn').addEventListener('click', () => switchFullscreenChannel(-1)); // -1 for previous (RTL)
-                document.getElementById('fs-next-btn').addEventListener('click', () => switchFullscreenChannel(1)); // 1 for next (RTL)
+                document.getElementById('fs-prev-btn').addEventListener('click', () => switchFullscreenChannel(-1));
+                document.getElementById('fs-next-btn').addEventListener('click', () => switchFullscreenChannel(1));
 
-                showFullscreenControls(); // Show controls initially
+                showFullscreenControls();
             }
         }
 
-        /**
-         * Renders the bottom navigation bar with channel buttons.
-         */
         function renderBottomNav() {
             bottomNavContainer.innerHTML = '';
             Object.keys(channels).forEach(key => {
@@ -914,170 +791,128 @@
             });
         }
 
-        /**
-         * Adds or removes a channel from the active list and re-renders the UI.
-         * @param {string} key - The channel key to toggle.
-         */
+        // --- Channel Management Functions ---
         function toggleChannel(key) {
             const index = activeChannels.indexOf(key);
             if (index > -1) {
-                // Channel is active, remove it
                 activeChannels.splice(index, 1);
-                // If the removed channel was the active audio, reset active audio
-                if (activeAudioKey === key) {
-                    setAudioChannel(null);
-                }
-                // If the removed channel was in fullscreen, exit fullscreen
-                if (fullscreenKey === key) {
-                    exitFullscreen();
-                }
-                cleanupPlayer(key); // Clean up its player instance
+                if (activeAudioKey === key) setAudioChannel(null);
+                if (fullscreenKey === key) exitFullscreen();
+                cleanupPlayer(key);
             } else {
-                // Channel is not active, add it
                 activeChannels.push(key);
-                // If no audio is active, make this the active audio channel
-                if (!activeAudioKey) {
-                    setAudioChannel(key);
-                }
+                if (!activeAudioKey) setAudioChannel(key);
             }
             saveState();
             renderGrid();
             renderBottomNav();
         }
 
-        /**
-         * Enters fullscreen mode for a specific channel.
-         * @param {string} key - The channel key to display in fullscreen.
-         */
         function enterFullscreen(key) {
             fullscreenKey = key;
             document.body.classList.add('fullscreen-mode');
-            // Mute all grid players to prevent background audio
+            
             for (const pKey in playerElements) {
                 if (playerElements.hasOwnProperty(pKey) && pKey !== fullscreenKey) {
                     updateMuteState(pKey, true);
                 }
             }
-            setAudioChannel(key); // Set audio to the fullscreen channel
+            
+            setAudioChannel(lastAudioPreference ? key : null);
             renderFullscreen();
             saveState();
-            // Request fullscreen API for the body or fullscreen container
-            if (document.body.requestFullscreen) {
-                document.body.requestFullscreen();
-            } else if (document.body.mozRequestFullScreen) { /* Firefox */
-                document.body.mozRequestFullScreen();
-            } else if (document.body.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
-                document.body.webkitRequestFullscreen();
-            } else if (document.body.msRequestFullscreen) { /* IE/Edge */
-                document.body.msRequestFullscreen();
+            
+            if (fullscreenContainer.requestFullscreen) {
+                fullscreenContainer.requestFullscreen();
+            } else if (fullscreenContainer.mozRequestFullScreen) {
+                fullscreenContainer.mozRequestFullScreen();
+            } else if (fullscreenContainer.webkitRequestFullscreen) {
+                fullscreenContainer.webkitRequestFullscreen();
+            } else if (fullscreenContainer.msRequestFullscreen) {
+                fullscreenContainer.msRequestFullscreen();
             }
         }
 
-        /**
-         * Exits fullscreen mode.
-         */
         function exitFullscreen() {
             document.body.classList.remove('fullscreen-mode');
             fullscreenKey = null;
-            renderFullscreen(); // This will hide the fullscreen container
+            renderFullscreen();
 
-            // Re-enable audio for the previously active audio channel in grid, if any
             if (activeAudioKey && lastAudioPreference) {
                 updateMuteState(activeAudioKey, false);
             }
-            renderGrid(); // Re-render the grid to ensure correct states
+            renderGrid();
             saveState();
 
-            // Exit fullscreen API
             if (document.exitFullscreen) {
                 document.exitFullscreen();
-            } else if (document.mozCancelFullScreen) { /* Firefox */
+            } else if (document.mozCancelFullScreen) {
                 document.mozCancelFullScreen();
-            } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+            } else if (document.webkitExitFullscreen) {
                 document.webkitExitFullscreen();
-            } else if (document.msExitFullscreen) { /* IE/Edge */
+            } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
             }
         }
 
-        /**
-         * Switches the channel when in fullscreen mode.
-         * @param {number} direction - 1 for next, -1 for previous.
-         */
         function switchFullscreenChannel(direction) {
             if (!fullscreenKey || activeChannels.length === 0) return;
 
             const currentIndex = activeChannels.indexOf(fullscreenKey);
             if (currentIndex === -1) {
-                // Current fullscreenKey is somehow not in activeChannels, pick first
                 fullscreenKey = activeChannels[0];
                 renderFullscreen();
-                setAudioChannel(fullscreenKey);
+                setAudioChannel(lastAudioPreference ? fullscreenKey : null);
                 saveState();
                 return;
             }
 
             let newIndex = currentIndex + direction;
-
-            // Loop around if at ends
-            if (newIndex >= activeChannels.length) {
-                newIndex = 0;
-            } else if (newIndex < 0) {
-                newIndex = activeChannels.length - 1;
-            }
+            if (newIndex >= activeChannels.length) newIndex = 0;
+            else if (newIndex < 0) newIndex = activeChannels.length - 1;
 
             const newFullscreenKey = activeChannels[newIndex];
             if (newFullscreenKey !== fullscreenKey) {
                 fullscreenKey = newFullscreenKey;
-                setAudioChannel(fullscreenKey); // Set audio to the new fullscreen channel
-                renderFullscreen(); // Re-render fullscreen to show new video
+                setAudioChannel(lastAudioPreference ? fullscreenKey : null);
+                renderFullscreen();
                 saveState();
             }
         }
 
-        // Listener for native fullscreen change events
+        // --- Event Listeners ---
         document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.mozFullScreenElement && !document.msFullscreenElement) {
-                // If exited fullscreen via browser controls
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && !document.msFullscreenElement) {
                 if (document.body.classList.contains('fullscreen-mode')) {
                     exitFullscreen();
                 }
             } else {
-                // Entered fullscreen via browser controls (e.g., F11)
-                // If we are not already in our custom fullscreen mode, ensure we transition
                 if (!document.body.classList.contains('fullscreen-mode') && activeChannels.length > 0) {
-                    // If no specific fullscreenKey was set, default to the first active channel
-                    if (!fullscreenKey) {
-                        fullscreenKey = activeChannels[0];
-                    }
+                    if (!fullscreenKey) fullscreenKey = activeChannels[0];
                     document.body.classList.add('fullscreen-mode');
-                    setAudioChannel(fullscreenKey);
+                    setAudioChannel(lastAudioPreference ? fullscreenKey : null);
                     renderFullscreen();
                     saveState();
                 }
             }
         });
 
-
-        // --- Initial Load ---
+        // --- Initialization ---
         document.addEventListener('DOMContentLoaded', () => {
-            feather.replace(); // Initialize Feather icons
+            feather.replace();
             renderGrid();
             renderBottomNav();
 
-            // If a fullscreen channel was saved, enter fullscreen on load
             if (fullscreenKey && activeChannels.includes(fullscreenKey)) {
                 enterFullscreen(fullscreenKey);
             } else if (fullscreenKey) {
-                // If fullscreenKey was saved but the channel is no longer active, clear it
                 fullscreenKey = null;
                 saveState();
             }
 
-            // Ensure initial audio state is correct for existing players
             setAudioChannel(activeAudioKey);
         });
-
     </script>
 </body>
 </html>
