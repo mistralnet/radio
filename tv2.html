@@ -214,6 +214,8 @@
             color: white;
             font-size: 1.2rem;
             z-index: 20;
+            opacity: 0; /* Changed to hidden by default */
+            pointer-events: none;
         }
 
         .spinner {
@@ -294,7 +296,7 @@
                 muteParam: null,
                 muteFunction: 'mute',
                 unmuteFunction: 'unmute',
-                muted: true,
+                muted: true, // Ensure channel 14 starts muted
                 showSoundControl: false
             },
             news13: { 
@@ -542,10 +544,10 @@
             channelInfo.appendChild(channelNumber);
             playerWrapper.appendChild(channelInfo);
             
-            // Add loading indicator
+            // Add loading indicator (hidden by default)
             const loadingIndicator = document.createElement('div');
             loadingIndicator.className = 'loading-indicator';
-            loadingIndicator.innerHTML = '<span class="spinner"></span> טוען...';
+            loadingIndicator.innerHTML = '<span class="spinner"></span>';
             playerWrapper.appendChild(loadingIndicator);
             
             // Add sound control only for channels that should show it
@@ -570,16 +572,6 @@
                 const iframe = createIframePlayer(channelKey, channel);
                 playerWrapper.appendChild(iframe);
                 state.iframeReadyStates[channelKey] = false;
-            }
-            
-            // Hide loading indicator when player is ready
-            if (channel.type === 'hls') {
-                const video = playerWrapper.querySelector('video');
-                if (video) {
-                    video.addEventListener('playing', () => {
-                        loadingIndicator.classList.add('hidden');
-                    });
-                }
             }
             
             return playerWrapper;
@@ -624,21 +616,14 @@
             iframe.setAttribute('title', channel.name);
             iframe.setAttribute('allowfullscreen', '');
             
-            // Add event listener for iframe load
-            iframe.addEventListener('load', () => {
-                const loadingIndicator = iframe.parentElement.querySelector('.loading-indicator');
-                if (loadingIndicator) loadingIndicator.classList.add('hidden');
-                
-                // For Channel 14, we need to wait for the iframe to be ready
-                if (channelKey === 'now14') {
-                    // This will trigger the iframe to send a message when ready
-                    setTimeout(() => {
-                        iframe.contentWindow.postMessage({
-                            action: 'isReady'
-                        }, new URL(channel.url).origin);
-                    }, 2000);
-                }
-            });
+            // For Channel 14, we need to wait for the iframe to be ready
+            if (channelKey === 'now14') {
+                setTimeout(() => {
+                    iframe.contentWindow.postMessage({
+                        action: 'isReady'
+                    }, new URL(channel.url).origin);
+                }, 2000);
+            }
             
             return iframe;
         }
