@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="he" dir="rtl">
 <head>
@@ -102,6 +101,16 @@
             opacity: 0;
         }
         
+        .sound-control {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 10;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
         .sound-indicator {
             display: flex;
             align-items: center;
@@ -110,6 +119,7 @@
             height: 24px;
             background-color: rgba(255,255,255,0.2);
             border-radius: 50%;
+            cursor: pointer;
         }
         
         .sound-indicator.active {
@@ -221,8 +231,23 @@
     <script>
         // Channel data
         const channels = {
-            kan11: { name: 'כאן 11', short: '11', type: 'hls', url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8' },
-            news12: { name: 'חדשות 12', short: '12', type: 'iframe', url: 'https://www.mako.co.il/player-embed-mako3/?vid=33ae8c620b8df810VgnVCM200000650a10acRCRD&cid=6c311f1cf23ff210VgnVCM2000002a0c10acRCRD&galleryCid=3d385dd2dd5d4110VgnVCM100000290c10acRCRD&showAds=true&isAutoplay=true&isLive=true&isHomePage=mako3&isMainTeaser=true', muteParam: 'muted' },
+            kan11: { 
+                name: 'כאן 11', 
+                short: '11', 
+                type: 'hls', 
+                url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8',
+                muted: true,
+                showSoundControl: true
+            },
+            news12: { 
+                name: 'חדשות 12', 
+                short: '12', 
+                type: 'iframe', 
+                url: 'https://www.mako.co.il/player-embed-mako3/?vid=33ae8c620b8df810VgnVCM200000650a10acRCRD&cid=6c311f1cf23ff210VgnVCM2000002a0c10acRCRD&galleryCid=3d385dd2dd5d4110VgnVCM100000290c10acRCRD&showAds=true&isAutoplay=true&isLive=true&isHomePage=mako3&isMainTeaser=true', 
+                muteParam: 'muted',
+                muted: true,
+                showSoundControl: false
+            },
             now14: { 
                 name: 'עכשיו 14', 
                 short: '14', 
@@ -230,10 +255,26 @@
                 url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3MWFlNmEzYzAzIiwiY2xpZW50IjoiY2hhbm5lbDE0IiwiYXBpIjoiaHR0cHM6Ly9pbnNpZ2h0LWFwaS1jaGFubmVsMTQudW5pdnRlYy5jb20vIn0=',
                 muteParam: null,
                 muteFunction: 'mute',
-                unmuteFunction: 'unmute'
+                unmuteFunction: 'unmute',
+                muted: true,
+                showSoundControl: false
             },
-            news13: { name: 'חדשות 13', short: '13', type: 'hls', url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8' },
-            i24news: { name: 'i24NEWS', short: 'i24', type: 'hls', url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8' }
+            news13: { 
+                name: 'חדשות 13', 
+                short: '13', 
+                type: 'hls', 
+                url: 'https://d198ztbnlup2iq.cloudfront.net/out/v1/2d9050c90fb94df8b78d1d98306a1a65/index.m3u8',
+                muted: true,
+                showSoundControl: true
+            },
+            i24news: { 
+                name: 'i24NEWS', 
+                short: 'i24', 
+                type: 'hls', 
+                url: 'https://bcovlive-a.akamaihd.net/d89ede8094c741b7924120b27764153c/eu-central-1/5377161796001/profile_0/chunklist.m3u8',
+                muted: true,
+                showSoundControl: true
+            }
         };
 
         // State management
@@ -242,7 +283,8 @@
             activeAudioChannel: null,
             hlsInstances: {},
             timeouts: {},
-            resizeObserver: null
+            resizeObserver: null,
+            iframeReadyStates: {}
         };
         
         // Initialize the app
@@ -283,8 +325,26 @@
         });
 
         function handleIframeMessage(event) {
-            // Handle messages from iframes if needed
-            console.log('Message from iframe:', event.data);
+            const channelKey = Object.keys(state.iframeReadyStates).find(key => 
+                event.origin === new URL(channels[key].url).origin
+            );
+            
+            if (channelKey) {
+                // Handle iframe ready state
+                if (event.data === 'iframe-ready') {
+                    state.iframeReadyStates[channelKey] = true;
+                    initializeIframeAudio(channelKey);
+                }
+            }
+        }
+        
+        function initializeIframeAudio(channelKey) {
+            const channel = channels[channelKey];
+            if (channel.muted) {
+                muteChannel(channelKey);
+            } else {
+                unmuteChannel(channelKey);
+            }
         }
         
         // Debounce function for resize events
@@ -338,6 +398,15 @@
             if (index === -1) {
                 if (state.selectedChannels.length < 5) {
                     state.selectedChannels.push(channelKey);
+                    // Initialize new channel as muted
+                    channels[channelKey].muted = true;
+                    
+                    // If this is the first channel, make it active (but still muted)
+                    if (state.selectedChannels.length === 1) {
+                        state.activeAudioChannel = channelKey;
+                        channels[channelKey].muted = false;
+                        unmuteChannel(channelKey);
+                    }
                 }
             } else {
                 cleanupChannelResources(channelKey);
@@ -345,6 +414,12 @@
                 
                 if (state.activeAudioChannel === channelKey) {
                     state.activeAudioChannel = null;
+                    // If there are other channels, select one to be active
+                    if (state.selectedChannels.length > 0) {
+                        state.activeAudioChannel = state.selectedChannels[0];
+                        channels[state.activeAudioChannel].muted = false;
+                        unmuteChannel(state.activeAudioChannel);
+                    }
                 }
             }
             
@@ -364,6 +439,11 @@
             if (state.timeouts[channelKey]) {
                 clearTimeout(state.timeouts[channelKey]);
                 delete state.timeouts[channelKey];
+            }
+            
+            // Clear iframe ready state
+            if (state.iframeReadyStates[channelKey]) {
+                delete state.iframeReadyStates[channelKey];
             }
         }
         
@@ -389,7 +469,7 @@
                     // Set timeout to fade out channel info
                     state.timeouts[channelKey] = setTimeout(() => {
                         const infoElement = document.querySelector(`.channel-info[data-channel-key="${channelKey}"]`);
-                        if (infoElement) {
+                        if (infoElement && state.activeAudioChannel !== channelKey) {
                             infoElement.classList.add('fade-out');
                         }
                     }, 3000);
@@ -412,18 +492,27 @@
             channelInfo.className = 'channel-info';
             channelInfo.dataset.channelKey = channelKey;
             
-            const soundIndicator = document.createElement('div');
-            soundIndicator.className = 'sound-indicator';
-            soundIndicator.innerHTML = '🔊';
-            soundIndicator.setAttribute('aria-label', 'סאונד כבוי');
-            
             const channelNumber = document.createElement('span');
             channelNumber.className = 'channel-number';
             channelNumber.textContent = channel.short;
             
-            channelInfo.appendChild(soundIndicator);
             channelInfo.appendChild(channelNumber);
             playerWrapper.appendChild(channelInfo);
+            
+            // Add sound control only for channels that should show it
+            if (channel.showSoundControl) {
+                const soundControl = document.createElement('div');
+                soundControl.className = 'sound-control';
+                
+                const soundIndicator = document.createElement('div');
+                soundIndicator.className = 'sound-indicator';
+                soundIndicator.innerHTML = '🔊';
+                soundIndicator.setAttribute('aria-label', 'סאונד כבוי');
+                soundIndicator.addEventListener('click', () => toggleChannelAudio(channelKey));
+                
+                soundControl.appendChild(soundIndicator);
+                playerWrapper.appendChild(soundControl);
+            }
             
             if (channel.type === 'hls') {
                 const video = createHLSPlayer(channelKey, channel.url);
@@ -431,6 +520,7 @@
             } else if (channel.type === 'iframe') {
                 const iframe = createIframePlayer(channelKey, channel);
                 playerWrapper.appendChild(iframe);
+                state.iframeReadyStates[channelKey] = false;
             }
             
             return playerWrapper;
@@ -439,7 +529,7 @@
         // Create HLS player
         function createHLSPlayer(channelKey, url) {
             const video = document.createElement('video');
-            video.muted = true;
+            video.muted = channels[channelKey].muted;
             video.autoplay = true;
             video.playsinline = true;
             video.id = `player-${channelKey}`;
@@ -475,6 +565,19 @@
             iframe.setAttribute('title', channel.name);
             iframe.setAttribute('allowfullscreen', '');
             
+            // Add event listener for iframe load
+            iframe.addEventListener('load', () => {
+                // For Channel 14, we need to wait for the iframe to be ready
+                if (channelKey === 'now14') {
+                    // This will trigger the iframe to send a message when ready
+                    setTimeout(() => {
+                        iframe.contentWindow.postMessage({
+                            action: 'isReady'
+                        }, new URL(channel.url).origin);
+                    }, 2000);
+                }
+            });
+            
             return iframe;
         }
         
@@ -506,7 +609,7 @@
             const channelBtn = document.querySelector(`.channel-btn[data-channel-key="${channelKey}"]`);
             
             if (soundIndicator) {
-                if (state.activeAudioChannel === channelKey) {
+                if (!channels[channelKey].muted) {
                     soundIndicator.classList.add('active');
                     soundIndicator.setAttribute('aria-label', 'סאונד פעיל');
                     if (channelBtn) channelBtn.classList.add('has-audio');
@@ -532,11 +635,15 @@
         
         // Toggle audio for a specific channel
         function toggleChannelAudio(channelKey) {
-            if (state.activeAudioChannel === channelKey) {
+            if (!channels[channelKey].muted) {
+                // If channel is not muted, mute it
+                channels[channelKey].muted = true;
                 muteChannel(channelKey);
                 state.activeAudioChannel = null;
             } else {
+                // If channel is muted, unmute it and mute others
                 muteAllChannels();
+                channels[channelKey].muted = false;
                 unmuteChannel(channelKey);
                 state.activeAudioChannel = channelKey;
             }
@@ -547,6 +654,7 @@
         // Mute all channels
         function muteAllChannels() {
             state.selectedChannels.forEach(key => {
+                channels[key].muted = true;
                 muteChannel(key);
             });
         }
@@ -554,6 +662,7 @@
         // Mute a specific channel
         function muteChannel(channelKey) {
             const channel = channels[channelKey];
+            channel.muted = true;
             
             if (channel.type === 'hls') {
                 const video = document.getElementById(`player-${channelKey}`);
@@ -572,7 +681,7 @@
                             // For Channel 14 new player
                             iframe.contentWindow.postMessage({
                                 action: channel.muteFunction
-                            }, '*');
+                            }, new URL(channel.url).origin);
                         }
                     } catch (e) {
                         console.error('Could not mute iframe:', e);
@@ -584,6 +693,7 @@
         // Unmute a specific channel
         function unmuteChannel(channelKey) {
             const channel = channels[channelKey];
+            channel.muted = false;
             
             if (channel.type === 'hls') {
                 const video = document.getElementById(`player-${channelKey}`);
@@ -600,13 +710,14 @@
                             }), '*');
                         } else if (channel.unmuteFunction) {
                             // For Channel 14 new player
-                            iframe.contentWindow.postMessage({
-                                action: channel.unmuteFunction
-                            }, '*');
+                            if (state.iframeReadyStates[channelKey]) {
+                                iframe.contentWindow.postMessage({
+                                    action: channel.unmuteFunction
+                                }, new URL(channel.url).origin);
+                            }
                         }
                     } catch (e) {
                         console.error('Could not unmute iframe:', e);
-                        alert('לא ניתן לשלוט בסאונד של ערוץ זה עקב מגבלות אבטחה.');
                     }
                 }
             }
