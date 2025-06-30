@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>צפייה מקבילה בערוצי טלוויזיה</title>
+    <!-- HLS.js for HLS streaming -->
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts - Heebo for Hebrew text -->
     <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Feather Icons -->
+    <!-- Feather Icons for modern icons -->
     <script src="https://unpkg.com/feather-icons"></script>
     
     <style>
@@ -36,10 +37,12 @@
             --sound-muted-underline: #333; /* Dark for muted sound */
         }
 
+        /* Universal box-sizing for consistent layout */
         * {
             box-sizing: border-box;
         }
 
+        /* Body styling */
         body {
             font-family: 'Heebo', sans-serif;
             margin: 0;
@@ -50,6 +53,7 @@
             padding-bottom: 90px; /* Reserve space for bottom nav bar */
         }
 
+        /* Main container for content */
         .container {
             max-width: 1400px;
             margin: 0 auto;
@@ -66,6 +70,7 @@
             background-color: #1a1a1a;
         }
 
+        /* Wrapper for each individual player */
         .player-wrapper {
             position: relative;
             overflow: hidden;
@@ -76,25 +81,27 @@
             border: 2px solid transparent; /* Keep this for overall highlight */
         }
 
+        /* Highlight for the active audio player */
         .player-wrapper.active-audio-highlight {
             border-color: var(--active-grid-border);
             box-shadow: 0 0 20px rgba(16, 185, 129, 0.7);
         }
 
+        /* Styling for video and iframe elements within player wrappers */
         .player-wrapper video, .player-wrapper iframe {
             width: 100%;
             height: 100%;
-            object-fit: contain;
+            object-fit: contain; /* Ensures video fits without cropping */
             display: block;
             border: none;
         }
 
-        /* --- Channel Info --- */
+        /* --- Channel Info Overlay --- */
         .channel-info {
             position: absolute;
             top: 10px;
             left: 10px;
-            color: var(--text-color); /* Changed from --light-text */
+            color: var(--text-color);
             background-color: var(--overlay-bg);
             padding: 8px 12px;
             border-radius: var(--border-radius);
@@ -104,15 +111,16 @@
             align-items: center;
             gap: 8px;
             opacity: 1;
-            transition: opacity 0.5s ease 3s;
+            transition: opacity 0.5s ease 3s; /* Fade out after 3s */
             font-weight: bold;
         }
 
+        /* Class to fade out channel info */
         .channel-info.fade-out {
             opacity: 0;
         }
 
-        /* --- Sound Control --- */
+        /* --- Sound Control Button --- */
         .sound-control {
             position: absolute;
             bottom: 10px;
@@ -120,6 +128,7 @@
             z-index: 10;
         }
 
+        /* Styling for the sound indicator button */
         .sound-indicator {
             display: flex;
             align-items: center;
@@ -134,11 +143,13 @@
             transition: all 0.2s ease;
         }
 
+        /* Hover effect for sound indicator */
         .sound-indicator:hover {
             transform: scale(1.1);
             background: rgba(55, 65, 81, 0.9);
         }
 
+        /* Active state for sound indicator */
         .sound-indicator.active {
             background-color: var(--primary-color);
         }
@@ -157,11 +168,12 @@
             z-index: 15; /* Ensure it's above the video but below controls */
         }
 
+        /* Active state for audio underline */
         .audio-underline.active {
             background-color: var(--sound-active-underline); /* Active color */
         }
 
-        /* --- Channel Selector & Fullscreen Button --- */
+        /* --- Channel Selector & Fullscreen Button (Bottom Navigation Bar) --- */
         .channel-selector {
             position: fixed;
             bottom: 0;
@@ -178,6 +190,7 @@
             height: 75px;
         }
 
+        /* Container for channel selection buttons */
         .channel-options {
             display: flex;
             flex-wrap: wrap;
@@ -186,6 +199,7 @@
             flex-grow: 1; /* Allow channel options to take available space */
         }
 
+        /* Styling for individual channel selection buttons */
         .channel-btn {
             display: flex;
             flex-direction: column;
@@ -204,11 +218,13 @@
             border: 2px solid transparent;
         }
 
+        /* Hover effect for channel buttons */
         .channel-btn:hover {
             transform: translateY(-3px);
             color: var(--text-color);
         }
 
+        /* Selected state for channel buttons */
         .channel-btn.selected {
             color: var(--text-color);
             background-color: var(--nav-btn-active-bg-color);
@@ -216,12 +232,13 @@
             box-shadow: 0 0 15px rgba(16, 185, 129, 0.7);
         }
 
+        /* Styling for the sound icon within channel buttons */
         .channel-btn .sound-icon {
             position: absolute;
             top: 0px;
             left: 5px;
             font-size: 1rem;
-            color: #fde047;
+            color: #fde047; /* Yellow color for sound icon */
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.7);
         }
 
@@ -244,6 +261,7 @@
             flex-shrink: 0; /* Prevent shrinking */
         }
 
+        /* Hover effect for fullscreen button */
         .fullscreen-btn:hover {
             transform: translateY(-3px);
             color: var(--text-color);
@@ -262,9 +280,10 @@
             font-size: 1.2rem;
             z-index: 20;
             opacity: 0; /* Changed to hidden by default */
-            pointer-events: none;
+            pointer-events: none; /* Allows clicks to pass through when hidden */
         }
 
+        /* Spinner animation */
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top: 4px solid #fff;
@@ -313,6 +332,26 @@
                 margin-right: 5px;
             }
         }
+
+        /* Styles for the iframe overlay */
+        .iframe-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black */
+            z-index: 5; /* Below channel info and sound control */
+            opacity: 0; /* Hidden by default */
+            pointer-events: none; /* Allows clicks to pass through by default */
+            transition: opacity 0.3s ease-in-out;
+            border-radius: 12px; /* Match player-wrapper radius */
+        }
+
+        .iframe-overlay.active {
+            opacity: 1; /* Visible when active */
+            pointer-events: all; /* Blocks clicks when active */
+        }
     </style>
 </head>
 <body>
@@ -329,24 +368,24 @@
     </div>
 
     <script>
-        // Channel data - Reordered as requested: 11, 12, 13, 14, i24
+        // Channel data - Defines all available channels with their properties
         const channels = {
             kan11: { 
                 name: 'כאן 11', 
                 short: '11', 
                 type: 'hls', 
                 url: 'https://kan11w.media.kan.org.il/hls/live/2105694/2105694/source1_4k/chunklist.m3u8',
-                muted: true,
-                showSoundControl: true
+                muted: true, // Initial mute state
+                showSoundControl: true // Show sound control button on player
             },
             news12: { 
                 name: 'חדשות 12', 
                 short: '12', 
                 type: 'iframe', 
                 url: 'https://www.mako.co.il/player-embed-mako3/?vid=33ae8c620b8df810VgnVCM200000650a10acRCRD&cid=6c311f1cf23ff210VgnVCM2000002a0c10acRCRD&galleryCid=3d385dd2dd5d4110VgnVCM100000290c10acRCRD&showAds=true&isAutoplay=true&isLive=true&isHomePage=mako3&isMainTeaser=true', 
-                muteParam: 'muted', 
+                muteParam: 'muted', // Parameter for muting via URL (if supported by iframe)
                 muted: true,
-                showSoundControl: false 
+                showSoundControl: false // No direct sound control as iframe handles it
             },
             news13: { 
                 name: 'חדשות 13', 
@@ -360,10 +399,10 @@
                 name: 'עכשיו 14', 
                 short: '14', 
                 type: 'iframe', 
-                url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3MWFlNmEzYzAzIiwiY2xpZW50IjoiY2hhbm5lbDE0IiwiYXBpIjoiaHR0cHM6Ly9pbnNpZ2h0LWFwaS1jaGFubmVsMTQudW5pdnRlYy5jb20vIn0=',
-                muteParam: null, 
-                muteFunction: 'mute',
-                unmuteFunction: 'unmute',
+                url: 'https://snippet.univtec.com/player.html?data-insight=eyJndWlkIjoiYjY3NmI5MDYtNTYyNS00OGFmLWEzMzEtMTFhNWQyMmUxNTFiIiwidHlwZSI6ImNoYW5uZWxzIiwiYWNjb3VudElkIjoiNjM5Nzc1M2ZmZjg3MTk3MWFlNmEzYzAzIiwiY2xpZW50IjoiY2hhbm5lbDE0IiwiYXBpIjoiaHR0cHM6Ly9pbnNpZ2h0LWFwaS1jaGFubmVsMTQudW5pdnRlYy5com/In0=',
+                muteParam: null, // No URL param for muting
+                muteFunction: 'mute', // Function name to call via postMessage for muting
+                unmuteFunction: 'unmute', // Function name to call via postMessage for unmuting
                 muted: true, 
                 showSoundControl: false 
             },
@@ -377,86 +416,87 @@
             }
         };
 
-        // State management
+        // State management object to keep track of application's dynamic data
         const state = {
-            selectedChannels: [],
-            activeAudioChannel: null,
-            hlsInstances: {},
-            timeouts: {},
-            resizeObserver: null,
-            iframeReadyStates: {},
-            lastAudioPreference: false
+            selectedChannels: [], // Array of channel keys currently displayed in the grid
+            activeAudioChannel: null, // Key of the channel with active audio
+            hlsInstances: {}, // Stores HLS.js instances for each HLS channel
+            timeouts: {}, // Stores timeouts for fading out channel info
+            resizeObserver: null, // Observer for window resize events
+            iframeReadyStates: {}, // Tracks if an iframe is ready to receive postMessages
+            lastAudioPreference: false // Indicates if the user last preferred audio to be on
         };
         
-        // Initialize the app
+        // Initialize the application when the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', function() {
-            renderChannelOptions();
+            renderChannelOptions(); // Render the channel selection buttons
             
-            // Handle window resize with debounce
+            // Initialize ResizeObserver to re-render grid layout on window resize
             state.resizeObserver = new ResizeObserver(debounce(() => {
                 if (state.selectedChannels.length > 0) {
-                    renderPlayersGrid(false);
+                    renderPlayersGrid(false); // Only update grid layout, do not re-create players
                 }
             }, 200));
-            state.resizeObserver.observe(document.body);
+            state.resizeObserver.observe(document.body); // Observe body for size changes
             
-            // Keyboard navigation for channel buttons
+            // Keyboard navigation for channel selection buttons (Arrow keys)
             document.addEventListener('keydown', function(e) {
                 if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
                     const buttons = Array.from(document.querySelectorAll('.channel-btn'));
                     const currentIndex = buttons.indexOf(document.activeElement);
                     
                     if (currentIndex !== -1) {
-                        e.preventDefault();
+                        e.preventDefault(); // Prevent default scroll behavior
                         let nextIndex;
                         
+                        // Determine next button based on arrow key pressed
                         if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
                             nextIndex = (currentIndex + 1) % buttons.length;
                         } else {
                             nextIndex = (currentIndex - 1 + buttons.length) % buttons.length;
                         }
                         
-                        buttons[nextIndex].focus();
+                        buttons[nextIndex].focus(); // Move focus to the next button
                     }
                 }
             });
 
-            // Listen for messages from iframes
+            // Listen for messages from iframes (used for controlling iframe players)
             window.addEventListener('message', handleIframeMessage);
             
-            // Add event listener for fullscreen toggle
+            // Add event listener for the fullscreen toggle button
             const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn');
             if (fullscreenToggleBtn) { // Ensure button exists before adding listener
                 fullscreenToggleBtn.addEventListener('click', toggleFullscreen);
 
-                // Listen for fullscreen change events to update button icon
+                // Listen for fullscreen change events to update the button icon
                 document.addEventListener('fullscreenchange', updateFullscreenButtonIcon);
                 document.addEventListener('webkitfullscreenchange', updateFullscreenButtonIcon);
                 document.addEventListener('mozfullscreenchange', updateFullscreenButtonIcon);
                 document.addEventListener('MSFullscreenChange', updateFullscreenButtonIcon);
             }
 
-            // Replace feather icons
-            feather.replace();
+            feather.replace(); // Replace data-feather attributes with SVG icons
         });
 
+        // Handles messages received from iframes
         function handleIframeMessage(event) {
-            // Find the channel key based on the origin of the message
+            // Find the channel key corresponding to the iframe that sent the message
             const channelKey = Object.keys(channels).find(key => 
                 channels[key].type === 'iframe' && event.origin === new URL(channels[key].url).origin
             );
             
             if (channelKey) {
-                // Handle iframe ready state for Channel 14 specifically
+                // Specifically handle 'iframe-ready' message from 'now14' channel
                 if (channelKey === 'now14' && event.data === 'iframe-ready') {
-                    state.iframeReadyStates[channelKey] = true;
-                    // Initialize audio state for Channel 14 once it's ready
-                    initializeIframeAudio(channelKey);
+                    state.iframeReadyStates[channelKey] = true; // Mark iframe as ready
+                    initializeIframeAudio(channelKey); // Initialize its audio state
                 }
-                // Add any other specific iframe message handling here if needed
+                // Add any other specific iframe message handling here if needed for other channels
             }
         }
         
+        // Initializes the audio state for iframes once they signal readiness
         function initializeIframeAudio(channelKey) {
             const channel = channels[channelKey];
             if (channel.muted) {
@@ -464,11 +504,10 @@
             } else {
                 unmuteChannel(channelKey);
             }
-            // Ensure the underline state is also updated
-            updateSoundIndicator(channelKey);
+            updateSoundIndicator(channelKey); // Ensure the visual sound indicator is updated
         }
         
-        // Debounce function for resize events
+        // Debounce function to limit the rate at which a function is called (e.g., on resize)
         function debounce(func, wait) {
             let timeout;
             return function() {
@@ -480,28 +519,30 @@
             };
         }
         
-        // Render channel selection buttons
+        // Renders the channel selection buttons in the bottom navigation bar
         function renderChannelOptions() {
             const channelOptions = document.getElementById('channelOptions');
-            channelOptions.innerHTML = '';
+            channelOptions.innerHTML = ''; // Clear existing buttons
             
-            // Iterate over the channels object directly to maintain order
+            // Iterate over the channels object to create buttons in a defined order
             for (const [key, channel] of Object.entries(channels)) {
                 const btn = document.createElement('button');
                 btn.className = 'channel-btn';
                 btn.innerHTML = `
                     <span>${channel.short}</span>
                 `;
-                btn.dataset.channelKey = key;
+                btn.dataset.channelKey = key; // Store channel key in dataset
                 
+                // Add 'selected' class if the channel is currently displayed in the grid
                 if (state.selectedChannels.includes(key)) {
                     btn.classList.add('selected');
-                    // Add sound icon to button if it's the active audio channel and not muted
+                    // Add sound icon if it's the active audio channel and not muted
                     if (state.activeAudioChannel === key && !channels[key].muted) {
                         btn.innerHTML += `<span class="sound-icon"><i data-feather="volume-2"></i></span>`;
                     }
                 }
                 
+                // Add click event listener to toggle channel selection
                 btn.addEventListener('click', function() {
                     toggleChannelSelection(key);
                 });
@@ -509,21 +550,22 @@
                 channelOptions.appendChild(btn);
             }
             
-            feather.replace();
+            feather.replace(); // Re-render feather icons after updating innerHTML
         }
         
-        // Toggle channel selection
+        // Toggles the selection of a channel (adds/removes it from the video grid)
         function toggleChannelSelection(channelKey) {
             const index = state.selectedChannels.indexOf(channelKey);
             
             if (index === -1) {
+                // Add channel if not already selected and the total number of selected channels is less than 5
                 if (state.selectedChannels.length < 5) {
                     state.selectedChannels.push(channelKey);
-                    // Initialize new channel as muted
-                    channels[channelKey].muted = true;
+                    channels[channelKey].muted = true; // New channels start muted
                     
-                    // If this is the first channel, make it active (but still muted initially)
-                    // Then, if lastAudioPreference was true, unmute it.
+                    // If this is the first channel added and the user's last audio preference was 'on', unmute it.
+                    // This ensures that if the user had audio on for a previous set of channels,
+                    // the first new channel they select will also have audio on.
                     if (state.selectedChannels.length === 1 && state.lastAudioPreference) {
                         state.activeAudioChannel = channelKey;
                         channels[channelKey].muted = false;
@@ -531,12 +573,15 @@
                     }
                 }
             } else {
-                cleanupChannelResources(channelKey);
-                state.selectedChannels.splice(index, 1);
+                // Remove channel if it's already selected
+                cleanupChannelResources(channelKey); // Clean up associated resources (HLS, timeouts)
+                state.selectedChannels.splice(index, 1); // Remove from selected channels array
                 
+                // If the removed channel was the active audio, reset activeAudioChannel
                 if (state.activeAudioChannel === channelKey) {
                     state.activeAudioChannel = null;
-                    // If there are other channels, select one to be active if lastAudioPreference was true
+                    // If there are other channels remaining and last audio preference was 'on',
+                    // set the first remaining channel as the new active audio
                     if (state.selectedChannels.length > 0 && state.lastAudioPreference) {
                         state.activeAudioChannel = state.selectedChannels[0];
                         channels[state.activeAudioChannel].muted = false;
@@ -545,74 +590,102 @@
                 }
             }
             
+            // Re-render channel options and players grid to reflect the changes
             renderChannelOptions();
-            renderPlayersGrid();
+            renderPlayersGrid(true); // Pass true to indicate a full DOM update is needed
         }
         
-        // Clean up resources for a channel
+        // Cleans up resources associated with a specific channel (e.g., HLS instances, timeouts)
         function cleanupChannelResources(channelKey) {
-            // Clean HLS instances
+            // Destroy HLS instance if it exists for the channel
             if (state.hlsInstances[channelKey]) {
                 state.hlsInstances[channelKey].destroy();
                 delete state.hlsInstances[channelKey];
             }
             
-            // Clear timeouts
+            // Clear any pending timeouts for channel info fade-out
             if (state.timeouts[channelKey]) {
                 clearTimeout(state.timeouts[channelKey]);
                 delete state.timeouts[channelKey];
             }
             
-            // Clear iframe ready state
+            // Remove iframe ready state entry
             if (state.iframeReadyStates[channelKey]) {
                 delete state.iframeReadyStates[channelKey];
             }
         }
         
-        // Render the players grid
-        function renderPlayersGrid(createPlayers = true) {
+        // Renders or updates the video players grid based on selected channels
+        function renderPlayersGrid(updateDOM = true) { // Added updateDOM parameter
             const playersGrid = document.getElementById('playersGrid');
+            const newOrderKeys = state.selectedChannels;
             
-            if (createPlayers) {
-                playersGrid.innerHTML = '';
-                const gridLayout = getGridLayout(state.selectedChannels.length);
-                playersGrid.style.gridTemplateColumns = gridLayout.columns;
-                playersGrid.style.gridTemplateRows = gridLayout.rows;
-            }
-            
-            state.selectedChannels.forEach(channelKey => {
-                const channel = channels[channelKey];
-                let playerWrapper = document.querySelector(`.player-wrapper[data-channel-key="${channelKey}"]`);
-                
-                if (createPlayers || !playerWrapper) {
-                    playerWrapper = createPlayerElement(channelKey, channel);
-                    playersGrid.appendChild(playerWrapper);
-                    
-                    // Set timeout to fade out channel info
-                    state.timeouts[channelKey] = setTimeout(() => {
-                        const infoElement = document.querySelector(`.channel-info[data-channel-key="${channelKey}"]`);
-                        if (infoElement && state.activeAudioChannel !== channelKey) {
-                            infoElement.classList.add('fade-out');
+            if (updateDOM) {
+                const currentChildren = Array.from(playersGrid.children);
+                const currentKeys = new Set(currentChildren.map(el => el.dataset.channelKey));
+
+                // Remove elements that are no longer selected
+                currentChildren.forEach(child => {
+                    if (!newOrderKeys.includes(child.dataset.channelKey)) {
+                        playersGrid.removeChild(child);
+                    }
+                });
+
+                // Add or reorder elements
+                let prevElement = null;
+                newOrderKeys.forEach(channelKey => {
+                    let playerWrapper = document.querySelector(`.player-wrapper[data-channel-key="${channelKey}"]`);
+                    const channel = channels[channelKey];
+
+                    if (!playerWrapper) { // Element doesn't exist, create it
+                        playerWrapper = createPlayerElement(channelKey, channel);
+                        // Add timeout for channel info fade-out
+                        state.timeouts[channelKey] = setTimeout(() => {
+                            const infoElement = playerWrapper.querySelector('.channel-info');
+                            if (infoElement && state.activeAudioChannel !== channelKey) {
+                                infoElement.classList.add('fade-out');
+                            }
+                        }, 3000);
+                    }
+
+                    // Insert or move the element to its correct position
+                    if (prevElement) {
+                        if (playerWrapper !== prevElement.nextElementSibling) {
+                            playersGrid.insertBefore(playerWrapper, prevElement.nextElementSibling);
                         }
-                    }, 3000);
-                }
-                
-                // Update sound indicator and underline
-                updateSoundIndicator(channelKey);
-            });
-            
-            setupPlayerHoverEvents();
+                    } else { // First element
+                        if (playerWrapper !== playersGrid.firstElementChild) {
+                            playersGrid.insertBefore(playerWrapper, playersGrid.firstElementChild);
+                        }
+                    }
+                    prevElement = playerWrapper;
+                });
+            }
+
+            // Always update grid layout CSS
+            const gridLayout = getGridLayout(state.selectedChannels.length);
+            playersGrid.style.gridTemplateColumns = gridLayout.columns;
+            playersGrid.style.gridTemplateRows = gridLayout.rows;
+
+            // Always update sound indicator and underline for all *selected* channels
+            state.selectedChannels.forEach(key => updateSoundIndicator(key));
+
+            if (updateDOM) {
+                setupPlayerHoverEvents(); // Re-attach hover events (needed if elements are new or reordered)
+            }
         }
         
-        // Create player DOM element
+        // Creates the DOM element for a single player (either a video tag for HLS or an iframe)
         function createPlayerElement(channelKey, channel) {
             const playerWrapper = document.createElement('div');
             playerWrapper.className = 'player-wrapper';
+            // Add highlight class if this is the active audio channel
             if (state.activeAudioChannel === channelKey && !channels[channelKey].muted) {
                 playerWrapper.classList.add('active-audio-highlight');
             }
-            playerWrapper.dataset.channelKey = channelKey;
+            playerWrapper.dataset.channelKey = channelKey; // Store channel key for easy lookup
             
+            // Channel Info Overlay
             const channelInfo = document.createElement('div');
             channelInfo.className = 'channel-info';
             channelInfo.dataset.channelKey = channelKey;
@@ -624,13 +697,13 @@
             channelInfo.appendChild(channelNumber);
             playerWrapper.appendChild(channelInfo);
             
-            // Add loading indicator (hidden by default)
+            // Add loading indicator (hidden by default, shown when video/iframe is loading)
             const loadingIndicator = document.createElement('div');
             loadingIndicator.className = 'loading-indicator';
-            loadingIndicator.innerHTML = '<span class="spinner"></span>';
+            loadingIndicator.innerHTML = '<span class="spinner"></span> טוען...'; // Added text
             playerWrapper.appendChild(loadingIndicator);
             
-            // Add sound control only for channels that should show it (HLS players)
+            // Add sound control button only for channels that should show it (HLS players)
             if (channel.showSoundControl) {
                 const soundControl = document.createElement('div');
                 soundControl.className = 'sound-control';
@@ -639,6 +712,7 @@
                 soundIndicator.className = 'sound-indicator';
                 soundIndicator.innerHTML = '<i data-feather="volume-x"></i>'; // Default to muted icon
                 soundIndicator.setAttribute('aria-label', 'סאונד כבוי');
+                soundIndicator.dataset.channelKey = channelKey; // Add data-channel-key for easy lookup
                 soundIndicator.addEventListener('click', () => toggleChannelAudio(channelKey));
                 
                 soundControl.appendChild(soundIndicator);
@@ -651,114 +725,203 @@
             audioUnderline.dataset.channelKey = channelKey;
             playerWrapper.appendChild(audioUnderline);
             
+            // Create the actual video/iframe player based on channel type
             if (channel.type === 'hls') {
                 const video = createHLSPlayer(channelKey, channel.url);
                 playerWrapper.appendChild(video);
             } else if (channel.type === 'iframe') {
                 const iframe = createIframePlayer(channelKey, channel);
                 playerWrapper.appendChild(iframe);
-                state.iframeReadyStates[channelKey] = false; // Mark iframe as not ready yet
+                // Add the iframe overlay for iframe players
+                const iframeOverlay = document.createElement('div');
+                iframeOverlay.className = 'iframe-overlay';
+                iframeOverlay.dataset.channelKey = channelKey;
+                playerWrapper.appendChild(iframeOverlay);
+                state.iframeReadyStates[channelKey] = false; // Mark iframe as not ready yet initially
+
+                // Add click listener to the playerWrapper for iframe channels that cannot be programmatically muted
+                if (!channel.showSoundControl) { // This condition targets news12 specifically
+                    playerWrapper.addEventListener('click', () => toggleChannelAudio(channelKey));
+                }
             }
             
             return playerWrapper;
         }
         
-        // Create HLS player
+        // Creates and initializes an HLS video player using hls.js
         function createHLSPlayer(channelKey, url) {
             const video = document.createElement('video');
-            video.muted = channels[channelKey].muted;
+            video.muted = channels[channelKey].muted; // Set initial mute state
             video.autoplay = true;
-            video.playsinline = true;
+            video.playsinline = true; // Important for mobile browsers to play inline
             video.id = `player-${channelKey}`;
+            video.dataset.channelKey = channelKey; // Add data-channel-key for easy lookup
+
+            const loadingIndicator = document.querySelector(`.player-wrapper[data-channel-key="${channelKey}"] .loading-indicator`);
+            if (loadingIndicator) {
+                loadingIndicator.style.opacity = 1; // Show loading indicator
+                loadingIndicator.style.pointerEvents = 'auto';
+            }
             
             if (Hls.isSupported()) {
                 const hls = new Hls();
-                state.hlsInstances[channelKey] = hls;
+                state.hlsInstances[channelKey] = hls; // Store HLS instance for cleanup
                 hls.loadSource(url);
                 hls.attachMedia(video);
                 hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                    video.play().catch(e => console.error('Autoplay error:', e));
+                    video.play().catch(e => console.error(`Autoplay error for ${channelKey}:`, e));
+                    if (loadingIndicator) {
+                        loadingIndicator.style.opacity = 0; // Hide loading indicator on play
+                        loadingIndicator.style.pointerEvents = 'none';
+                    }
+                });
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    console.error(`HLS error for ${channelKey}:`, data);
+                    if (loadingIndicator) {
+                        loadingIndicator.innerHTML = '<span style="color: red;">שגיאת טעינה</span>';
+                        loadingIndicator.style.opacity = 1;
+                        loadingIndicator.style.pointerEvents = 'none';
+                    }
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Native HLS support for Safari/iOS
                 video.src = url;
                 video.addEventListener('loadedmetadata', function() {
-                    video.play().catch(e => console.error('Autoplay error:', e));
+                    video.play().catch(e => console.error(`Autoplay error for ${channelKey}:`, e));
+                    if (loadingIndicator) {
+                        loadingIndicator.style.opacity = 0; // Hide loading indicator on play
+                        loadingIndicator.style.pointerEvents = 'none';
+                    }
                 });
+                video.addEventListener('error', function(e) {
+                    console.error(`Native HLS error for ${channelKey}:`, e);
+                    if (loadingIndicator) {
+                        loadingIndicator.innerHTML = '<span style="color: red;">שגיאת טעינה</span>';
+                        loadingIndicator.style.opacity = 1;
+                        loadingIndicator.style.pointerEvents = 'none';
+                    }
+                });
+            } else {
+                console.error(`HLS is not supported in this browser for ${channelKey}.`);
+                if (loadingIndicator) {
+                    loadingIndicator.innerHTML = '<span style="color: red;">HLS לא נתמך</span>';
+                    loadingIndicator.style.opacity = 1;
+                    loadingIndicator.style.pointerEvents = 'none';
+                }
             }
             
             return video;
         }
         
-        // Create iframe player
+        // Creates and initializes an iframe video player
         function createIframePlayer(channelKey, channel) {
             let iframeUrl = channel.url;
             
             const iframe = document.createElement('iframe');
             iframe.src = iframeUrl;
-            iframe.allow = 'autoplay';
+            iframe.allow = 'autoplay'; // Allow autoplay
             iframe.id = `player-${channelKey}`;
+            iframe.dataset.channelKey = channelKey; // Add data-channel-key for easy lookup
             iframe.frameBorder = '0';
             iframe.scrolling = 'no';
             iframe.setAttribute('title', channel.name);
             iframe.setAttribute('allowfullscreen', '');
+
+            const loadingIndicator = document.querySelector(`.player-wrapper[data-channel-key="${channelKey}"] .loading-indicator`);
+            if (loadingIndicator) {
+                loadingIndicator.style.opacity = 1; // Show loading indicator
+                loadingIndicator.style.pointerEvents = 'auto';
+            }
             
-            // For Channel 14, we need to wait for the iframe to be ready before sending commands
+            // Special handling for 'now14' iframe, which requires readiness check
             if (channelKey === 'now14') {
-                // Send a message to the iframe to check if it's ready.
-                // The iframe is expected to respond with 'iframe-ready'.
                 iframe.onload = () => {
+                    // Send a message to the iframe to check if it's ready.
+                    // The iframe is expected to respond with 'iframe-ready'.
                     setTimeout(() => { // Give iframe a moment to load its internal scripts
-                        iframe.contentWindow.postMessage({
-                            action: 'isReady'
-                        }, new URL(channel.url).origin);
+                        if (iframe.contentWindow) {
+                            iframe.contentWindow.postMessage({
+                                action: 'isReady'
+                            }, new URL(channel.url).origin);
+                        }
                     }, 1000); // Increased timeout slightly for iframe readiness check
+                    if (loadingIndicator) {
+                        loadingIndicator.style.opacity = 0; // Hide loading indicator on load
+                        loadingIndicator.style.pointerEvents = 'none';
+                    }
+                };
+            } else {
+                // For other iframes (like News 12), assume ready on load and hide loading
+                iframe.onload = () => {
+                    if (loadingIndicator) {
+                        loadingIndicator.style.opacity = 0;
+                        loadingIndicator.style.pointerEvents = 'none';
+                    }
+                    // Apply initial mute state for News 12 (as it doesn't send ready message)
+                    if (channelKey === 'news12') {
+                        initializeIframeAudio(channelKey);
+                    }
                 };
             }
             
             return iframe;
         }
         
-        // Set up player hover events
+        // Sets up hover events for player wrappers to show/hide channel info
         function setupPlayerHoverEvents() {
             const playersGrid = document.getElementById('playersGrid');
             
+            // Mouseover event to show channel info and clear fade-out timeout
             playersGrid.addEventListener('mouseover', function(e) {
-                const channelInfo = e.target.closest('.player-wrapper')?.querySelector('.channel-info');
-                if (channelInfo) {
-                    channelInfo.classList.remove('fade-out');
-                    clearTimeout(state.timeouts[channelInfo.dataset.channelKey]);
+                const playerWrapper = e.target.closest('.player-wrapper');
+                if (playerWrapper) {
+                    const channelInfo = playerWrapper.querySelector('.channel-info');
+                    const channelKey = playerWrapper.dataset.channelKey;
+                    if (channelInfo) {
+                        channelInfo.classList.remove('fade-out');
+                        clearTimeout(state.timeouts[channelKey]);
+                    }
                 }
             });
             
+            // Mouseout event to set timeout for fading out channel info
             playersGrid.addEventListener('mouseout', function(e) {
-                const channelInfo = e.target.closest('.player-wrapper')?.querySelector('.channel-info');
-                if (channelInfo && state.activeAudioChannel !== channelInfo.dataset.channelKey) {
-                    state.timeouts[channelInfo.dataset.channelKey] = setTimeout(() => {
-                        channelInfo.classList.add('fade-out');
-                    }, 3000);
+                const playerWrapper = e.target.closest('.player-wrapper');
+                if (playerWrapper) {
+                    const channelInfo = playerWrapper.querySelector('.channel-info');
+                    const channelKey = playerWrapper.dataset.channelKey;
+                    // Only fade out if audio is not active for this channel
+                    if (channelInfo && state.activeAudioChannel !== channelKey) {
+                        state.timeouts[channelKey] = setTimeout(() => {
+                            channelInfo.classList.add('fade-out');
+                        }, 3000);
+                    }
                 }
             });
         }
         
-        // Update sound indicator and underline for a channel
+        // Updates the visual sound indicator, player highlight, and channel button for a given channel
         function updateSoundIndicator(channelKey) {
-            const soundIndicator = document.querySelector(`.sound-indicator[data-channel-key="${channelKey}"]`);
+            const soundIndicatorBtn = document.querySelector(`.sound-indicator[data-channel-key="${channelKey}"]`);
             const channelBtn = document.querySelector(`.channel-btn[data-channel-key="${channelKey}"]`);
             const playerWrapper = document.querySelector(`.player-wrapper[data-channel-key="${channelKey}"]`);
             const audioUnderline = document.querySelector(`.audio-underline[data-channel-key="${channelKey}"]`);
+            const iframeOverlay = document.querySelector(`.iframe-overlay[data-channel-key="${channelKey}"]`);
 
+
+            // Determine if the audio for this channel is currently active
             const isAudioActive = (state.activeAudioChannel === channelKey && !channels[channelKey].muted);
 
-            // Update sound indicator (for HLS players)
-            if (soundIndicator) {
+            // Update sound indicator button (for HLS players)
+            if (soundIndicatorBtn) {
                 if (isAudioActive) {
-                    soundIndicator.classList.add('active');
-                    soundIndicator.innerHTML = '<i data-feather="volume-2"></i>';
-                    soundIndicator.setAttribute('aria-label', 'סאונד פעיל');
+                    soundIndicatorBtn.classList.add('active');
+                    soundIndicatorBtn.innerHTML = '<i data-feather="volume-2"></i>'; // Volume on icon
+                    soundIndicatorBtn.setAttribute('aria-label', 'סאונד פעיל');
                 } else {
-                    soundIndicator.classList.remove('active');
-                    soundIndicator.innerHTML = '<i data-feather="volume-x"></i>';
-                    soundIndicator.setAttribute('aria-label', 'סאונד כבוי');
+                    soundIndicatorBtn.classList.remove('active');
+                    soundIndicatorBtn.innerHTML = '<i data-feather="volume-x"></i>'; // Volume off icon
+                    soundIndicatorBtn.setAttribute('aria-label', 'סאונד כבוי');
                 }
             }
 
@@ -771,15 +934,16 @@
                 }
             }
 
-            // Update channel button (bottom bar)
+            // Update channel button in the bottom bar (icon and 'selected' class)
             if (channelBtn) {
                 if (isAudioActive) {
-                    channelBtn.classList.add('selected');
                     channelBtn.innerHTML = `<span>${channels[channelKey].short}</span><span class="sound-icon"><i data-feather="volume-2"></i></span>`;
+                    channelBtn.classList.add('selected'); // Ensure selected class is present
                 } else {
                     channelBtn.innerHTML = `<span>${channels[channelKey].short}</span>`;
+                    // Keep selected class if the channel is still in the grid, even if muted
                     if (state.selectedChannels.includes(channelKey)) {
-                        channelBtn.classList.add('selected'); // Keep selected if still in grid
+                        channelBtn.classList.add('selected'); 
                     } else {
                         channelBtn.classList.remove('selected');
                     }
@@ -794,156 +958,197 @@
                     audioUnderline.classList.remove('active');
                 }
             }
+
+            // Control the iframe overlay
+            if (iframeOverlay) {
+                // Activate overlay if it's an iframe that cannot be programmatically muted AND it's not the active audio
+                // For news12, showSoundControl is false, so it will be covered when not active audio.
+                // For now14, showSoundControl is false, but it's programmatically muted, so it won't be covered unless it's not the active audio.
+                if (channels[channelKey].type === 'iframe' && !isAudioActive) {
+                    // Only apply overlay if it's not the active audio channel
+                    iframeOverlay.classList.add('active');
+                } else {
+                    iframeOverlay.classList.remove('active');
+                }
+            }
             
-            feather.replace();
+            feather.replace(); // Re-render the icons after updating innerHTML
         }
         
-        // Determine grid layout based on number of channels
+        // Determines the CSS grid layout based on the number of active channels and viewport width
         function getGridLayout(count) {
-            switch (count) {
-                case 1: return { columns: '1fr', rows: '1fr' };
-                case 2: return { columns: '1fr 1fr', rows: '1fr' };
-                case 3: return { columns: '1fr 1fr', rows: '1fr 1fr' };
-                case 4: return { columns: '1fr 1fr', rows: '1fr 1fr' };
-                case 5: return { columns: '1fr 1fr 1fr', rows: '1fr 1fr' };
-                default: return { columns: '1fr', rows: '1fr' };
+            const viewportWidth = window.innerWidth;
+            if (viewportWidth <= 768) { // Mobile and small tablets
+                switch (count) {
+                    case 1: return { columns: '1fr', rows: '1fr' };
+                    case 2: return { columns: '1fr', rows: '1fr 1fr' };
+                    case 3:
+                    case 4:
+                    case 5: return { columns: '1fr', rows: `repeat(${count}, 1fr)` }; // Stack vertically
+                    default: return { columns: '1fr', rows: '1fr' };
+                }
+            } else if (viewportWidth <= 1200) { // Medium screens (tablets, small desktops)
+                switch (count) {
+                    case 1: return { columns: '1fr', rows: '1fr' };
+                    case 2: return { columns: '1fr 1fr', rows: '1fr' };
+                    case 3: return { columns: '1fr 1fr', rows: '1fr 1fr' }; // 2x2 with one empty
+                    case 4: return { columns: '1fr 1fr', rows: '1fr 1fr' };
+                    case 5: return { columns: '1fr 1fr 1fr', rows: '1fr 1fr' }; // 3x2 with one empty
+                    default: return { columns: '1fr', rows: '1fr' };
+                }
+            } else { // Large screens (desktops)
+                switch (count) {
+                    case 1: return { columns: '1fr', rows: '1fr' };
+                    case 2: return { columns: '1fr 1fr', rows: '1fr' };
+                    case 3: return { columns: '1fr 1fr 1fr', rows: '1fr' };
+                    case 4: return { columns: '1fr 1fr', rows: '1fr 1fr' };
+                    case 5: return { columns: '1fr 1fr 1fr', rows: '1fr 1fr' };
+                    default: return { columns: '1fr', rows: '1fr' };
+                }
             }
         }
         
-        // Toggle audio for a specific channel
+        // Toggles audio for a specific channel, muting all other channels
         function toggleChannelAudio(channelKey) {
-            if (state.activeAudioChannel === channelKey && !channels[channelKey].muted) {
-                // If channel is active and not muted, mute it
-                channels[channelKey].muted = true;
-                muteChannel(channelKey);
+            const currentChannel = channels[channelKey];
+
+            // If the clicked channel is already the active audio, mute it
+            if (state.activeAudioChannel === channelKey) {
+                currentChannel.muted = true;
                 state.activeAudioChannel = null;
-                state.lastAudioPreference = false;
+                state.lastAudioPreference = false; // User explicitly muted
+                muteChannel(channelKey); // Mute the current one
             } else {
-                // If channel is muted or not active, unmute it and mute others
-                muteAllChannels();
-                channels[channelKey].muted = false;
-                unmuteChannel(channelKey);
+                // Mute all other currently selected channels
+                state.selectedChannels.forEach(key => {
+                    if (key !== channelKey) { // Don't mute the channel we are about to activate
+                        const otherChannel = channels[key];
+                        if (!otherChannel.muted) { // Only mute if it's currently unmuted
+                            otherChannel.muted = true;
+                            muteChannel(key);
+                        }
+                    }
+                });
+
+                // Unmute the current channel
+                currentChannel.muted = false;
                 state.activeAudioChannel = channelKey;
-                state.lastAudioPreference = true;
+                state.lastAudioPreference = true; // User wants audio on
+                unmuteChannel(channelKey);
             }
             
-            updateUIAfterAudioChange(channelKey);
+            // Update indicators for all channels to reflect changes
+            Object.keys(channels).forEach(key => updateSoundIndicator(key));
         }
-        
-        // Mute all channels
-        function muteAllChannels() {
-            state.selectedChannels.forEach(key => {
-                channels[key].muted = true;
-                muteChannel(key);
-            });
-        }
-        
-        // Mute a specific channel
+
+        // Mutes a specific channel's audio
         function muteChannel(channelKey) {
             const channel = channels[channelKey];
-            channel.muted = true; // Update internal state
+            const playerElement = document.getElementById(`player-${channelKey}`);
+            const iframeOverlay = document.querySelector(`.iframe-overlay[data-channel-key="${channelKey}"]`);
+
+            if (!playerElement) return;
 
             if (channel.type === 'hls') {
-                const video = document.getElementById(`player-${channelKey}`);
-                if (video) video.muted = true;
+                playerElement.muted = true;
             } else if (channel.type === 'iframe') {
-                const iframe = document.getElementById(`player-${channelKey}`);
-                if (iframe && state.iframeReadyStates[channelKey]) { // Only send message if iframe is ready
-                    try {
-                        if (channel.muteParam) {
-                            // For channels with mute param in URL (e.g., Mako)
-                            iframe.contentWindow.postMessage(JSON.stringify({
-                                event: 'command',
-                                func: 'mute'
-                            }), '*'); 
-                        } else if (channel.muteFunction) {
-                            // For Channel 14 new player (specific mute function)
-                            iframe.contentWindow.postMessage({
-                                action: channel.muteFunction
-                            }, new URL(channel.url).origin);
-                        }
-                    } catch (e) {
-                        console.error(`Could not mute iframe for ${channelKey}:`, e);
+                if (channelKey === 'now14') {
+                    // For Channel 14, send mute command via postMessage if ready
+                    if (state.iframeReadyStates[channelKey] && playerElement.contentWindow) {
+                        playerElement.contentWindow.postMessage({
+                            action: channel.muteFunction
+                        }, new URL(channel.url).origin);
+                    } else {
+                        console.warn(`Iframe for ${channelKey} not ready or contentWindow not accessible to send mute command.`);
                     }
+                } else if (channelKey === 'news12') {
+                    // For News 12, programmatic muting is not reliably possible.
+                    // Instead, activate the overlay to block interaction and sound.
+                    if (iframeOverlay) {
+                        iframeOverlay.classList.add('active');
+                    }
+                    console.warn(`Programmatic muting for News 12 (${channelKey}) is not supported due to iframe limitations. Using overlay.`);
                 }
             }
         }
-        
-        // Unmute a specific channel
+
+        // Unmutes a specific channel's audio
         function unmuteChannel(channelKey) {
             const channel = channels[channelKey];
-            channel.muted = false; // Update internal state
-            
+            const playerElement = document.getElementById(`player-${channelKey}`);
+            const iframeOverlay = document.querySelector(`.iframe-overlay[data-channel-key="${channelKey}"]`);
+
+            if (!playerElement) return;
+
             if (channel.type === 'hls') {
-                const video = document.getElementById(`player-${channelKey}`);
-                if (video) {
-                    video.muted = false;
-                    video.play().catch(e => console.error('Play error:', e));
-                }
+                playerElement.muted = false;
+                playerElement.volume = 1; // Ensure volume is at max
             } else if (channel.type === 'iframe') {
-                const iframe = document.getElementById(`player-${channelKey}`);
-                if (iframe && state.iframeReadyStates[channelKey]) { // Only send message if iframe is ready
-                    try {
-                        if (channel.muteParam) {
-                            // For channels with mute param in URL (e.g., Mako)
-                            iframe.contentWindow.postMessage(JSON.stringify({
-                                event: 'command',
-                                func: 'unMute'
-                            }), '*'); 
-                        } else if (channel.unmuteFunction) {
-                            // For Channel 14 new player (specific unmute function)
-                            iframe.contentWindow.postMessage({
-                                action: channel.unmuteFunction
-                            }, new URL(channel.url).origin);
-                        }
-                    } catch (e) {
-                        console.error(`Could not unmute iframe for ${channelKey}:`, e);
+                if (channelKey === 'now14') {
+                    // For Channel 14, send unmute command via postMessage if ready
+                    if (state.iframeReadyStates[channelKey] && playerElement.contentWindow) {
+                        playerElement.contentWindow.postMessage({
+                            action: channel.unmuteFunction
+                        }, new URL(channel.url).origin);
+                    } else {
+                        console.warn(`Iframe for ${channelKey} not ready or contentWindow not accessible to send unmute command.`);
                     }
+                } else if (channelKey === 'news12') {
+                    // For News 12, programmatic unmuting is not reliably possible.
+                    // Instead, deactivate the overlay to allow interaction and sound.
+                    if (iframeOverlay) {
+                        iframeOverlay.classList.remove('active');
+                    }
+                    console.warn(`Programmatic unmuting for News 12 (${channelKey}) is not supported due to iframe limitations. Removing overlay.`);
                 }
             }
         }
-        
-        // Update UI after audio changes
-        function updateUIAfterAudioChange(channelKey) {
-            // Update all sound indicators and underlines
-            state.selectedChannels.forEach(key => {
-                updateSoundIndicator(key);
-            });
-            
-            // Keep channel info visible for active audio channel
-            const channelInfo = document.querySelector(`.channel-info[data-channel-key="${channelKey}"]`);
-            if (channelInfo && state.activeAudioChannel === channelKey && !channels[channelKey].muted) {
-                channelInfo.classList.remove('fade-out');
-                clearTimeout(state.timeouts[channelKey]);
-            }
-            
-            // Update channel buttons
-            renderChannelOptions();
-            
-            feather.replace();
-        }
 
-        // Fullscreen toggle functions
+        // Toggles fullscreen mode for the entire document
         function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
-                });
+            const doc = document.documentElement;
+            // Check if currently in fullscreen
+            if (!document.fullscreenElement && !document.mozFullScreenElement &&
+                !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                // Enter fullscreen
+                if (doc.requestFullscreen) {
+                    doc.requestFullscreen();
+                } else if (doc.mozRequestFullScreen) { /* Firefox */
+                    doc.mozRequestFullScreen();
+                } else if (doc.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+                    doc.webkitRequestFullscreen();
+                } else if (doc.msRequestFullscreen) { /* IE/Edge */
+                    doc.msRequestFullscreen();
+                }
             } else {
-                document.exitFullscreen();
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.mozCancelFullScreen) { /* Firefox */
+                    document.mozCancelFullScreen();
+                } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE/Edge */
+                    doc.msExitFullscreen();
+                }
             }
         }
 
+        // Updates the fullscreen button icon based on the current fullscreen state
         function updateFullscreenButtonIcon() {
             const fullscreenToggleBtn = document.getElementById('fullscreenToggleBtn');
             if (fullscreenToggleBtn) {
                 const iconElement = fullscreenToggleBtn.querySelector('i');
-                if (document.fullscreenElement) {
-                    iconElement.setAttribute('data-feather', 'minimize');
+                // Check if any element is in fullscreen mode
+                if (document.fullscreenElement || document.mozFullScreenElement ||
+                    document.webkitFullscreenElement || document.msFullscreenElement) {
+                    iconElement.setAttribute('data-feather', 'minimize'); // Change icon to minimize
+                    fullscreenToggleBtn.setAttribute('aria-label', 'צא ממסך מלא');
                 } else {
-                    iconElement.setAttribute('data-feather', 'maximize');
+                    iconElement.setAttribute('data-feather', 'maximize'); // Change icon to maximize
+                    fullscreenToggleBtn.setAttribute('aria-label', 'החלף למסך מלא');
                 }
-                feather.replace(); // Re-render feather icons
+                feather.replace(); // Re-render the icon to show the change
             }
         }
     </script>
